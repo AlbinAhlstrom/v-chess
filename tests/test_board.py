@@ -1,4 +1,5 @@
 import pytest
+
 from chess.board import Coordinate, Color, Board
 
 
