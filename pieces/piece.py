@@ -18,7 +18,7 @@ class Piece(ABC):
 
     @property
     @abstractmethod
-    def legal_moves(self, board: Board) -> list[Coordinate]:
+    def moves(self, board: Board) -> list[Coordinate]:
         pass
 
     @property
@@ -33,7 +33,3 @@ class Piece(ABC):
     def __repr__(self):
         # TODO: Return proper repr once board representation is implemented
         return self.__str__()
-
-
-
-
