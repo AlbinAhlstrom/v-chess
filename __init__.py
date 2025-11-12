@@ -1,1 +1,2 @@
-from board import Coordinate, Color, Board
+from board import Board
+from board_utils import Coordinate, Color
