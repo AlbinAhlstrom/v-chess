@@ -1,8 +1,8 @@
 from board import Color
-from pieces import Piece
+from pieces.movement import StraightMovingPiece
 
 
-class Rook(Piece):
+class Rook(StraightMovingPiece):
     def __str__(self):
         match self.color:
             case Color.WHITE:
