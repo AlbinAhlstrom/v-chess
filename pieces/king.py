@@ -1,7 +1,7 @@
 from math import inf
 
 from board import Color
-from . import Piece
+from pieces import Piece
 
 
 class King(Piece):
