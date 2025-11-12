@@ -1,5 +1,5 @@
 from pieces import Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook, Pawn
-from board import Color, Coordinate
+from chess import Color, Coordinate, BoardState
 
 
 def main():
