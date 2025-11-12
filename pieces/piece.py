@@ -7,6 +7,7 @@ class Piece(ABC):
     def __init__(self, color: Color, position: Coordinate):
         self.color = color
         self._position = position
+        self.has_moved = False
 
     @property
     def position(self):
