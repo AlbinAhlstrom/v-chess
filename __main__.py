@@ -1,17 +1,23 @@
 from pieces import Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook, Pawn
-from chess import Color, Coordinate, Board
+from chess.board import Board
 
 
 def main():
     """Set up and print the initial chess board.
 
     This function initializes an 8x8 chess board with all pieces in their
-    standard starting positions. It prints the board layout and example moves
-    for a sample pawn.
+    standard starting positions. It prints the board layout using unicode
+    characters for pieces and 0 for empty squares.
 
-    Example:
-        printed output:
-        [[♜, ♞, ♝, ♛, ♚, ♝, ♞, ♜], ...]
+    printed output:
+        [♜, ♞, ♝, ♛, ♚, ♝, ♞, ♜]
+        [♟, ♟, ♟, ♟, ♟, ♟, ♟, ♟]
+        [0, 0, 0, 0, 0, 0, 0, 0]
+        [0, 0, 0, 0, 0, 0, 0, 0]
+        [0, 0, 0, 0, 0, 0, 0, 0]
+        [0, 0, 0, 0, 0, 0, 0, 0]
+        [♙, ♙, ♙, ♙, ♙, ♙, ♙, ♙]
+        [♖, ♘, ♗, ♕, ♔, ♗, ♘, ♖]
     """
 
     board = Board.starting_setup()
