@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from pieces import Piece
+
 
 @dataclass(frozen=True)
 class Square:
@@ -55,6 +57,12 @@ class Square:
         row = 8 - int(rank_char)
 
         return cls(row, col)
+
+    def add_piece(piece: Piece):
+        self.piece = piece
+
+    def remove_piece(piece: Piece):
+        self.piece = None
 
 
 class Coordinate:
