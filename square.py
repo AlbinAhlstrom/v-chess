@@ -4,7 +4,6 @@ from typing import Optional
 from pieces import Piece
 
 
-@dataclass(frozen=True)
 class Square:
     """Represents a square on the chessboard.
 
@@ -13,8 +12,9 @@ class Square:
         piece: The piece currently on the square (if any).
     """
 
-    coord: Coordinate
-    piece: Optional[object] = None
+    def __init__(self, coordinate: Coordinate, piece: Optional[Piece] = None):
+        self.coordinate = coordinate
+        self.piece = piece
 
     @property
     def is_occupied(self) -> bool:
