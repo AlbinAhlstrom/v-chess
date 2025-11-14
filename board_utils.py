@@ -35,11 +35,6 @@ class Coordinate:
         self.row = row
         self.col = col
 
-    @property
-    def algebraic_notation(self) -> str:
-        """Return the squares corresponding algebraic notation."""
-        return f"{chr(self.col + ord('a'))}{8 - self.row}"
-
     def __eq__(self, other: Coordinate) -> bool:
         """Check if two coordinates are equal.
 
@@ -58,4 +53,4 @@ class Coordinate:
         return hash((self.row, self.col))
 
     def __str__(self):
-        return self.algebraic_notation
+        return f"{chr(self.col + ord('a'))}{8 - self.row}"
