@@ -1,15 +1,13 @@
 from dataclasses import dataclass
 
-from chess.board_utils import Coordinate
+from chess.square import Square
 from chess.pieces import Piece
 
 
 @dataclass(frozen=True)
 class Move:
-    start: Coordinate
-    end: Coordinate
-    piece_moved: Piece
-    piece_captured: Piece = None
+    start: Square
+    end: Square
     promotion_piece: Piece = None
     is_en_passant: bool = False
     is_castling: bool = False
