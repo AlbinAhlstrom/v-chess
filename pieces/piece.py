@@ -1,8 +1,12 @@
 from abc import ABC, abstractmethod
+from dataclass import dataclass
+from enum import Enum
 
-from chess import Color, Coordinate
+from chess.square import Square
+from chess.pieces import Color
 
 
+@dataclass
 class Piece(ABC):
     """Abstract base class for chess pieces.
 
@@ -14,22 +18,13 @@ class Piece(ABC):
         has_moved: True if piece has moved from starting position.
     """
 
-    def __init__(self, color: Color, position: Coordinate):
-        self.color = color
-        self._position = position
-        self.has_moved: bool = False
-
-    @property
-    def position(self):
-        return self._position
-
-    @position.setter
-    def position(self, position: Coordinate):
-        self._position = position
+    color: Color
+    position: Square
+    has_moved: bool = False
 
     @property
     @abstractmethod
-    def moves(self, board: Board) -> list[Coordinate]:
+    def moves(self, board: Board) -> list[Square]:
         """Return all theoretically possible moves for the piece.
 
         Returns a list of coordinates that would be possible to move
