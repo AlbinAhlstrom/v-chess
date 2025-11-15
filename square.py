@@ -14,13 +14,7 @@ class Square:
     """
 
     def __init__(self, coordinate: str | tuple, piece: Optional[Piece] = None):
-        if isinstance(coordinate, str):
-            self.coordinate = Coordinate.from_str(coordinate)
-        elif isinstance(coordinate, tuple)
-            self.coordinate = Coordinate(*coordinate)
-        else:
-            raise TypeError(f"Invalid {type(coordinate)=}")
-
+        self.coordinate = Coordinate.from_str_or_tuple(coordinate)
         self.piece = piece
 
     @property
@@ -75,11 +69,11 @@ class Square:
 
     def add_piece(self, piece: Piece):
         self.piece = piece
-        piece.position = self
+        piece.square = self
 
     def remove_piece(self):
         self.piece = None
-        piece.position = None
+        piece.square= None
 
 
 @dataclass(frozen=True)
@@ -120,3 +114,13 @@ class Coordinate:
 
     def __str__(self):
         return f"{chr(self.col + ord('a'))}{8 - self.row}"
+
+    @classmethod
+    def from_str_or_tuple(cls, coordinate: str | tuple):
+        if isinstance(coordinate, str):
+            return cls.from_str(coordinate)
+        elif isinstance(coordinate, tuple)
+            return cls(*coordinate)
+        else:
+            raise TypeError(f"Invalid {type(coordinate)=}")
+
