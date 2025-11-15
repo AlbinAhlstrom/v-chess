@@ -1,19 +1,26 @@
 from dataclasses import dataclass
-from typing import Optional
+from string import ascii_lowercase
+from typing import Optional, Literal
 
-from pieces import Piece
+from chess.pieces import Piece
 
 
 class Square:
     """Represents a square on the chessboard.
 
     Attributes:
-        coord: The coordinate of the square being represented.
+        coordinate: The coordinate of the square being represented.
         piece: The piece currently on the square (if any).
     """
 
-    def __init__(self, coordinate: Coordinate, piece: Optional[Piece] = None):
-        self.coordinate = coordinate
+    def __init__(self, coordinate: str | tuple, piece: Optional[Piece] = None):
+        if isinstance(coordinate, str):
+            self.coordinate = Coordinate.from_str(coordinate)
+        elif isinstance(coordinate, tuple)
+            self.coordinate = Coordinate(*coordinate)
+        else:
+            raise TypeError(f"Invalid {type(coordinate)=}")
+
         self.piece = piece
 
     @property
@@ -58,15 +65,16 @@ class Square:
 
         return cls(row, col)
 
-    def add_piece(piece: Piece):
+    def add_piece(self, piece: Piece):
         self.piece = piece
-        piece.position = self.coord
+        piece.position = self
 
-    def remove_piece():
+    def remove_piece(self):
         self.piece = None
         piece.position = None
 
 
+@dataclass(frozen=True)
 class Coordinate:
     """Represents a coordinate on a chessboard.
 
@@ -75,36 +83,32 @@ class Coordinate:
     Index 0 for column corresponds to the A-file.
     """
 
-    def __init__(self, row: int, col: int):
-        """Initialize a coordinate by row and column
-        Attributes:
-            row: Row index (0-7) => algebraic (8-1).
-            col: Column index (0-7) => algebraic (A-H).
-        """
+    row: int
+    col: int
+
+    def __post_init__(self):
         if not 0 <= row < 8:
             raise ValueError(f"Invalid row {row}")
         if not 0 <= col < 8:
             raise ValueError(f"Invalid col {col}")
 
-        self.row = row
-        self.col = col
+    @classmethod
+    def from_str(cls, notation: str):
+        if len(notation) != 2:
+            raise ValueError(f"Invalid length of {len(notation)=}")
 
-    def __eq__(self, other: Coordinate) -> bool:
-        """Check if two coordinates are equal.
+        file_char = notation[0].lower()
+        rank_char = notation[1]
 
-        Args:
-            other: Coordinate to compare to.
+        if file_char < "a" or file_char > "h":
+            raise ValueError(f"Invalid file in {coord=}")
+        if rank_char < "1" or rank_char > "8":
+            raise ValueError(f"Invalid rank in {coord=}")
 
-        Returns:
-            bool: True if row and col attributes match, else False
-        """
-        return self.row == other.row and self.col == other.col
+        col = ord(notation[0].lower()) - ord("a")
+        row = 8 - int(notation[1])
 
-    def __repr__(self):
-        return f"Coordinate(row={self.row}, col={self.col})"
-
-    def __hash__(self):
-        return hash((self.row, self.col))
+        return cls(row, col)
 
     def __str__(self):
         return f"{chr(self.col + ord('a'))}{8 - self.row}"
