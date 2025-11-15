@@ -24,6 +24,14 @@ class Square:
         self.piece = piece
 
     @property
+    def row(self) -> int:
+        return self.coordinate.row
+
+    @property
+    def col(self) -> int:
+        return self.coordinate.col
+
+    @property
     def is_occupied(self) -> bool:
         return self.piece is not None
 
