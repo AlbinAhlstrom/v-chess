@@ -1,5 +1,6 @@
 from chess.piece.piece import Piece
 from chess.piece.color import Color
+from chess.move_utils import Moveset
 
 
 class Queen(Piece):
@@ -17,7 +18,7 @@ class Queen(Piece):
 
     @property
     def moves(self):
-        return straight_moves(self) | diagonal_moves(self)
+        return self.get_lines(Moveset.STRAIGHT_AND_DIAGONAL)
 
     @property
     def value(self):
