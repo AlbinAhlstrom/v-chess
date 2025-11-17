@@ -3,16 +3,17 @@ from string import ascii_lowercase
 from typing import Optional, Literal
 
 
+from dataclasses import dataclass
+from typing import Optional
+
+
 class Square:
-    """Represents a square on the chessboard.
+    """Represents a square on the chessboard."""
 
-    Attributes:
-        coordinate: The coordinate of the square being represented.
-        piece: The piece currently on the square (if any).
-    """
-
-    def __init__(self, coordinate: str | tuple, piece: Optional["Piece"] = None):
-        self.coordinate = Coordinate.from_str_or_tuple(coordinate)
+    def __init__(
+        self, coordinate: str | tuple | "Coordinate", piece: Optional["Piece"] = None
+    ):
+        self.coordinate = Coordinate.from_any(coordinate)
         self.piece = piece
 
     @property
@@ -33,45 +34,21 @@ class Square:
 
     def __str__(self):
         """Return algebraic notation (e.g., 'e4')."""
-        return str(self.coord)
+        return str(self.coordinate)
 
     @classmethod
-    def from_string(cls, coord: str) -> Square:
-        """Create a Coordinate from a string.
-
-        Args:
-            coord: A 2-character algebraic square string (e.g. 'e4').
-
-        Returns:
-            Coordinate: The corresponding board coordinate.
-
-        Raises:
-            ValueError: If the input is invalid.
-        """
-        if len(notation) != 2:
-            raise ValueError(f"Invalid length of {coord=}")
-
-        file_char = notation[0].lower()
-        rank_char = notation[1]
-
-        if file_char < "a" or file_char > "h":
-            raise ValueError(f"Invalid file in {coord=}")
-
-        if rank_char < "1" or rank_char > "8":
-            raise ValueError(f"Invalid rank in {coord=}")
-
-        col = ord(file_char) - ord("a")
-        row = 8 - int(rank_char)
-
-        return cls(row, col)
+    def from_string(cls, notation: str) -> "Square":
+        """Create a Square from an algebraic notation string (e.g., 'e4')."""
+        return cls(Coordinate.from_str(notation))
 
     def add_piece(self, piece: "Piece"):
         self.piece = piece
         piece.square = self
 
     def remove_piece(self):
+        if self.piece is not None:
+            self.piece.square = None
         self.piece = None
-        piece.square = None
 
 
 @dataclass(frozen=True)
@@ -88,36 +65,37 @@ class Coordinate:
 
     def __post_init__(self):
         if not 0 <= self.row < 8:
-            raise ValueError(f"Invalid row {row}")
+            raise ValueError(f"Invalid row {self.row}")
         if not 0 <= self.col < 8:
-            raise ValueError(f"Invalid col {col}")
+            raise ValueError(f"Invalid col {self.col}")
 
     @classmethod
-    def from_str(cls, notation: str):
+    def from_str(cls, notation: str) -> "Coordinate":
         if len(notation) != 2:
-            raise ValueError(f"Invalid length of {len(notation)=}")
+            raise ValueError(f"Invalid length of {notation=}")
 
         file_char = notation[0].lower()
         rank_char = notation[1]
 
-        if file_char < "a" or file_char > "h":
-            raise ValueError(f"Invalid file in {coord=}")
-        if rank_char < "1" or rank_char > "8":
-            raise ValueError(f"Invalid rank in {coord=}")
+        if not ("a" <= file_char <= "h"):
+            raise ValueError(f"Invalid file in {notation=}")
+        if not ("1" <= rank_char <= "8"):
+            raise ValueError(f"Invalid rank in {notation=}")
 
-        col = ord(notation[0].lower()) - ord("a")
-        row = 8 - int(notation[1])
-
+        col = ord(file_char) - ord("a")
+        row = 8 - int(rank_char)
         return cls(row, col)
 
-    def __str__(self):
-        return f"{chr(self.col + ord('a'))}{8 - self.row}"
-
     @classmethod
-    def from_str_or_tuple(cls, coordinate: str | tuple):
-        if isinstance(coordinate, str):
+    def from_any(cls, coordinate: str | tuple | "Coordinate") -> "Coordinate":
+        if isinstance(coordinate, cls):
+            return coordinate
+        elif isinstance(coordinate, str):
             return cls.from_str(coordinate)
         elif isinstance(coordinate, tuple):
             return cls(*coordinate)
         else:
-            raise TypeError(f"Invalid {type(coordinate)=}")
+            raise TypeError(f"Invalid coordinate type: {type(coordinate)}")
+
+    def __str__(self):
+        return f"{chr(self.col + ord('a'))}{8 - self.row}"

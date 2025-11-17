@@ -60,14 +60,16 @@ class Board:
 
     def get_square(self, coordinate):
         """Retrieve a square by tuple or algebraic notation (e.g. 'e4')."""
-        coord = Coordinate.from_str_or_tuple(coordinate)
+        coord = Coordinate.from_any(coordinate)
         return self.board[(coord.row, coord.col)]
 
     def get_piece(self, coordinate):
         return self.get_square(coordinate).piece
 
-    def move_piece(self, move: Move):
-        pass
+    def make_move(self, move: Move):
+        piece = move.start.piece
+        move.start.piece = None
+        move.end.piece = piece
 
     @property
     def repetitions_of_position(self) -> int:

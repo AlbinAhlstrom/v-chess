@@ -19,20 +19,17 @@ class Pawn(Piece):
 
     @property
     def moves(self):
-        pass
-
-        print(self.color)
         if self.color.value == 1:
             move_offsets = (-1,) if self.has_moved else (-1, -2)
         elif self.color.value == 0:
             move_offsets = (1,) if self.has_moved else (1, 2)
         else:
-            raise AttributeError(f"Invalid piece {color=}")
+            raise AttributeError(f"Invalid piece color={self.color}")
 
         return {
-            Square(self.square.row + move, self.square.col)
+            Square((self.square.row + move, self.square.col))
             for move in move_offsets
-            if 0 <= pos.row + move < 8
+            if 0 <= self.square.row + move < 8
         }
 
     @property

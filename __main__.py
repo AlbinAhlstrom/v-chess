@@ -29,7 +29,9 @@ def main():
     """
 
     game = Game()
-    game.render()
+    while True:
+        game.render()
+        game.debug_move()
 
 
 if __name__ == "__main__":

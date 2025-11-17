@@ -1,6 +1,8 @@
 from typing import Optional
 
 from chess.board import Board
+from chess.move import Move
+from chess.piece.color import Color
 
 
 class Game:
@@ -10,13 +12,11 @@ class Game:
     The majority of the game logic is handled in the Board class.
     """
 
-    def __init__(
-        self, board: Optional[Board] = None, player_white=None, player_black=None
-    ):
+    def __init__(self, board: Optional[Board] = None):
         self.board = board or Board.starting_setup()
 
-        self.player_white = player_white
-        self.player_black = player_black
+        self.player_white = Color.WHITE
+        self.player_black = Color.BLACK
 
         self.current_player = self.player_white
 
@@ -33,15 +33,38 @@ class Game:
 
     def is_move_legal(self, move):
         """Determine if a move is legal.
-        - Checking if piece belongs to current player
+        X- Checking if piece belongs to current player
         - Valid movement patterns
         - Checks for check
         - Castling/en passant rules
         """
-        pass
+        if move.start.piece.color != self.current_player:
+            return False
+        return True
 
     def render(self):
         """Print the board."""
         for row in range(8):
             pieces = [self.board.get_square((row, col)).piece or 0 for col in range(8)]
             print(pieces)
+
+    def take_turn(self):
+        move_str = input("Enter a move: ")
+        start_square = self.board.get_square(move_str[:2])
+        end_square = self.board.get_square(move_str[2:])
+        move = Move(start_square, end_square)
+        if not self.is_move_legal(move):
+            raise Exception("Not a legal move")
+        self.board.make_move(move)
+        self.switch_turn()
+
+    def debug_move(self):
+        move_str = input("Enter a move: ")
+        start_square = self.board.get_square(move_str[:2])
+        end_square = self.board.get_square(move_str[2:])
+        move = Move(start_square, end_square)
+        if not self.is_move_legal(move):
+            print("Not a legal move")
+        for move in start_square.piece.moves:
+            print(move)
+        self.switch_turn()
