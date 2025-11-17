@@ -78,7 +78,7 @@ class Game:
             print(pieces)
 
     def take_turn(self):
-        move_str = input("Enter a move: ")
+        move_str = input("Enter a move (e.g. e2e4) or square to debug: ")
         try:
             start_square = self.board.get_square(move_str[:2])
             end_square = self.board.get_square(move_str[2:])
