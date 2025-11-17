@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from chess.square import Square
-from chess.pieces import Piece
+from chess.piece import Piece
 
 
 @dataclass(frozen=True)

@@ -1,5 +1,13 @@
-from chess.pieces import Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook, Pawn
+from chess.piece.rook import Rook
+from chess.piece.knight import Knight
+from chess.piece.bishop import Bishop
+from chess.piece.queen import Queen
+from chess.piece.king import King
+from chess.piece.pawn import Pawn
+from chess.piece.color import Color
+
 from chess.board import Board
+from chess.game import Game
 
 
 def main():
@@ -20,10 +28,8 @@ def main():
         [♖, ♘, ♗, ♕, ♔, ♗, ♘, ♖]
     """
 
-    board = Board.starting_setup()
-    for row in board.board:
-        row = [char or 0 for char in row]
-        print(row)
+    game = Game()
+    game.render()
 
 
 if __name__ == "__main__":

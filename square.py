@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from string import ascii_lowercase
 from typing import Optional, Literal
 
-from chess.pieces import Piece
-
 
 class Square:
     """Represents a square on the chessboard.
@@ -13,7 +11,7 @@ class Square:
         piece: The piece currently on the square (if any).
     """
 
-    def __init__(self, coordinate: str | tuple, piece: Optional[Piece] = None):
+    def __init__(self, coordinate: str | tuple, piece: Optional["Piece"] = None):
         self.coordinate = Coordinate.from_str_or_tuple(coordinate)
         self.piece = piece
 
@@ -67,13 +65,13 @@ class Square:
 
         return cls(row, col)
 
-    def add_piece(self, piece: Piece):
+    def add_piece(self, piece: "Piece"):
         self.piece = piece
         piece.square = self
 
     def remove_piece(self):
         self.piece = None
-        piece.square= None
+        piece.square = None
 
 
 @dataclass(frozen=True)
@@ -89,9 +87,9 @@ class Coordinate:
     col: int
 
     def __post_init__(self):
-        if not 0 <= row < 8:
+        if not 0 <= self.row < 8:
             raise ValueError(f"Invalid row {row}")
-        if not 0 <= col < 8:
+        if not 0 <= self.col < 8:
             raise ValueError(f"Invalid col {col}")
 
     @classmethod
@@ -119,8 +117,7 @@ class Coordinate:
     def from_str_or_tuple(cls, coordinate: str | tuple):
         if isinstance(coordinate, str):
             return cls.from_str(coordinate)
-        elif isinstance(coordinate, tuple)
+        elif isinstance(coordinate, tuple):
             return cls(*coordinate)
         else:
             raise TypeError(f"Invalid {type(coordinate)=}")
-

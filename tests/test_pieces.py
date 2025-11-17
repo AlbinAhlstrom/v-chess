@@ -1,11 +1,17 @@
 import pytest
 
-from chess.board import Coordinate, Color
-from chess.pieces import Rook, Bishop, Queen, Knight, King, Pawn
+from chess.square import Square
+from chess.piece.rook import Rook
+from chess.piece.knight import Knight
+from chess.piece.bishop import Bishop
+from chess.piece.queen import Queen
+from chess.piece.king import King
+from chess.piece.pawn import Pawn
+from chess.piece.color import Color
 
 
 def test_rook_moves_and_value():
-    rook = Rook(Color.WHITE, Coordinate(4, 4))
+    rook = Rook(Color.WHITE, Square(4, 4))
     assert rook.color == Color.WHITE
     moves = rook.moves()
     assert len(moves) == 14
@@ -13,7 +19,7 @@ def test_rook_moves_and_value():
 
 
 def test_bishop_moves_and_value():
-    bishop = Bishop(Color.BLACK, Coordinate(4, 4))
+    bishop = Bishop(Color.BLACK, Square(4, 4))
     assert bishop.color == Color.BLACK
     moves = bishop.moves()
     assert len(moves) == 13
@@ -21,7 +27,7 @@ def test_bishop_moves_and_value():
 
 
 def test_queen_moves_and_value():
-    queen = Queen(Color.WHITE, Coordinate(4, 4))
+    queen = Queen(Color.WHITE, Square(4, 4))
     assert queen.color == Color.WHITE
     moves = queen.moves()
     assert len(moves) == 27
@@ -29,7 +35,7 @@ def test_queen_moves_and_value():
 
 
 def test_knight_moves_and_value():
-    knight = Knight(Color.BLACK, Coordinate(4, 4))
+    knight = Knight(Color.BLACK, Square(4, 4))
     assert knight.color == Color.BLACK
     moves = knight.moves()
     assert len(moves) == 8
@@ -37,7 +43,7 @@ def test_knight_moves_and_value():
 
 
 def test_king_moves_and_value():
-    king = King(Color.WHITE, Coordinate(4, 4))
+    king = King(Color.WHITE, Square(4, 4))
     assert king.color == Color.WHITE
     moves = king.moves()
     assert len(moves) == 8
@@ -45,15 +51,15 @@ def test_king_moves_and_value():
 
 
 def test_pawn_moves_first_and_after_moving():
-    pawn = Pawn(Color.WHITE, Coordinate(6, 4))
+    pawn = Pawn(Color.WHITE, Square(6, 4))
     assert pawn.has_moved == False
     assert pawn.color == Color.WHITE
     moves = pawn.moves()
-    assert Coordinate(5, 4) in moves
-    assert Coordinate(4, 4) in moves
+    assert Square(5, 4) in moves
+    assert Square(4, 4) in moves
 
     pawn.has_moved = True
     moves = pawn.moves()
     assert len(moves) == 1
-    assert Coordinate(5, 4) in moves
+    assert Square(5, 4) in moves
     assert pawn.value == 1
