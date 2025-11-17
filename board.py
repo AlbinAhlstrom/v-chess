@@ -71,6 +71,25 @@ class Board:
         move.start.piece = None
         move.end.piece = piece
 
+    def path_is_clear(self, start_square: Square, end_square: Square) -> bool:
+        piece = start_square.piece
+        if not hasattr(piece, "lines"):
+            return True
+
+        path = [line for line in piece.lines if end_square in line]
+        assert len(path) == 1, f"Expected one path, found: {path}"
+
+        for square in path[0]:
+            square = self.get_square(square)
+            if square == end_square:
+                break
+
+            if square.is_occupied:
+                print("Path blocked")
+                return False
+
+        return True
+
     @property
     def repetitions_of_position(self) -> int:
         return sum(1 for past in self.history if past.board == self.board)

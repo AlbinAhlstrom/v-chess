@@ -26,14 +26,14 @@ class Moveset(Enum):
     STRAIGHT_AND_DIAGONAL = STRAIGHT + DIAGONAL
 
 
-def get_line_from(square: Square, direction: Direction):
+def get_line_from(square: Coordinate, direction: Direction):
     row_increment, col_increment = direction
     row = square.row + row_increment
     col = square.col + col_increment
     line = []
 
     while 0 <= row < 8 and 0 <= col < 8:
-        line.append(Square((row, col)))
+        line.append(Coordinate(row, col))
         row += row_increment
         col += col_increment
 

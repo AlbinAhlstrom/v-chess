@@ -36,6 +36,11 @@ class Square:
         """Return algebraic notation (e.g., 'e4')."""
         return str(self.coordinate)
 
+    def __eq__(self, other: Square | Coordinate | str | tuple[int, int]):
+        if isinstance(other, tuple):
+            other = Coordinate.from_any(other)
+        return str(self) == str(other)
+
     @classmethod
     def from_string(cls, notation: str) -> "Square":
         """Create a Square from an algebraic notation string (e.g., 'e4')."""

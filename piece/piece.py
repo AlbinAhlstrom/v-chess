@@ -61,5 +61,6 @@ class Piece(ABC):
 
     def get_lines(self, moveset: Iterable[Direction]):
         return [
-            get_line_from(self.square, direction.value) for direction in moveset.value
+            get_line_from(self.square.coordinate, direction.value)
+            for direction in moveset.value
         ]

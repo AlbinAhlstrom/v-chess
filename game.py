@@ -3,6 +3,7 @@ from typing import Optional
 from chess.board import Board
 from chess.move import Move
 from chess.piece.color import Color
+from chess.piece.sliding_piece import SlidingPiece
 
 
 class Game:
@@ -31,16 +32,26 @@ class Game:
             else self.player_white
         )
 
-    def is_move_legal(self, move):
+    def move_is_legal(self, move):
         """Determine if a move is legal.
-        X- Checking if piece belongs to current player
+        - Checking if piece belongs to current player
         - Valid movement patterns
-        - Checks for check
-        - Castling/en passant rules
+        TODO: Checks for check
+        TODO: Castling/en passant rules
         """
-        if move.start.piece.color != self.current_player:
+        if not move.start.is_occupied:
+            print("No piece")
             return False
-        return True
+
+        if move.start.piece.color != self.current_player:
+            print("Wrong piece color")
+            return False
+
+        if move.end.piece and move.end.piece.color == self.current_player:
+            print("Can't capture own piece")
+            return False
+
+        return self.board.path_is_clear(move.start, move.end)
 
     def render(self):
         """Print the board."""
@@ -53,10 +64,11 @@ class Game:
         start_square = self.board.get_square(move_str[:2])
         end_square = self.board.get_square(move_str[2:])
         move = Move(start_square, end_square)
-        if not self.is_move_legal(move):
-            raise Exception("Not a legal move")
-        self.board.make_move(move)
-        self.switch_turn()
+        if self.move_is_legal(move):
+            self.board.make_move(move)
+            self.switch_turn()
+        else:
+            print("Not a legal move")
 
     def debug_move(self):
         start_square = self.board.get_square(input("Enter a square: "))
