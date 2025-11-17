@@ -59,12 +59,9 @@ class Game:
         self.switch_turn()
 
     def debug_move(self):
-        move_str = input("Enter a move: ")
-        start_square = self.board.get_square(move_str[:2])
-        end_square = self.board.get_square(move_str[2:])
-        move = Move(start_square, end_square)
-        if not self.is_move_legal(move):
-            print("Not a legal move")
-        for move in start_square.piece.moves:
-            print(move)
+        start_square = self.board.get_square(input("Enter a square: "))
+
+        for line in start_square.piece.moves:
+            for square in line:
+                print(str(square))
         self.switch_turn()
