@@ -1,5 +1,6 @@
-from chess.pieces import Color, Piece
-from chess.pieces.movement import straight_moves
+from chess.piece.piece import Piece
+from chess.piece.color import Color
+from chess.move_utils import Moveset
 
 
 class Rook(Piece):
@@ -17,7 +18,7 @@ class Rook(Piece):
 
     @property
     def moves(self):
-        return straight_moves(self)
+        return self.get_lines(Moveset.STRAIGHT)
 
     @property
     def value(self):

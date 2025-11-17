@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
-from dataclass import dataclass
+from dataclasses import dataclass
 from enum import Enum
 
 from chess.square import Square
-from chess.pieces import Color
+from chess.piece.color import Color
+from chess.move_utils import get_line_from
 
 
 @dataclass
@@ -19,7 +20,7 @@ class Piece(ABC):
     """
 
     color: Color
-    position: Square
+    square: Square = None
     has_moved: bool = False
 
     @property
@@ -60,3 +61,8 @@ class Piece(ABC):
     def __repr__(self):
         # TODO: Return proper repr once board representation is implemented
         return self.__str__()
+
+    def get_lines(self, moveset: Iterable[Direction]):
+        return [
+            get_line_from(self.square, direction.value) for direction in moveset.value
+        ]

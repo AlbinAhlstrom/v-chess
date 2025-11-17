@@ -1,5 +1,6 @@
-from chess.pieces import Color, Piece
-from chess.pieces.movement import diagonal_moves
+from chess.piece.piece import Piece
+from chess.piece.color import Color
+from chess.move_utils import Moveset
 
 
 class Bishop(Piece):
@@ -17,7 +18,7 @@ class Bishop(Piece):
 
     @property
     def moves(self):
-        return diagonal_moves(self)
+        return self.get_lines(Moveset.DIAGONAL)
 
     @property
     def value(self):

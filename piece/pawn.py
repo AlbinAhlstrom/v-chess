@@ -1,5 +1,6 @@
 from chess.square import Square
-from chess.pieces import Color, Piece
+from chess.piece.piece import Piece
+from chess.piece.color import Color
 
 
 class Pawn(Piece):
@@ -18,7 +19,7 @@ class Pawn(Piece):
 
     @property
     def moves(self):
-        pos = self.position
+        pass
 
         print(self.color)
         if self.color.value == 1:
@@ -29,7 +30,7 @@ class Pawn(Piece):
             raise AttributeError(f"Invalid piece {color=}")
 
         return {
-            Square(pos.row + move, pos.col)
+            Square(self.square.row + move, self.square.col)
             for move in move_offsets
             if 0 <= pos.row + move < 8
         }

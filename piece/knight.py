@@ -1,5 +1,6 @@
 from chess.square import Square
-from chess.pieces import Color, Piece
+from chess.piece.piece import Piece
+from chess.piece.color import Color
 
 
 class Knight(Piece):
@@ -17,15 +18,14 @@ class Knight(Piece):
 
     @property
     def moves(self):
-        pos = self.position
         offsets = (-2, -1, 1, 2)
         return {
-            Square(pos.row + row_offset, pos.col + column_offset)
+            Square(self.square.row + row_offset, self.square.col + column_offset)
             for row_offset in offsets
             for column_offset in offsets
             if abs(row_offset) != abs(column_offset)
-            and 0 <= pos.row + row_offset < 8
-            and 0 <= pos.col + column_offset < 8
+            and 0 <= self.square.row + row_offset < 8
+            and 0 <= self.square.col + column_offset < 8
         }
 
     @property
