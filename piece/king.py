@@ -1,6 +1,7 @@
 from math import inf
 
 from .piece import Piece, Color
+from chess.square import Square
 
 
 class King(Piece):
@@ -19,8 +20,14 @@ class King(Piece):
 
     @property
     def moves(self):
-        moves = straight_moves(self) | diagonal_moves(self)
-        return limit_distance(self, moves, 1)
+        row, col = self.square.row, self.square.col
+
+        return {
+            Square((r, c))
+            for r in range(row - 1, row + 2)
+            for c in range(col - 1, col + 2)
+            if 0 <= r < 8 and 0 <= c < 8 and (r, c) != (row, col)
+        }
 
     @property
     def value(self):
