@@ -39,15 +39,24 @@ class Game:
         TODO: Checks for check
         TODO: Castling/en passant rules
         """
-        if not move.start.is_occupied:
+        start = move.start
+        end = move.end
+        piece = move.start.piece
+        target = move.end.piece
+
+        if not start.is_occupied:
             print("No piece")
             return False
 
-        if move.start.piece.color != self.current_player:
+        if piece.color != self.current_player:
             print("Wrong piece color")
             return False
 
-        if move.end.piece and move.end.piece.color == self.current_player:
+        if end.coordinate not in piece.moves:
+            print("Move not in piece moveset")
+            return False
+
+        if target and target.color == self.current_player:
             print("Can't capture own piece")
             return False
 
