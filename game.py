@@ -61,7 +61,6 @@ class Game:
     def debug_move(self):
         start_square = self.board.get_square(input("Enter a square: "))
 
-        for line in start_square.piece.moves:
-            for square in line:
-                print(str(square))
+        for square in start_square.piece.moves:
+            print(str(square))
         self.switch_turn()
