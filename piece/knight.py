@@ -20,7 +20,7 @@ class Knight(Piece):
     def moves(self):
         offsets = (-2, -1, 1, 2)
         return {
-            Square(self.square.row + row_offset, self.square.col + column_offset)
+            Square((self.square.row + row_offset, self.square.col + column_offset))
             for row_offset in offsets
             for column_offset in offsets
             if abs(row_offset) != abs(column_offset)
