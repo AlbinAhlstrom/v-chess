@@ -19,18 +19,22 @@ class Pawn(Piece):
 
     @property
     def moves(self):
-        if self.color.value == 1:
-            move_offsets = (-1,) if self.has_moved else (-1, -2)
-        elif self.color.value == 0:
-            move_offsets = (1,) if self.has_moved else (1, 2)
-        else:
-            raise AttributeError(f"Invalid piece color={self.color}")
+        direction = -1 if self.color.value == 1 else 1
 
-        return {
-            Coordinate(self.square.row + move, self.square.col)
-            for move in move_offsets
-            if 0 <= self.square.row + move < 8
+        steps = (direction,) if self.has_moved else (direction, 2 * direction)
+        forward = {
+            Coordinate(self.square.row + step, self.square.col)
+            for step in steps
+            if 0 <= self.square.row + step < 8 and 0 <= self.square.col < 8
         }
+
+        capture_cols = (self.square.col - 1, self.square.col + 1)
+        captures = {
+            Coordinate(self.square.row + direction, col)
+            for col in capture_cols
+            if 0 <= self.square.row + direction < 8 and 0 <= col < 8
+        }
+        return captures | forward
 
     @property
     def value(self):
