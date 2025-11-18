@@ -65,7 +65,14 @@ class Game:
             print("Can't capture own piece")
             return False
 
-        if isinstance(piece, Pawn) and end.col != start.col and target is None:
+        print(f"{end=}")
+        print(f"{self.board.en_passant_square=}")
+        if (
+            isinstance(piece, Pawn)
+            and end.col != start.col
+            and target is None
+            and end != self.board.en_passant_square
+        ):
             print("Can only move pawn diagonal to capture")
             return False
 
@@ -88,6 +95,9 @@ class Game:
         move = Move(start_square, end_square)
         if self.move_is_legal(move):
             self.board.make_move(move)
+            print(f"{move.is_double_pawn_push=}")
+            if move.is_double_pawn_push:
+                self.board.en_passant_square = move.end.piece.en_passant_square
             self.switch_turn()
         else:
             print("Not a legal move")
@@ -96,3 +106,5 @@ class Game:
         print(f"{square=}")
         if square.piece is not None:
             print(f"{[str(square) for square in square.piece.moves]}")
+            if isinstance(square.piece, Pawn):
+                print(f"{square.piece.en_passant_square}")
