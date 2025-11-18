@@ -85,6 +85,7 @@ class Game:
             print(pieces)
 
     def take_turn(self):
+        self.board.history.append(self.board.copy())
         move_str = input("Enter a move (e.g. e2e4) or square to debug: ")
         try:
             start_square = self.board.get_square(move_str[:2])
