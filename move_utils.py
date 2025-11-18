@@ -2,6 +2,8 @@ from enum import Enum
 from typing import Iterable
 
 from chess.square import Square, Coordinate
+from chess.move import Move
+from chess.board import Board
 
 
 class Direction(Enum):
@@ -38,3 +40,23 @@ def get_line_from(square: Coordinate, direction: Direction):
         col += col_increment
 
     return line
+
+
+def get_move_from_input(board):
+    while True:
+        move_str = input("Enter a move (e.g. e2e4) or square to debug: ")
+        try:
+            start_square = board.get_square(move_str[:2])
+            end_square = board.get_square(move_str[2:])
+            break
+        except ValueError:
+            print("Invalid move")
+    return Move(start_square, end_square)
+
+
+def debug_square(square):
+    print(f"{square=}")
+    if square.piece is not None:
+        print(f"{[str(square) for square in square.piece.moves]}")
+        if isinstance(square.piece, Pawn):
+            print(f"{square.piece.en_passant_square}")
