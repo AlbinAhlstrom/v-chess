@@ -67,6 +67,15 @@ class Board:
     def get_piece(self, coordinate):
         return self.get_square(coordinate).piece
 
+    def get_pieces(self, piece_type=Piece, color=None) -> list[Piece]:
+        pieces = self.pieces
+        if color == Color.WHITE:
+            pieces = self.white_pieces
+        if color == Color.BLACK:
+            pieces = self.black_pieces
+
+        return [piece for piece in pieces if isinstance(piece, piece_type)]
+
     @property
     def squares(self):
         return [self.get_square((row, col)) for row in range(8) for col in range(8)]
