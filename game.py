@@ -91,7 +91,7 @@ class Game:
         self.board = self.history.pop(-1)
 
     def take_turn(self):
-        move = self.get_move_from_input(self.board)
+        move = self.get_move_from_input()
         if self.move_is_legal(move):
             self.board.make_move(move)
             self.switch_turn()
