@@ -20,7 +20,7 @@ class Move:
 
     @property
     def is_capture(self) -> bool:
-        return self.piece_captured is not None
+        return self.target_piece is not None
 
     @property
     def is_double_pawn_push(self) -> bool:
