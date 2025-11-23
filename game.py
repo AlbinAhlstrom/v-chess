@@ -32,7 +32,7 @@ class Game:
     def add_to_history(self):
         self.history.append(deepcopy(self.board))
 
-    def move_is_legal(self, move):
+    def move_is_legal(self, move, verbose=False):
         """Determine if a move is legal.
         - Has to move a piece of the current players color
         - Movement has to correspond to the pieces capabilities
@@ -50,19 +50,23 @@ class Game:
         target = move.end.piece
 
         if piece is None:
-            print("No piece")
+            if verbose:
+                print("No piece")
             return False
 
         if piece.color != self.current_player:
-            print("Wrong piece color")
+            if verbose:
+                print("Wrong piece color")
             return False
 
         if end.coordinate not in piece.moves:
-            print("Move not in piece moveset")
+            if verbose:
+                print("Move not in piece moveset")
             return False
 
         if target and target.color == self.current_player:
-            print("Can't capture own piece")
+            if verbose:
+                print("Can't capture own piece")
             return False
 
         if (
@@ -71,17 +75,56 @@ class Game:
             and target is None
             and end != self.board.en_passant_square
         ):
-            print("Can only move pawn diagonal to capture")
+            if verbose:
+                print("Can only move pawn diagonal to capture")
             return False
+
         if isinstance(piece, Pawn) and move.is_capture and start.col == end.col:
-            print("Pawns can't capture forwards.")
+            if verbose:
+                print("Pawns can't capture forwards.")
             return False
 
         if not self.board.path_is_clear(move.start, move.end):
-            print("Path is blocked.")
+            if verbose:
+                print("Path is blocked.")
+            return False
+
+        if self.king_left_in_check(move):
+            if verbose:
+                print("King left in check.")
             return False
 
         return True
+
+    def get_all_legal_moves(self) -> list[Move]:
+        legal_moves = []
+
+        for piece in self.board.current_players_pieces:
+            start_square = piece.square
+
+            for end_coord in piece.moves:
+                end_square = self.board.get_square(end_coord)
+
+                candidate_move = self.board.get_move(start_square, end_square)
+
+                if self.move_is_legal(candidate_move):
+                    legal_moves.append(candidate_move)
+
+        return legal_moves
+
+    @property
+    def is_checkmate(self) -> bool:
+        if not self.board.current_player_in_check:
+            return False
+
+        return len(self.get_all_legal_moves()) == 0
+
+    @property
+    def is_draw(self) -> bool:
+        if self.board.current_player_in_check:
+            return False
+
+        return len(self.get_all_legal_moves()) == 0
 
     def render(self):
         """Print the board."""
@@ -89,12 +132,28 @@ class Game:
             pieces = [self.board.get_square((row, col)).piece or 0 for col in range(8)]
             print(pieces)
 
-    def make_move(self, move: Move):
+    def king_left_in_check(self, move: Move) -> bool:
         self.add_to_history()
         self.execute_piece_movement(move)
-        if self.board.current_player_in_check:
-            self.undo_last_move()
-            print("King is left in check.")
+        check = self.board.current_player_in_check
+        self.undo_last_move()
+        self.switch_current_player()
+        return check
+
+    def make_move(self, move: Move):
+        """Make a move.
+
+        Refetching board squares is necessary due to making a move
+        and reverting another board object. Since move references the old
+        board object new squares need to be fetched.
+        """
+        start_square = self.board.get_square(move.start.coordinate)
+        end_square = self.board.get_square(move.end.coordinate)
+
+        move = self.board.get_move(start_square, end_square)
+
+        self.add_to_history()
+        self.execute_piece_movement(move)
         self.switch_current_player()
 
     def execute_piece_movement(self, move: Move):
