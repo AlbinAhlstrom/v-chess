@@ -38,6 +38,7 @@ class Game:
         - Capturing own pieces is not allowed
         - Path has to be clear (Doesn't apply for knights)
         - Pawn can only move diagonal if capturing or en passant
+        - Pawns can only make non-capturing moves forward
         TODO: *Current* - Can't move into check
         TODO: - Must unckeck oneself if in check
         TODO: - Castling is allowed
@@ -70,6 +71,9 @@ class Game:
             and end != self.board.en_passant_square
         ):
             print("Can only move pawn diagonal to capture")
+            return False
+        if isinstance(piece, Pawn) and move.is_capture and start.col == end.col:
+            print("Pawns can't capture forwards.")
             return False
 
         return self.board.path_is_clear(move.start, move.end)
