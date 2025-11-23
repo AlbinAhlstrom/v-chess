@@ -71,6 +71,10 @@ class Board:
     def squares(self):
         return [self.get_square((row, col)) for row in range(8) for col in range(8)]
 
+    @property
+    def pieces(self):
+        return [square.piece for square in self.squares if square.piece]
+
     def make_move(self, move: Move):
         piece = move.piece
         if move.target_piece or move.is_en_passant:
