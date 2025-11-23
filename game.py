@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Optional
 
 from chess.board import Board
@@ -22,14 +23,13 @@ class Game:
         self.is_over = False
         self.winner = None
         self.history = []
-        self.last_move: Move = None
 
     def switch_current_player(self):
         """Switch current player to the opponent."""
         self.current_player = self.current_player.opposite
 
     def add_to_history(self):
-        self.history.append(self.board)
+        self.history.append(deepcopy(self.board))
 
     def move_is_legal(self, move):
         """Determine if a move is legal.
@@ -85,7 +85,6 @@ class Game:
 
     def make_move(self, move: Move):
         self.execute_piece_movement(move)
-        self.last_move = move
         self.switch_current_player()
 
     def execute_piece_movement(self, move: Move):
@@ -100,23 +99,13 @@ class Game:
             en_passant_sq = self.board.get_square(move.piece.en_passant_square)
             self.board.en_passant_square = en_passant_sq
 
-    def undo_move(self, move: Move):
-        if move.is_en_passant:
-            move.end.piece = None
-            original_location = Coordinate(move.start.row, move.end.col)
-            capture_square = self.board.get_square(original_location)
-            capture_square.piece = move.target_piece
-        else:
-            move.end.piece = move.target_piece
-        move.start.piece = move.piece
+    def undo_last_move(self):
+        """Revert to the previous board state."""
+        if not self.history:
+            raise ValueError("No moves to undo.")
 
-        self.board = self.history.pop(-1)
+        self.board = self.history.pop()
         self.switch_current_player()
-
-    def undo_last_move(self) -> None:
-        if self.last_move is None:
-            raise AttributeError("Can't undo last move since it's not recorded.")
-        return self.undo_move(self.last_move)
 
     @property
     def repetitions_of_position(self) -> int:

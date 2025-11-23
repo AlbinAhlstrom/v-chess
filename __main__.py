@@ -29,6 +29,7 @@ def execute_action(action: str, game):
             end = game.board.get_square(action[2:])
             move = game.board.get_move(start, end)
             print(f"{move.__dict__=}")
+            game.add_to_history()
             game.make_move(move)
 
 
@@ -52,7 +53,6 @@ def main():
 
     game = Game()
     while True:
-        game.add_to_history()
         game.render()
         print()
         print(f"Current players king in check={game.board.current_player_in_check}")
