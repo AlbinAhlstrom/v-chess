@@ -104,14 +104,6 @@ class Board:
         elif self.player_to_move == Color.BLACK:
             return self.white_pieces
 
-    def make_move(self, move: Move):
-        piece = move.piece
-        if move.target_piece or move.is_en_passant:
-            move.target_piece.square.piece = None
-        move.start.piece = None
-        move.end.piece = piece
-        piece.has_moved = True
-
     def path_is_clear(self, start_square: Square, end_square: Square) -> bool:
         piece = start_square.piece
         if not hasattr(piece, "lines"):
