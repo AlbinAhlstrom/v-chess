@@ -41,7 +41,7 @@ class Game:
         - Movement has to correspond to the pieces capabilities
         - Capturing own pieces is not allowed
         - Path has to be clear (Doesn't apply for knights)
-        TODO: - Pawn can only move diagonal if capturing or en passant
+        - Pawn can only move diagonal if capturing or en passant
         TODO: - Can't move into check
         TODO: - Must unckeck oneself if in check
         TODO: - Castling is allowed
