@@ -22,13 +22,20 @@ def execute_action(action: str, game):
     match action:
         case "u":
             game.undo_last_move()
+        case "0-0":
+            game.add_to_history()
+            game.board.short_castle()
+            game.switch_current_player()
+        case "0-0-0":
+            game.add_to_history()
+            game.board.long_castle()
+            game.switch_current_player()
         case _:
             if len(action) != 4:
                 print("Move must consist of two valid squares without separation.")
             start = game.board.get_square(action[:2])
             end = game.board.get_square(action[2:])
             move = game.board.get_move(start, end)
-            print(f"{move.__dict__=}")
 
             if game.move_is_legal(move):
                 game.make_move(move)
@@ -57,12 +64,6 @@ def main():
     game = Game()
     while True:
         game.render()
-        print()
-        print(f"Current players king in check={game.board.current_player_in_check}")
-        print("Valid actions: ")
-        print("Move - 'e2e4'")
-        print("Undo - u")
-        print(f"{str(game.board.en_passant_square)=}")
         action = input("Enter a move: ")
         execute_action(action, game)
 

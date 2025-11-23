@@ -124,13 +124,22 @@ class Board:
         return True
 
     @property
-    def current_player_in_check(self) -> bool:
+    def current_players_king(self) -> "King":
         from chess.piece.king import King
 
         kings = self.get_pieces(King, self.player_to_move)
         assert len(kings) == 1, "Multiple kings of same color found"
-        king = kings[0]
+        return kings[0]
 
+    @property
+    def current_players_rooks(self) -> list["Rook"]:
+        from chess.piece.rook import Rook
+
+        return self.get_pieces(Rook, self.player_to_move)
+
+    @property
+    def current_player_in_check(self) -> bool:
+        king = self.current_players_king
         return any(
             [king.square.coordinate in piece.moves for piece in self.opponent_pieces]
         )
@@ -147,3 +156,77 @@ class Board:
             target_piece = target_square.piece
 
         return Move(start, end, piece, target_piece)
+
+    @property
+    def short_castle_allowed(self) -> bool:
+        king = self.current_players_king
+        if king.has_moved:
+            return False
+        try:
+            rook = [
+                rook for rook in self.current_players_rooks if rook.square.col == 7
+            ][0]
+            if rook.has_moved:
+                return False
+        except IndexError:
+            return False
+
+        if self.player_to_move == Color.BLACK:
+            squares_to_check = [(0, 5), (0, 6)]
+        else:
+            squares_to_check = [(7, 5), (7, 6)]
+
+        path_blocked = any(self.get_square(sq).is_occupied for sq in squares_to_check)
+        if path_blocked:
+            return False
+
+        return True
+
+    @property
+    def long_castle_allowed(self) -> bool:
+        king = self.current_players_king
+        if king.has_moved:
+            return False
+        try:
+            rook = [
+                rook for rook in self.current_players_rooks if rook.square.col == 0
+            ][0]
+            if rook.has_moved:
+                return False
+        except IndexError:
+            return False
+
+        if self.player_to_move == Color.BLACK:
+            squares_to_check = [(0, 1), (0, 2), (0, 3)]
+        else:
+            squares_to_check = [(7, 1), (7, 2), (7, 3)]
+
+        path_blocked = any(self.get_square(sq).is_occupied for sq in squares_to_check)
+        if path_blocked:
+            return False
+
+        return True
+
+    def short_castle(self):
+        king = self.current_players_king
+        rook = [rook for rook in self.current_players_rooks if rook.square.col == 7][0]
+
+        king.square.piece = None
+        rook.square.piece = None
+
+        king_square = (0, 6) if self.player_to_move == Color.BLACK else (7, 6)
+        rook_square = (0, 5) if self.player_to_move == Color.BLACK else (7, 5)
+        self.get_square(king_square).piece = king
+        self.get_square(rook_square).piece = rook
+
+    def long_castle(self):
+        king = self.current_players_king
+        rook = [rook for rook in self.current_players_rooks if rook.square.col == 0][0]
+
+        king.square.piece = None
+        rook.square.piece = None
+
+        king_square = (0, 2) if self.player_to_move == Color.BLACK else (7, 2)
+        rook_square = (0, 3) if self.player_to_move == Color.BLACK else (7, 3)
+        self.get_square(king_square).piece = king
+        self.get_square(rook_square).piece = rook
