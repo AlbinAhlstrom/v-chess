@@ -83,6 +83,20 @@ class Board:
     def black_pieces(self):
         return [piece for piece in self.pieces if piece.color == Color.BLACK]
 
+    @property
+    def current_players_pieces(self):
+        if self.player_to_move == Color.WHITE:
+            return self.white_pieces
+        elif self.player_to_move == Color.BLACK:
+            return self.black_pieces
+
+    @property
+    def opponent_pieces(self):
+        if self.player_to_move == Color.WHITE:
+            return self.black_pieces
+        elif self.player_to_move == Color.BLACK:
+            return self.white_pieces
+
     def make_move(self, move: Move):
         piece = move.piece
         if move.target_piece or move.is_en_passant:
