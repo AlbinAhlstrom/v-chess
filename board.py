@@ -104,25 +104,6 @@ class Board:
         elif self.player_to_move == Color.BLACK:
             return self.white_pieces
 
-    def path_is_clear(self, start_square: Square, end_square: Square) -> bool:
-        piece = start_square.piece
-        if not hasattr(piece, "lines"):
-            return True
-
-        path = [line for line in piece.lines if end_square in line]
-        assert len(path) == 1, f"Expected one path, found: {path}"
-
-        for square in path[0]:
-            square = self.get_square(square)
-            if square == end_square:
-                break
-
-            if square.is_occupied:
-                print("Path blocked")
-                return False
-
-        return True
-
     @property
     def current_players_king(self) -> "King":
         from chess.piece.king import King
@@ -157,28 +138,103 @@ class Board:
 
         return Move(start, end, piece, target_piece)
 
+    def path_is_clear(self, start_square: Square, end_square: Square) -> bool:
+        piece = start_square.piece
+        if not hasattr(piece, "lines"):
+            return True
+
+        start_row, start_col = start_square.coordinate.row, start_square.coordinate.col
+        end_row, end_col = end_square.coordinate.row, end_square.coordinate.col
+
+        d_row = end_row - start_row
+        d_col = end_col - start_col
+
+        step_row = 0 if d_row == 0 else d_row // abs(d_row)
+        step_col = 0 if d_col == 0 else d_col // abs(d_col)
+
+        current_row = start_row + step_row
+        current_col = start_col + step_col
+
+        while (current_row, current_col) != (end_row, end_col):
+            if not (0 <= current_row < 8 and 0 <= current_col < 8):
+                break
+
+            if self.get_square((current_row, current_col)).is_occupied:
+                return False
+
+            current_row += step_row
+            current_col += step_col
+
+        return True
+
+    def is_square_attacked(self, target_square: Square, attacker_color: Color) -> bool:
+        from chess.piece.sliding_piece import SlidingPiece
+        from chess.piece.pawn import Pawn
+
+        attackers = self.get_pieces(color=attacker_color)
+        target_coord = target_square.coordinate
+
+        for piece in attackers:
+            if isinstance(piece, SlidingPiece):
+                d_row = target_coord.row - piece.square.row
+                d_col = target_coord.col - piece.square.col
+
+                if d_row == 0 and d_col == 0:
+                    continue
+
+                if abs(d_row) != abs(d_col) and d_row != 0 and d_col != 0:
+                    continue
+
+                step_row = 0 if d_row == 0 else d_row // abs(d_row)
+                step_col = 0 if d_col == 0 else d_col // abs(d_col)
+
+                direction_tuple = (step_row, step_col)
+                allowed_directions = [d.value for d in piece.moveset.value]
+
+                if direction_tuple in allowed_directions:
+                    if self.path_is_clear(piece.square, target_square):
+                        return True
+
+            elif isinstance(piece, Pawn):
+                attack_row = piece.square.row + piece.direction
+                attack_cols = [piece.square.col - 1, piece.square.col + 1]
+
+                if target_coord.row == attack_row and target_coord.col in attack_cols:
+                    return True
+
+            else:
+                if target_coord in piece.moves:
+                    return True
+
+        return False
+
     @property
     def short_castle_allowed(self) -> bool:
         king = self.current_players_king
         if king.has_moved:
             return False
+
+        opponent = self.player_to_move.opposite
+
+        if self.is_square_attacked(king.square, opponent):
+            return False
+
         try:
-            rook = [
-                rook for rook in self.current_players_rooks if rook.square.col == 7
-            ][0]
+            rook = [r for r in self.current_players_rooks if r.square.col == 7][0]
             if rook.has_moved:
                 return False
         except IndexError:
             return False
 
-        if self.player_to_move == Color.BLACK:
-            squares_to_check = [(0, 5), (0, 6)]
-        else:
-            squares_to_check = [(7, 5), (7, 6)]
+        row = 0 if self.player_to_move == Color.BLACK else 7
+        path_cols = [5, 6]
 
-        path_blocked = any(self.get_square(sq).is_occupied for sq in squares_to_check)
-        if path_blocked:
-            return False
+        for col in path_cols:
+            sq = self.get_square((row, col))
+            if sq.is_occupied:
+                return False
+            if self.is_square_attacked(sq, opponent):
+                return False
 
         return True
 
@@ -187,23 +243,29 @@ class Board:
         king = self.current_players_king
         if king.has_moved:
             return False
+
+        opponent = self.player_to_move.opposite
+
+        if self.is_square_attacked(king.square, opponent):
+            return False
+
         try:
-            rook = [
-                rook for rook in self.current_players_rooks if rook.square.col == 0
-            ][0]
+            rook = [r for r in self.current_players_rooks if r.square.col == 0][0]
             if rook.has_moved:
                 return False
         except IndexError:
             return False
 
-        if self.player_to_move == Color.BLACK:
-            squares_to_check = [(0, 1), (0, 2), (0, 3)]
-        else:
-            squares_to_check = [(7, 1), (7, 2), (7, 3)]
+        row = 0 if self.player_to_move == Color.BLACK else 7
 
-        path_blocked = any(self.get_square(sq).is_occupied for sq in squares_to_check)
-        if path_blocked:
+        if any(self.get_square((row, c)).is_occupied for c in [1, 2, 3]):
             return False
+
+        path_cols = [2, 3]
+        for col in path_cols:
+            sq = self.get_square((row, col))
+            if self.is_square_attacked(sq, opponent):
+                return False
 
         return True
 
