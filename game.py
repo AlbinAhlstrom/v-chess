@@ -123,17 +123,18 @@ class Game:
         try:
             start_square = self.board.get_square(move[:2])
             end_square = self.board.get_square(move[2:])
-            piece = start_square.piece
-            target_piece = end_square.piece
-            move = Move(start_square, end_square, piece, target_piece)
-
-            if move.is_en_passant:
-                capture_square = Coordinate(start_square.row, end_square.col)
-                target_piece = self.board.get_square(capture_square).piece
-                move = Move(start_square, end_square, piece, target_piece)
-            return move
         except ValueError:
             print("Move must consist of two valid squares without separation")
+
+        piece = start_square.piece
+        target_piece = end_square.piece
+        move = Move(start_square, end_square, piece, target_piece)
+
+        if move.is_en_passant:
+            capture_square = Coordinate(start_square.row, end_square.col)
+            target_piece = self.board.get_square(capture_square).piece
+            move = Move(start_square, end_square, piece, target_piece)
+        return move
 
     def get_move_from_input(self):
         while True:
