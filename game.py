@@ -25,7 +25,7 @@ class Game:
 
         self.is_over = False
         self.winner = None
-        self.move_history = []
+        self.history = []
 
     def switch_turn(self):
         """Switch current player to the opponent."""
@@ -89,10 +89,14 @@ class Game:
             print(pieces)
 
     def take_turn(self):
-        self.board.history.append(self.board.board.copy())
         move = get_move_from_input(self.board)
         if self.move_is_legal(move):
             self.board.make_move(move)
             self.switch_turn()
+            self.history.append(self.board.copy())
         else:
             print("Not a legal move")
+
+    @property
+    def repetitions_of_position(self) -> int:
+        return sum(1 for past in self.history if past.board == self.board)

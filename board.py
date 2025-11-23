@@ -12,7 +12,6 @@ class Board:
     def __init__(
         self,
         board: dict[tuple[int, int], Square],
-        history: list[Board],
         player_to_move: Color,
         castling_allowed: list[Color],
         en_passant_square: Square | None,
@@ -53,7 +52,7 @@ class Board:
 
         return cls(
             board=board,
-            history=[],
+            history=[board.copy()],
             player_to_move=Color.WHITE,
             castling_allowed=[Color.WHITE, Color.BLACK],
             en_passant_square=None,
