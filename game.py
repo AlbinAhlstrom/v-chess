@@ -16,11 +16,7 @@ class Game:
 
     def __init__(self, board: Optional[Board] = None):
         self.board = board or Board.starting_setup()
-
-        self.player_white = Color.WHITE
-        self.player_black = Color.BLACK
-
-        self.current_player = self.player_white
+        self.current_player = Color.WHITE
 
         self.is_over = False
         self.winner = None
@@ -28,11 +24,7 @@ class Game:
 
     def switch_turn(self):
         """Switch current player to the opponent."""
-        self.current_player = (
-            self.player_black
-            if self.current_player == self.player_white
-            else self.player_white
-        )
+        self.current_player = self.current_player.opposite
         self.board.player_to_move = self.current_player
 
     def move_is_legal(self, move):

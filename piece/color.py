@@ -12,5 +12,9 @@ class Color(Enum):
     BLACK = 0
     WHITE = 1
 
+    @property
+    def opposite(self):
+        return Color.BLACK if self == Color.WHITE else Color.WHITE
+
     def __eq__(self, other) -> bool:
         return isinstance(other, Color) and self.value == other.value
