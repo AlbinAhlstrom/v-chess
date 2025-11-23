@@ -88,7 +88,7 @@ class Game:
         self.switch_current_player()
 
     def execute_piece_movement(self, move: Move):
-        if move.target_piece or move.is_en_passant:
+        if move.target_piece:
             move.target_piece.square.piece = None
 
         move.start.piece = None
