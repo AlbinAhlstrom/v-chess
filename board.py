@@ -1,6 +1,7 @@
 from string import ascii_lowercase
 
 from chess.piece.color import Color
+from chess.piece.piece import Piece
 from chess.square import Square, Coordinate
 from chess.move import Move
 
@@ -133,7 +134,21 @@ class Board:
 
         return True
 
-    def in_check() -> bool:
+    @property
+    def current_player_in_check(self) -> bool:
+        from chess.piece.king import King
+
+        kings = self.get_pieces(King, self.player_to_move)
+        assert len(kings) == 1, "Multiple kings of same color found"
+        king = kings[0]
+
+        print(
+            f"King in check = {any([king.square.coordinate in piece.moves for piece in self.opponent_pieces])}"
+        )
+        return any(
+            [king.square.coordinate in piece.moves for piece in self.opponent_pieces]
+        )
+
         return False
 
     @property
