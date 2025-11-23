@@ -29,8 +29,12 @@ def execute_action(action: str, game):
             end = game.board.get_square(action[2:])
             move = game.board.get_move(start, end)
             print(f"{move.__dict__=}")
-            game.add_to_history()
-            game.make_move(move)
+
+            if game.move_is_legal(move):
+                game.add_to_history()
+                game.make_move(move)
+            else:
+                print("Please make a legal move.")
 
 
 def main():
