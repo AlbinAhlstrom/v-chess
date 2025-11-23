@@ -79,6 +79,9 @@ class Game:
 
         return self.board.path_is_clear(move.start, move.end)
 
+    def move_is_into_check(move: Move) -> bool:
+        return False
+
     def render(self):
         """Print the board."""
         for row in range(8):
