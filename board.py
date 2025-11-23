@@ -67,6 +67,10 @@ class Board:
     def get_piece(self, coordinate):
         return self.get_square(coordinate).piece
 
+    @property
+    def squares(self):
+        return [self.get_square((row, col)) for row in range(8) for col in range(8)]
+
     def make_move(self, move: Move):
         piece = move.piece
         if move.target_piece or move.is_en_passant:
