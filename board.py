@@ -212,18 +212,22 @@ class Board:
     def short_castle_allowed(self) -> bool:
         king = self.current_players_king
         if king.has_moved:
+            print("King has moved.")
             return False
 
         opponent = self.player_to_move.opposite
 
         if self.is_square_attacked(king.square, opponent):
+            print("Can't castle out of check.")
             return False
 
         try:
             rook = [r for r in self.current_players_rooks if r.square.col == 7][0]
             if rook.has_moved:
+                print(f"Rook {rook.square} has moved.")
                 return False
         except IndexError:
+            print("No rook on the H-file.")
             return False
 
         row = 0 if self.player_to_move == Color.BLACK else 7
@@ -232,8 +236,10 @@ class Board:
         for col in path_cols:
             sq = self.get_square((row, col))
             if sq.is_occupied:
+                print(f"Square {sq} is occupied.")
                 return False
             if self.is_square_attacked(sq, opponent):
+                print(f"Can't castle through {sq} which is in check.")
                 return False
 
         return True
@@ -242,29 +248,35 @@ class Board:
     def long_castle_allowed(self) -> bool:
         king = self.current_players_king
         if king.has_moved:
+            print("King has moved.")
             return False
 
         opponent = self.player_to_move.opposite
 
         if self.is_square_attacked(king.square, opponent):
+            print("Can't castle out of check.")
             return False
 
         try:
             rook = [r for r in self.current_players_rooks if r.square.col == 0][0]
             if rook.has_moved:
+                print(f"Rook {rook.square} has moved.")
                 return False
         except IndexError:
+            print("No rook on the A-file.")
             return False
 
         row = 0 if self.player_to_move == Color.BLACK else 7
 
         if any(self.get_square((row, c)).is_occupied for c in [1, 2, 3]):
+            print(f"Path is occupied.")
             return False
 
         path_cols = [2, 3]
         for col in path_cols:
             sq = self.get_square((row, col))
             if self.is_square_attacked(sq, opponent):
+                print(f"Can't castle through {sq} which is in check.")
                 return False
 
         return True
