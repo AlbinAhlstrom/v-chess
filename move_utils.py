@@ -2,7 +2,6 @@ from enum import Enum
 from typing import Iterable
 
 from chess.square import Square, Coordinate
-from chess.move import Move
 from chess.board import Board
 
 
@@ -43,6 +42,8 @@ def get_line_from(square: Coordinate, direction: Direction):
 
 
 def get_move_from_input(board):
+    from chess.move import Move
+
     while True:
         move_str = input("Enter a move (e.g. e2e4) or square to debug: ")
         try:

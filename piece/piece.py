@@ -4,7 +4,6 @@ from enum import Enum
 
 from chess.square import Square
 from chess.piece.color import Color
-from chess.move_utils import get_line_from
 
 
 @dataclass
@@ -60,6 +59,8 @@ class Piece(ABC):
         return self.__str__()
 
     def get_lines(self, moveset: Iterable[Direction]):
+        from chess.move_utils import get_line_from
+
         return [
             get_line_from(self.square.coordinate, direction.value)
             for direction in moveset.value

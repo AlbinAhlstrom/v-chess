@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 
 from chess.square import Square
-from chess.piece import Piece
 from chess.piece.pawn import Pawn
 
 
@@ -30,6 +29,8 @@ class Move:
 
     @property
     def is_double_pawn_push(self) -> bool:
+        from chess.piece.piece import Piece
+
         print(f"{isinstance(self.piece, Pawn)=}")
         print(f"{self.start.row - self.end.row=}")
         return isinstance(self.piece, Pawn) and abs(self.start.row - self.end.row) == 2

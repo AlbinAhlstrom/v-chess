@@ -5,6 +5,7 @@ from chess.move import Move
 from chess.piece.color import Color
 from chess.piece.sliding_piece import SlidingPiece
 from chess.piece.pawn import Pawn
+from chess.move_utils import get_move_from_input
 
 
 class Game:
@@ -87,6 +88,7 @@ class Game:
 
     def take_turn(self):
         self.board.history.append(self.board.copy())
+        move = get_move_from_input(board)
         if self.move_is_legal(move):
             self.board.make_move(move)
             print(f"{move.is_double_pawn_push=}")

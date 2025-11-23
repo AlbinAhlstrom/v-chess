@@ -1,11 +1,5 @@
 from string import ascii_lowercase
 
-from chess.piece.rook import Rook
-from chess.piece.knight import Knight
-from chess.piece.bishop import Bishop
-from chess.piece.queen import Queen
-from chess.piece.king import King
-from chess.piece.pawn import Pawn
 from chess.piece.color import Color
 from chess.square import Square, Coordinate
 from chess.move import Move
@@ -33,6 +27,13 @@ class Board:
     @classmethod
     def starting_setup(cls) -> "Board":
         """Create the initial chessboard setup."""
+        from chess.piece.rook import Rook
+        from chess.piece.knight import Knight
+        from chess.piece.bishop import Bishop
+        from chess.piece.queen import Queen
+        from chess.piece.king import King
+        from chess.piece.pawn import Pawn
+
         board = {}
 
         for row in range(8):
