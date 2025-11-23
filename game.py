@@ -27,6 +27,7 @@ class Game:
     def switch_current_player(self):
         """Switch current player to the opponent."""
         self.current_player = self.current_player.opposite
+        self.board.player_to_move = self.current_player
 
     def add_to_history(self):
         self.history.append(deepcopy(self.board))
@@ -39,8 +40,8 @@ class Game:
         - Path has to be clear (Doesn't apply for knights)
         - Pawn can only move diagonal if capturing or en passant
         - Pawns can only make non-capturing moves forward
-        TODO: *Current* - Can't move into check
-        TODO: - Must unckeck oneself if in check
+        - Can't move into check
+        - Must unckeck oneself if in check
         TODO: - Castling is allowed
         """
         start = move.start
@@ -76,10 +77,11 @@ class Game:
             print("Pawns can't capture forwards.")
             return False
 
-        return self.board.path_is_clear(move.start, move.end)
+        if not self.board.path_is_clear(move.start, move.end):
+            print("Path is blocked.")
+            return False
 
-    def move_is_into_check(move: Move) -> bool:
-        return False
+        return True
 
     def render(self):
         """Print the board."""
@@ -88,7 +90,11 @@ class Game:
             print(pieces)
 
     def make_move(self, move: Move):
+        self.add_to_history()
         self.execute_piece_movement(move)
+        if self.board.current_player_in_check:
+            self.undo_last_move()
+            print("King is left in check.")
         self.switch_current_player()
 
     def execute_piece_movement(self, move: Move):

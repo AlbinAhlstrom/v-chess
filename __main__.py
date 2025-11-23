@@ -31,7 +31,6 @@ def execute_action(action: str, game):
             print(f"{move.__dict__=}")
 
             if game.move_is_legal(move):
-                game.add_to_history()
                 game.make_move(move)
             else:
                 print("Please make a legal move.")
