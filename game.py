@@ -34,6 +34,7 @@ class Game:
             if self.current_player == self.player_white
             else self.player_white
         )
+        self.board.player_to_move = self.current_player
 
     def move_is_legal(self, move):
         """Determine if a move is legal.
