@@ -49,3 +49,7 @@ class Pawn(Piece):
     @property
     def en_passant_square(self) -> Coordinate:
         return Coordinate(self.square.row - self.direction, self.square.col)
+
+    @property
+    def char(self):
+        return "P" if self.color == Color.WHITE else "p"

@@ -32,3 +32,7 @@ class King(Piece):
     @property
     def value(self):
         return inf
+
+    @property
+    def char(self):
+        return "K" if self.color == Color.WHITE else "k"

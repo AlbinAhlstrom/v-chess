@@ -21,3 +21,7 @@ class Queen(SlidingPiece):
     @property
     def value(self):
         return 9
+
+    @property
+    def char(self):
+        return "Q" if self.color == Color.WHITE else "q"

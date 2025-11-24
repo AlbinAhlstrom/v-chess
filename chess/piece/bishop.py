@@ -21,3 +21,7 @@ class Bishop(SlidingPiece):
     @property
     def value(self):
         return 3
+
+    @property
+    def char(self):
+        return "B" if self.color == Color.WHITE else "b"

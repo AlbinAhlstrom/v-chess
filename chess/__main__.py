@@ -72,6 +72,7 @@ def main():
             print("Draw!")
             break
         game.render()
+        print(game.board.fen)
         player = "White" if game.current_player.value == 1 else "Black"
         print(f"Player to move: {player}")
         action = input("Enter a move: ")

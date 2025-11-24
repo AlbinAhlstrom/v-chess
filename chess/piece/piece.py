@@ -1,6 +1,5 @@
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import Enum
 
 from chess.square import Square
 from chess.piece.color import Color
@@ -22,7 +21,8 @@ class Piece(ABC):
     square: Square = None
     has_moved: bool = False
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def moves(self, board: Board) -> list[Square]:
         """Return all theoretically possible moves for the piece.
 
@@ -46,13 +46,18 @@ class Piece(ABC):
         """
         ...
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def value(self) -> int:
         """Return the conventional point value of the piece."""
         ...
 
     @abstractmethod
     def __str__(self): ...
+
+    @property
+    @abstractmethod
+    def char(self): ...
 
     @property
     def piece_type(self):

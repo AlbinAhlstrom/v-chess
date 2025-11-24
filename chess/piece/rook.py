@@ -21,3 +21,7 @@ class Rook(SlidingPiece):
     @property
     def value(self):
         return 5
+
+    @property
+    def char(self):
+        return "R" if self.color == Color.WHITE else "r"

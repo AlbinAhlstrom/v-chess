@@ -31,3 +31,7 @@ class Knight(Piece):
     @property
     def value(self):
         return 3
+
+    @property
+    def char(self):
+        return "N" if self.color == Color.WHITE else "n"
