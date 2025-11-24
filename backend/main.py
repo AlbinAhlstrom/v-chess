@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from chess.game import Game
 from chess.board import Board
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -20,11 +22,27 @@ app.add_middleware(
 )
 
 board = Board.starting_setup()
+game = Game(board)
+
+
+class MoveRequest(BaseModel):
+    move_uci: str
 
 
 @app.get("/api/board")
 def get_board_state():
     """Returns the current state of the board."""
 
-    board_fen = board.fen
+    board_fen = game.board.fen
     return {"status": "ok", "fen": board_fen, "message": "Initial board state loaded."}
+
+
+@app.post("/api/move")
+def make_move(move_request: MoveRequest):
+    """Makes a move."""
+    move = move_request.move_uci
+    fen = game.execute_action(move)
+    return {
+        "fen": fen,
+        "status": "success",
+    }

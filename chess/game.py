@@ -20,6 +20,32 @@ class Game:
         self.winner = None
         self.history = []
 
+    def execute_action(self, uci_string: str) -> str:
+        match uci_string:
+            case "u":
+                self.undo_last_move()
+            case "0-0":
+                if self.board.short_castle_allowed:
+                    self.short_castle()
+            case "0-0-0":
+                if self.board.long_castle_allowed:
+                    self.long_castle()
+            case _:
+                move = Move.from_uci_string(uci_string, self.board)
+                if self.move_is_legal(move):
+                    self.make_move(move)
+        return self.board.fen
+
+    def short_castle(self):
+        self.add_to_history()
+        self.board.short_castle()
+        self.switch_current_player()
+
+    def long_castle(self):
+        self.add_to_history()
+        self.board.long_castle()
+        self.switch_current_player()
+
     def switch_current_player(self):
         """Switch current player to the opponent."""
         self.board.player_to_move = self.board.player_to_move.opposite

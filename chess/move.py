@@ -1,7 +1,9 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Optional
 
 from chess.square import Square
 from chess.piece.pawn import Pawn
+from chess.piece.piece import Piece
 
 
 @dataclass(frozen=True)
@@ -11,7 +13,7 @@ class Move:
     piece: Piece
     target_piece: Optional[Piece] = None
     was_first_move: bool = False
-    promotion_piece: Piece = None
+    promotion_piece: Optional[Piece] = None
     is_castling: bool = False
 
     @property
@@ -37,3 +39,10 @@ class Move:
             and self.target_piece is None
             and self.start.col != self.end.col
         )
+
+    @classmethod
+    def from_uci_string(cls, uci_string, board) -> "Move":
+        start = board.get_square(uci_string[:2])
+        end = board.get_square(uci_string[2:])
+        move = board.get_move(start, end)
+        return move
