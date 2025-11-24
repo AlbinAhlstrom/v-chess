@@ -5,13 +5,14 @@ import './Board.css';
 
 function Board() {
     const [boardArray, setBoardArray] = useState(Array(8).fill(Array(8).fill(null)));
-    const [fen, setFen] = useState('Loading...'); 
+    const [fen, setFen] = useState('Loading...');
+    const [selectedSquare, setSelectedSquare] = useState(null);
 
     useEffect(() => {
-        fetch('/api/board') 
+        fetch('/api/board')
             .then(res => res.json())
             .then(data => {
-                const fenString = data.fen; 
+                const fenString = data.fen;
                 setFen(fenString);
 
                 const newBoardArray = fenToBoardArray(fenString);
@@ -28,7 +29,7 @@ function Board() {
             <div className="chessboard">
                 {boardArray.map((row, rowIndex) => (
                     row.map((pieceChar, colIndex) => (
-                        <Square 
+                        <Square
                             key={`${rowIndex}-${colIndex}`}
                             isLight={isLight(rowIndex, colIndex)}
                             pieceChar={pieceChar}

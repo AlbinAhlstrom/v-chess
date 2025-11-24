@@ -7,6 +7,9 @@ from chess.piece.pawn import Pawn
 from chess.piece.color import Color
 
 
+class IllegalMoveException(Exception): ...
+
+
 class Game:
     """Represents a chess game.
 
@@ -23,28 +26,38 @@ class Game:
     def execute_action(self, uci_string: str) -> str:
         match uci_string:
             case "u":
-                self.undo_last_move()
+                return self.undo_last_move()
+
             case "0-0":
-                if self.board.short_castle_allowed:
-                    self.short_castle()
+                return self.short_castle()
+
             case "0-0-0":
-                if self.board.long_castle_allowed:
-                    self.long_castle()
+                return self.long_castle()
+
             case _:
                 move = Move.from_uci_string(uci_string, self.board)
-                if self.move_is_legal(move):
-                    self.make_move(move)
-        return self.board.fen
+                if not self.move_is_legal(move):
+                    raise IllegalMoveException("Move is not allowed")
+                self.make_move(move)
+                return self.board.fen
 
-    def short_castle(self):
+    def short_castle(self) -> str:
+        if not self.board.short_castle_allowed:
+            raise IllegalMoveException("Short castle not allowed")
+
         self.add_to_history()
         self.board.short_castle()
         self.switch_current_player()
+        return self.board.fen
 
-    def long_castle(self):
+    def long_castle(self) -> str:
+        if not self.board.long_castle_allowed:
+            raise IllegalMoveException("Short castle not allowed")
+
         self.add_to_history()
         self.board.long_castle()
         self.switch_current_player()
+        return self.board.fen
 
     def switch_current_player(self):
         """Switch current player to the opponent."""
@@ -206,13 +219,14 @@ class Game:
             en_passant_sq = self.board.get_square(move.piece.en_passant_square)
             self.board.en_passant_square = en_passant_sq
 
-    def undo_last_move(self):
+    def undo_last_move(self) -> str:
         """Revert to the previous board state."""
         if not self.history:
             raise ValueError("No moves to undo.")
 
         self.board = self.history.pop()
         self.switch_current_player()
+        return self.board.fen
 
     @property
     def repetitions_of_position(self) -> int:

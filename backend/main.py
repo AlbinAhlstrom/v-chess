@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from chess.game import Game
 from chess.board import Board
 from pydantic import BaseModel
+
 
 app = FastAPI()
 
@@ -41,8 +42,19 @@ def get_board_state():
 def make_move(move_request: MoveRequest):
     """Makes a move."""
     move = move_request.move_uci
-    fen = game.execute_action(move)
-    return {
-        "fen": fen,
-        "status": "success",
-    }
+    try:
+        fen = game.execute_action(move)
+        return {
+            "fen": fen,
+            "status": "success",
+        }
+    except Exception as e:
+        print(f"Illegal move attempt: {move}. Error: {e}")
+        raise HTTPException(status_code=400, detail=f"Illegal move: {move}.")
+
+@app.get("api/select")
+def check_piece_selectability():
+
+
+@app.post("api/moves/legal")
+def legal_moves():
