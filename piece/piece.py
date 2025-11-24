@@ -54,6 +54,10 @@ class Piece(ABC):
     @abstractmethod
     def __str__(self): ...
 
+    @property
+    def piece_type(self):
+        return f"{self.color}-{self.__class__.__name__.lower()}"
+
     def __repr__(self):
         # TODO: Return proper repr once board representation is implemented
         return self.__str__()
