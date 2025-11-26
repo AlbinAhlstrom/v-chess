@@ -1,4 +1,3 @@
-from 
 from dataclasses import dataclass
 
 from chess.coordinate import Coordinate
@@ -28,15 +27,18 @@ class Move:
         return move_str
 
     @classmethod
-    def from_uci(cls, uci_string: str, player_to_move: Color) -> "Move":
-        start = Coordinate.from_any(uci_string[:2])
-        end = Coordinate.from_any(uci_string[2:])
+    def from_uci(cls, uci_str: str, player_to_move: Color = Color.WHITE) -> "Move":
+        if not 3 > len(uci_str) < 6:
+            print(f"Expected uci-string got {uci_str}")
+        start = Coordinate.from_any(uci_str[:2])
+        end = Coordinate.from_any(uci_str[2:])
 
-        promotion_char = uci_string[4:]
-        piece = piece_from_char[promotion_char](player_to_move) if promotion_char else None
+        promotion_char = uci_str[4:]
+        piece = (
+            piece_from_char[promotion_char](player_to_move) if promotion_char else None
+        )
 
         return cls(start, end, piece)
-
 
     def __str__(self) -> str:
         return self.uci
