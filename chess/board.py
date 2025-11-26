@@ -15,6 +15,8 @@ T = TypeVar("T", bound=Piece)
 class Board:
     """Represents the current state of a chessboard."""
 
+    START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
     def __init__(
         self,
         board: dict[Coordinate, Piece | None],
@@ -33,8 +35,7 @@ class Board:
 
     @classmethod
     def starting_setup(cls) -> "Board":
-        start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-        return cls.from_fen(start_fen)
+        return cls.from_fen(cls.START_FEN)
 
     def get_piece(self, coordinate: str | tuple | Coordinate) -> Piece | None:
         return self.board.get(Coordinate.from_any(coordinate))
