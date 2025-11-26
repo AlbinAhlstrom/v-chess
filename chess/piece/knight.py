@@ -1,4 +1,3 @@
-from chess.coordinate import Coordinate
 from chess.enums import Color, Moveset
 from chess.piece.piece import Piece
 

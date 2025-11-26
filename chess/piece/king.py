@@ -1,10 +1,10 @@
 from math import inf
 
-from chess.piece.piece import SlidingPiece
+from chess.piece.piece import Piece
 from chess.enums import Color, Moveset
 
 
-class King(SlidingPiece):
+class King(Piece):
     """King piece representation.
 
     Moves one square in any direction.

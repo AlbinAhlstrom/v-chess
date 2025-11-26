@@ -1,48 +1,35 @@
 from dataclasses import dataclass
-from typing import Optional
 
-from chess.square import Square
-from chess.piece.pawn import Pawn
+from chess.coordinate import Coordinate
 from chess.piece.piece import Piece
 
 
 @dataclass(frozen=True)
 class Move:
-    start: Square
-    end: Square
-    piece: Piece
-    target_piece: Optional[Piece] = None
-    was_first_move: bool = False
-    promotion_piece: Optional[Piece] = None
+    start: Coordinate
+    end: Coordinate
+    promotion_piece: Piece | None = None
     is_castling: bool = False
+    is_en_passant: bool = False
 
     @property
     def is_promotion(self) -> bool:
         return self.promotion_piece is not None
 
     @property
-    def is_capture(self) -> bool:
-        return self.target_piece is not None
-
-    @property
-    def is_double_pawn_push(self) -> bool:
-        from chess.piece.pawn import Pawn
-
-        return isinstance(self.piece, Pawn) and abs(self.start.row - self.end.row) == 2
-
-    @property
-    def is_en_passant(self) -> bool:
-        from chess.piece.piece import Piece
-
-        return (
-            isinstance(self.piece, Pawn)
-            and self.target_piece is None
-            and self.start.col != self.end.col
-        )
+    def uci(self) -> str:
+        """Returns the move in UCI format (e.g., 'e2e4', 'a7a8q')."""
+        move_str = f"{self.start}{self.end}"
+        if self.promotion_piece:
+            move_str += self.promotion_piece.fen
+        return move_str
 
     @classmethod
-    def from_uci_string(cls, uci_string, board) -> "Move":
+    def from_uci(cls, uci_string, board) -> "Move":
         start = board.get_square(uci_string[:2])
         end = board.get_square(uci_string[2:])
         move = board.get_move(start, end)
         return move
+
+    def __str__(self) -> str:
+        return self.uci
