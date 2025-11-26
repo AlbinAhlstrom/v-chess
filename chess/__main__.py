@@ -1,48 +1,16 @@
-from chess.piece.rook import Rook
-from chess.piece.knight import Knight
-from chess.piece.bishop import Bishop
-from chess.piece.queen import Queen
-from chess.piece.king import King
-from chess.piece.pawn import Pawn
-from chess.piece.color import Color
 from chess.board import Board
-from chess.game import Game
 from chess.move import Move
-from chess.square import Square, Coordinate
 
 
-def get_square_from_string(square: str, board: Board) -> tuple[Square]:
-    try:
-        return board.get_square(square)
-    except ValueError:
-        print(f"{square} is not a valid square.")
+def make_move(uci_str: str, board: Board):
+    move = Move.from_uci(uci_str)
+    board.make_move(move)
 
 
-def execute_action(action: str, game):
-    match action:
-        case "u":
-            game.undo_last_move()
-        case "0-0":
-            if game.board.short_castle_allowed:
-                game.add_to_history()
-                game.board.short_castle()
-                game.switch_current_player()
-        case "0-0-0":
-            if game.board.long_castle_allowed:
-                game.add_to_history()
-                game.board.long_castle()
-                game.switch_current_player()
-        case _:
-            if len(action) != 4:
-                print("Move must consist of two valid squares without separation.")
-            start = game.board.get_square(action[:2])
-            end = game.board.get_square(action[2:])
-            move = game.board.get_move(start, end)
-
-            if game.move_is_legal(move):
-                game.make_move(move)
-            else:
-                print("Please make a legal move.")
+def render(board: Board):
+    grid = [[board.get_piece((r, c)) or 0 for c in range(8)] for r in range(8)]
+    for row in grid:
+        print([f"{piece}" for piece in row])
 
 
 def main():
@@ -63,20 +31,12 @@ def main():
         [♖, ♘, ♗, ♕, ♔, ♗, ♘, ♖]
     """
 
-    game = Game()
+    board = Board.starting_setup()
     while True:
-        if game.is_checkmate:
-            print("Checkmate!")
-            break
-        if game.is_draw:
-            print("Draw!")
-            break
-        game.render()
-        print(game.board.fen)
-        player = game.board.player_to_move
-        print(f"Player to move: {player}")
-        action = input("Enter a move: ")
-        execute_action(action, game)
+        render(board)
+        print(f"Player to move: {board.player_to_move}")
+        uci_str = input("Enter a move: ")
+        make_move(uci_str, board)
 
 
 if __name__ == "__main__":
