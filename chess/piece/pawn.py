@@ -1,5 +1,5 @@
 from itertools import chain
-from chess.coordinate import Square
+from chess.square import Square
 from chess.enums import Color, Direction, Moveset
 from chess.piece.piece import Piece
 

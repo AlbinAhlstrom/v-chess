@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from itertools import chain
 
-from chess.coordinate import Square
-from chess.enums import Color, Direction, Moveset
+from chess.square import Square
+from chess.enums import Color, Moveset
 
 
 class Piece(ABC):

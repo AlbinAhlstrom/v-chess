@@ -7,7 +7,7 @@ from chess.enums import Color, CastlingRight, Direction
 from chess.piece.pawn import Pawn
 from chess.piece.king import King
 from chess.piece.piece import Piece
-from chess.coordinate import Square
+from chess.square import Square
 
 
 T = TypeVar("T", bound=Piece)

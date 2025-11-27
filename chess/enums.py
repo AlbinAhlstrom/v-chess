@@ -1,6 +1,6 @@
 from enum import Enum, StrEnum
 
-from chess.coordinate import Square
+from chess.square import Square
 
 
 class Color(StrEnum):

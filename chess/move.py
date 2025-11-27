@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from chess.coordinate import Square
+from chess.square import Square
 from chess.enums import Color
 from chess.piece.piece import Piece
 from chess.piece import piece_from_char
