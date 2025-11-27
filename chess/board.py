@@ -7,7 +7,7 @@ from chess.enums import Color, CastlingRight, Direction
 from chess.piece.pawn import Pawn
 from chess.piece.king import King
 from chess.piece.piece import Piece
-from chess.coordinate import Coordinate
+from chess.coordinate import Square
 
 
 T = TypeVar("T", bound=Piece)
@@ -20,14 +20,14 @@ class Board:
 
     def __init__(
         self,
-        board: dict[Coordinate, Piece | None],
+        board: dict[Square, Piece | None],
         player_to_move: Color,
         castling_rights: list[CastlingRight],
-        en_passant_square: Coordinate | None,
+        en_passant_square: Square | None,
         halfmove_clock: int,
         fullmove_count: int,
     ):
-        self.board: dict[Coordinate, Piece | None] = board
+        self.board: dict[Square, Piece | None] = board
         self.player_to_move = player_to_move
         self.castling_rights = castling_rights
         self.en_passant_square = en_passant_square
@@ -38,18 +38,18 @@ class Board:
     def starting_setup(cls) -> "Board":
         return cls.from_fen(cls.START_FEN)
 
-    def get_piece(self, coordinate: str | tuple | Coordinate) -> Piece | None:
-        return self.board.get(Coordinate.from_any(coordinate))
+    def get_piece(self, coordinate: str | tuple | Square) -> Piece | None:
+        return self.board.get(Square.from_any(coordinate))
 
-    def set_piece(self, piece: Piece | None, coordinate: str | tuple | Coordinate):
-        self.board[Coordinate.from_any(coordinate)] = piece
+    def set_piece(self, piece: Piece | None, coordinate: str | tuple | Square):
+        self.board[Square.from_any(coordinate)] = piece
 
-    def remove_piece(self, target_coord: str | tuple | Coordinate) -> None:
+    def remove_piece(self, target_coord: str | tuple | Square) -> None:
         self.set_piece(None, target_coord)
 
-    def _execute_castling_rook_move(self, target_coord: Coordinate):
+    def _execute_castling_rook_move(self, target_coord: Square):
         rook_col = 0 if target_coord.col == 2 else 7
-        rook_coord = Coordinate.from_any((target_coord.row, rook_col))
+        rook_coord = Square.from_any((target_coord.row, rook_col))
         rook = self.get_piece(rook_coord)
 
         if rook is None:
@@ -120,7 +120,7 @@ class Board:
         self._update_castling_rights(piece, move.start)
         self.player_to_move = self.player_to_move.opposite
 
-    def unblocked_path(self, piece: Piece, path: list[Coordinate]) -> list[Coordinate]:
+    def unblocked_path(self, piece: Piece, path: list[Square]) -> list[Square]:
         try:
             stop_index = next(
                 i for i, coord in enumerate(path) if self.get_piece(coord) is not None
@@ -135,7 +135,7 @@ class Board:
         else:
             return path[:stop_index]
 
-    def pseudo_legal_end_squares(self, piece: Piece) -> list[Coordinate]:
+    def pseudo_legal_end_squares(self, piece: Piece) -> list[Square]:
         unblocked_paths = [
             self.unblocked_path(piece, path) for path in piece.theoretical_move_paths
         ]
@@ -151,7 +151,7 @@ class Board:
             return en_passant_square
         return None
 
-    def _update_castling_rights(self, moved_piece: Piece, start: Coordinate):
+    def _update_castling_rights(self, moved_piece: Piece, start: Square):
         if isinstance(moved_piece, King):
             self.castling_rights.remove(CastlingRight.short(moved_piece.color))
             self.castling_rights.remove(CastlingRight.long(moved_piece.color))
@@ -160,7 +160,7 @@ class Board:
         elif start.col == 0:
             self.castling_rights.remove(CastlingRight.long(moved_piece.color))
 
-    def move_piece(self, piece: Piece, end: Coordinate):
+    def move_piece(self, piece: Piece, end: Square):
         if piece.square is None:
             raise ValueError("Piece has no square.")
 
@@ -203,7 +203,7 @@ class Board:
         board = cls._get_board_from_fen(fen_parts[0])
         active_color = Color(fen_parts[1])
         castling_rights = CastlingRight.from_fen(fen_parts[2])
-        en_passant = None if fen_parts[3] == "-" else Coordinate.from_any(fen_parts[3])
+        en_passant = None if fen_parts[3] == "-" else Square.from_any(fen_parts[3])
 
         try:
             halfmove_clock = int(fen_parts[4])
@@ -221,9 +221,9 @@ class Board:
         )
 
     @staticmethod
-    def _get_board_from_fen(fen_board) -> dict[Coordinate, Piece | None]:
-        board: dict[Coordinate, Piece | None] = {
-            Coordinate(r, c): None for r in range(8) for c in range(8)
+    def _get_board_from_fen(fen_board) -> dict[Square, Piece | None]:
+        board: dict[Square, Piece | None] = {
+            Square(r, c): None for r in range(8) for c in range(8)
         }
         fen_rows = fen_board.split("/")
         for row, fen_row in enumerate(fen_rows):
@@ -238,7 +238,7 @@ class Board:
                     if piece_type is None:
                         raise ValueError(f"Invalid piece in FEN: {char}")
                     piece = piece_type(piece_color)
-                    coord = Coordinate(row, col + empty_squares)
+                    coord = Square(row, col + empty_squares)
                     board[coord] = piece
                     piece.square = coord
         return board
@@ -247,7 +247,7 @@ class Board:
         empty_squares = 0
         fen_row_string = ""
         for col in range(8):
-            coord = Coordinate(row, col)
+            coord = Square(row, col)
             piece = self.board.get(coord)
 
             if piece is None:

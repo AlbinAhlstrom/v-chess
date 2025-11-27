@@ -1,5 +1,5 @@
 from itertools import chain
-from chess.coordinate import Coordinate
+from chess.coordinate import Square
 from chess.enums import Color, Direction, Moveset
 from chess.piece.piece import Piece
 
@@ -44,7 +44,7 @@ class Pawn(Piece):
         return [forward, *captures]
 
     @property
-    def pseudo_legal_moves(self) -> list[Coordinate]:
+    def pseudo_legal_moves(self) -> list[Square]:
         """All moves legal on an empty board"""
         return list(chain.from_iterable(self.all_directions_array))
 

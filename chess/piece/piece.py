@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from itertools import chain
 
-from chess.coordinate import Coordinate
+from chess.coordinate import Square
 from chess.enums import Color, Direction, Moveset
 
 
@@ -20,7 +20,7 @@ class Piece(ABC):
     MAX_SQUARES: int = 7
 
     def __init__(
-        self, color: Color, square: Coordinate | None = None, has_moved: bool = False
+        self, color: Color, square: Square | None = None, has_moved: bool = False
     ):
         self.color = color
         self.square = square
@@ -55,35 +55,16 @@ class Piece(ABC):
     def css_class(self):
         return f"{self.color}-{self.__class__.__name__.lower()}"
 
-    def _get_moves_in_direction(
-        self, direction: Direction, max_steps: int = 7
-    ) -> list["Coordinate"]:
-        """Generates all theoretical moves along a single vector."""
-        possible_moves = []
-        d_col, d_row = direction.value
-
-        if self.square is None:
-            raise AttributeError("Can't calculate moves for piece with no square.")
-
-        for dist in range(1, max_steps + 1):
-            new_c = self.square.col + (d_col * dist)
-            new_r = self.square.row + (d_row * dist)
-
-            if 0 <= new_r < 8 and 0 <= new_c < 8:
-                possible_moves.append(self.square.__class__(new_r, new_c))
-            else:
-                break
-
-        return possible_moves
-
     @property
-    def theoretical_move_paths(self) -> list[list[Coordinate]]:
+    def theoretical_move_paths(self) -> list[list[Square]]:
         """Array of coordinates reachable when moving in all directions"""
-        directions = self.MOVESET.value
-        max = self.MAX_SQUARES
-        return [self._get_moves_in_direction(dir, max) for dir in directions]
+        if self.square == None:
+            raise AttributeError("No square.")
+
+        paths = [direction.get_path(self.square) for direction in self.MOVESET.value]
+        return [path[: self.MAX_SQUARES + 1] for path in paths]
 
     @property
-    def theoretical_moves(self) -> list[Coordinate]:
+    def theoretical_moves(self) -> list[Square]:
         """All moves legal on an empty board"""
         return list(chain.from_iterable(self.theoretical_move_paths))

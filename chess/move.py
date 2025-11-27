@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from chess.coordinate import Coordinate
+from chess.coordinate import Square
 from chess.enums import Color
 from chess.piece.piece import Piece
 from chess.piece import piece_from_char
@@ -8,8 +8,8 @@ from chess.piece import piece_from_char
 
 @dataclass(frozen=True)
 class Move:
-    start: Coordinate
-    end: Coordinate
+    start: Square
+    end: Square
     promotion_piece: Piece | None = None
     is_castling: bool = False
     is_en_passant: bool = False
@@ -30,8 +30,8 @@ class Move:
     def from_uci(cls, uci_str: str, player_to_move: Color = Color.WHITE) -> "Move":
         if not 3 > len(uci_str) < 6:
             print(f"Expected uci-string got {uci_str}")
-        start = Coordinate.from_any(uci_str[:2])
-        end = Coordinate.from_any(uci_str[2:])
+        start = Square.from_any(uci_str[:2])
+        end = Square.from_any(uci_str[2:])
 
         promotion_char = uci_str[4:]
         piece = (

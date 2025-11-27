@@ -1,6 +1,6 @@
 from enum import Enum, StrEnum
 
-from chess.coordinate import Coordinate
+from chess.coordinate import Square
 
 
 class Color(StrEnum):
@@ -70,7 +70,7 @@ class Direction(Enum):
     L_DOWN_RIGHT = (1, 2)
     L_DOWN_LEFT = (-1, 2)
 
-    def get_path(self, square: Coordinate) -> list[Coordinate]:
+    def get_path(self, square: Square) -> list[Square]:
         """Get all squares in a direction."""
         possible_moves = []
 
@@ -81,7 +81,7 @@ class Direction(Enum):
             new_r = square.row + (d_row * dist)
 
             if 0 <= new_r < 8 and 0 <= new_c < 8:
-                possible_moves.append(Coordinate(new_r, new_c))
+                possible_moves.append(Square(new_r, new_c))
             else:
                 break
 

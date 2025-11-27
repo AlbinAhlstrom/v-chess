@@ -4,7 +4,7 @@ from chess.enums import Direction
 
 
 @dataclass(frozen=True)
-class Coordinate:
+class Square:
     """Represents a coordinate on a chessboard.
 
     Allows for row and column access as well as algebraic notation.
@@ -22,7 +22,7 @@ class Coordinate:
             raise ValueError(f"Invalid col {self.col}")
 
     @classmethod
-    def from_str(cls, notation: str) -> "Coordinate":
+    def from_str(cls, notation: str) -> "Square":
         if len(notation) != 2:
             raise ValueError(f"Invalid length of {notation=}")
 
@@ -39,7 +39,7 @@ class Coordinate:
         return cls(row, col)
 
     @classmethod
-    def from_any(cls, coordinate: str | tuple | "Coordinate") -> "Coordinate":
+    def from_any(cls, coordinate: str | tuple | "Square") -> "Square":
         if isinstance(coordinate, cls):
             return coordinate
         elif isinstance(coordinate, str):
@@ -49,7 +49,7 @@ class Coordinate:
         else:
             raise TypeError(f"Invalid coordinate type: {type(coordinate)}")
 
-    def get_adjacent(self, direction: Direction) -> Coordinate:
+    def get_adjacent(self, direction: Direction) -> Square:
         """Return a new coordinate one step in a direction"""
         d_col, d_row = direction.value
         return self.from_any((self.row + d_row, self.col + d_col))
