@@ -24,7 +24,7 @@ class Pawn(Piece):
         if self.color == Color.WHITE:
             return Moveset.PAWN_WHITE_CAPTURE
         else:
-            return Moveset.PAWN_WHITE_CAPTURE
+            return Moveset.PAWN_BLACK_CAPTURE
 
     @property
     def capture_squares(self) -> list[Square]:
