@@ -21,7 +21,7 @@ def main():
         uci_str = input("Enter a move: ")
 
         try:
-            move = Move.from_uci(uci_str)
+            move = Move.from_uci(uci_str, board.player_to_move)
         except ValueError as e:
             print(e)
             continue
