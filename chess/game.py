@@ -4,7 +4,6 @@ from chess.board import Board
 from chess.move import Move
 from chess.piece.king import King
 from chess.piece.pawn import Pawn
-from chess.piece.piece import Piece
 from chess.enums import Color
 
 
