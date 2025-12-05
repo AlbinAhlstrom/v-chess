@@ -21,9 +21,12 @@ class King(Piece):
         if self.has_moved:
             return super().theoretical_move_paths
 
+        if self.square is None:
+            return []
+
         castling = {Direction.LEFT, Direction.RIGHT}
         return [
-            direction.get_path(self.square, self.MAX_STEPS if direction in castling else 2)
+            direction.get_path(self.square, 2 if direction in castling else self.MAX_STEPS)
             for direction in self.moveset
         ]
 
