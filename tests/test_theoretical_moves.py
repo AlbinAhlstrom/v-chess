@@ -45,6 +45,7 @@ def test_theoretical_moves_count_king(square: Square, piece: Piece):
 
     if piece.__class__ is not King:
         return
+    piece.has_moved = True
 
     row_idx = square.row
     col_idx = square.col
@@ -165,13 +166,14 @@ def test_theoretical_moves_count_limits(square: Square, piece: Piece):
     empty_board_with_piece(square, piece)
 
     assert piece is not None
+    piece.square = square
 
     moves_count = len(piece.theoretical_moves)
     piece_type = piece.__class__
 
     if issubclass(piece_type, (King, Knight)):
-        assert moves_count <= 8
-
+        # Castling included
+        assert moves_count <= 10
     elif issubclass(piece_type, (Rook, Bishop)):
         assert moves_count <= 14
     elif piece_type is Queen:
