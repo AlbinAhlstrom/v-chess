@@ -20,6 +20,10 @@ class Pawn(Piece):
             return Direction.DOWN
 
     @property
+    def promotion_row(self) -> int:
+        return 0 if self.color == Color.WHITE else 7
+
+    @property
     def capture_moveset(self) -> Moveset:
         if self.color == Color.WHITE:
             return {Direction.UP_LEFT, Direction.UP_RIGHT}

@@ -63,6 +63,8 @@ class Game:
                 and move.end != self.board.en_passant_square
             ):
                 return False, "Diagonal pawn move requires a capture."
+            if move.end.row == piece.promotion_row and not move.is_promotion:
+                return False, "Pawns must promote when reaching last row."
 
         if not self.board.unblocked_paths(piece):
             return False, "Path is blocked."
