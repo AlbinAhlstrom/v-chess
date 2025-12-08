@@ -117,6 +117,10 @@ class Board:
         return self.player_in_check(self.player_to_move.opposite)
 
     def _execute_castling_rook_move(self, target_coord: Square):
+        print("target_coord")
+        print("Board:")
+        print(self.__dict__)
+        self.update_castling_rights()
         rook_col = 0 if target_coord.col == 2 else 7
         rook_coord = Square.from_any((target_coord.row, rook_col))
         rook = self.get_piece(rook_coord)
@@ -185,7 +189,6 @@ class Board:
             move.promotion_piece.square = move.end
 
         self.en_passant_square = self._update_en_passant_square(move)
-        self._update_castling_rights(piece, move.start)
         self.switch_active_player()
 
     def unblocked_path(self, piece: Piece, path: list[Square]) -> list[Square]:
@@ -225,38 +228,39 @@ class Board:
             rights = {rights}
         for castling_right in rights:
             if castling_right in self.castling_rights:
+                print(f"removing castling {rights=}")
                 self.castling_rights.remove(castling_right)
 
 
-    def _update_castling_rights(self, moved_piece: Piece, start: Square):
-
-        short = CastlingRight.short(moved_piece.color)
-        long = CastlingRight.long(moved_piece.color)
-        is_rook_on_start_rank = isinstance(moved_piece, Rook) and (start.row == 0 or start.row == 7)
+    def update_castling_rights(self):
         rook_squares = {str(rook.square) for rook in self.get_pieces(Rook)}
         king_squares = {str(king.square) for king in self.get_pieces(King)}
-        remove_rights = {
+        king_starting_squares = {
             "e1": {CastlingRight.WHITE_SHORT, CastlingRight.WHITE_LONG},
             "e8": {CastlingRight.BLACK_SHORT, CastlingRight.BLACK_LONG},
+        }
+        rook_starting_squares = {
             "a1": {CastlingRight.WHITE_LONG},
             "a8": {CastlingRight.BLACK_LONG},
             "h1": {CastlingRight.WHITE_SHORT},
             "h8": {CastlingRight.BLACK_SHORT},
         }
-        for square in remove_rights:
-            castling_rights = remove_rights[square]
-            if not square in rook_squares | king_squares:
-                for castling_right in castling_rights:
-                    if castling_right in self.castling_rights:
-                        self.castling_rights.remove(castling_right)
+        for square in king_starting_squares:
+            if not square in king_squares:
+                self.remove_castling_rights(king_starting_squares[square])
+        for square in rook_starting_squares:
+            if not square in rook_squares:
+                self.remove_castling_rights(rook_starting_squares[square])
 
-        if (is_rook_on_start_rank and start.col == 7) or isinstance(moved_piece, King):
-            if short in self.castling_rights:
-                self.castling_rights.remove(short)
 
-        if (is_rook_on_start_rank and start.col == 0) or isinstance(moved_piece, King):
-            if long in self.castling_rights:
-                self.castling_rights.remove(long)
+    def increment_turn_counters(self, move: Move):
+        if self or self.is_capture(move):
+            self.halfmove_clock = 0
+        else:
+            self.halfmove_clock += 1
+
+        if self.player_to_move == Color.WHITE:
+            self.fullmove_count += 1
 
     def move_piece(self, piece: Piece, end: Square):
         if piece.square is None:
