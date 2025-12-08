@@ -6,7 +6,7 @@ import { createGame } from '../../api.js'
 import { useState, useRef, useEffect } from 'react'
 
 
-export function Pieces() {
+export function Pieces({ onFenChange }) { // Accept onFenChange prop
     const ref = useRef()
     const [fen, setFen] = useState();
     const ws = useRef(null);
@@ -46,6 +46,13 @@ export function Pieces() {
             }
         };
     }, []);
+
+    // Call onFenChange whenever fen state updates
+    useEffect(() => {
+        if (fen) {
+            onFenChange(fen);
+        }
+    }, [fen, onFenChange]);
 
     const position = fen ? fenToPosition(fen) : [];
 

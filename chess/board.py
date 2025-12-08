@@ -117,9 +117,6 @@ class Board:
         return self.player_in_check(self.player_to_move.opposite)
 
     def _execute_castling_rook_move(self, target_coord: Square):
-        print("target_coord")
-        print("Board:")
-        print(self.__dict__)
         self.update_castling_rights()
         rook_col = 0 if target_coord.col == 2 else 7
         rook_coord = Square.from_any((target_coord.row, rook_col))
@@ -136,7 +133,8 @@ class Board:
     def get_pieces(
         self, piece_type: type[T] = Piece, color: Color | None = None
     ) -> list[T]:
-        pieces = [piece for piece in self.pieces if isinstance(piece, piece_type)]
+        pieces = [piece for piece in self.board.values() if piece]
+        pieces = [piece for piece in pieces if isinstance(piece, piece_type)]
         if color is not None:
             pieces = [piece for piece in pieces if piece.color.value == color.value]
         return pieces
@@ -154,10 +152,7 @@ class Board:
         return self.get_pieces(color=self.player_to_move.opposite)
 
     def make_move(self, move: Move) -> None:
-        """Update piece positions and FEN state variables.
-
-        Assumes that the move is pseudo-legal and legal.
-        """
+        print(f"Board.make_move: Making move {move} on board with FEN: {self.fen}")
         piece = self.get_piece(move.start)
 
         if piece is None:
@@ -166,13 +161,11 @@ class Board:
             raise ValueError(f"Piece {piece} has no square.")
 
         is_castling = isinstance(piece, King) and abs(move.start.col - move.end.col) == 2
+        print(f"Board.make_move: is_castling detected: {is_castling} for piece {piece}")
 
         self.halfmove_clock += 1
         if isinstance(piece, Pawn) or self.is_capture(move):
             self.halfmove_clock = 0
-
-        if self.player_to_move == Color.BLACK:
-            self.fullmove_count += 1
 
         self.move_piece(piece, move.end)
 
@@ -182,7 +175,14 @@ class Board:
             self.remove_piece(captured_coordinate)
 
         if is_castling:
-            self._execute_castling_rook_move(move.end)
+            print(f"Board.make_move: Executing castling rook move for King move {move.end}")
+            try:
+                self._execute_castling_rook_move(move.end)
+            except AttributeError as e:
+                print(f"Board.make_move: AttributeError during castling: {e}")
+                print(f"Board.make_move: Current board FEN: {self.fen}")
+                print(f"Board.make_move: Move that triggered error: {move}")
+                raise e # Re-raise the exception after printing context
 
         if move.is_promotion:
             self.board[move.end] = move.promotion_piece
@@ -228,7 +228,6 @@ class Board:
             rights = {rights}
         for castling_right in rights:
             if castling_right in self.castling_rights:
-                print(f"removing castling {rights=}")
                 self.castling_rights.remove(castling_right)
 
 
@@ -259,8 +258,209 @@ class Board:
         else:
             self.halfmove_clock += 1
 
-        if self.player_to_move == Color.WHITE:
-            self.fullmove_count += 1
+    def move_piece(self, piece: Piece, end: Square):
+        if piece.square is None:
+            raise ValueError("Piece has no square.")
+
+        start = piece.square
+        self.set_piece(piece, end)
+        self.remove_piece(start)
+        piece.square = end
+        piece.has_moved = True
+
+    @property
+    def fen(self) -> str:
+        """Generates the FEN string representing the current board state."""
+        fen_piece_placement = self._get_piece_placement_fen()
+        fen_active_color = self.player_to_move.value
+
+        fen_castling = "".join([r.value for r in self.castling_rights]) or "-"
+
+        fen_en_passant = str(self.en_passant_square) if self.en_passant_square else "-"
+
+        fen_halfmove_clock = str(self.halfmove_clock)
+        fen_fullmove_number = str(self.fullmove_count)
+
+        return " ".join(
+            [
+                fen_piece_placement,
+                fen_active_color,
+                fen_castling,
+                fen_en_passant,
+                fen_halfmove_clock,
+                fen_fullmove_number,
+            ]
+        )
+
+    @classmethod
+    def from_fen(cls, fen: str) -> "Board":
+        fen_parts = fen.split()
+        if len(fen_parts) != 6:
+            raise ValueError("Invalid FEN format: Must contain 6 fields.")
+
+        board = cls._get_board_from_fen(fen_parts[0])
+        active_color = Color(fen_parts[1])
+        castling_rights = CastlingRight.from_fen(fen_parts[2])
+        en_passant = None if fen_parts[3] == "-" else Square.from_any(fen_parts[3])
+
+        try:
+            halfmove_clock = int(fen_parts[4])
+            fullmove_count = int(fen_parts[5])
+        except ValueError:
+            raise ValueError("FEN halfmove and fullmove must be int.")
+
+        return cls(
+            board,
+            active_color,
+            castling_rights,
+            en_passant,
+            halfmove_clock,
+            fullmove_count,
+        )
+
+    @staticmethod
+    def _get_board_from_fen(fen_board) -> dict[Square, Piece | None]:
+        board: dict[Square, Piece | None] = {
+            Square(r, c): None for r in range(8) for c in range(8)
+        }
+        fen_rows = fen_board.split("/")
+        for row, fen_row in enumerate(fen_rows):
+            empty_squares = 0
+            for col, char in enumerate(fen_row):
+                if char.isdigit():
+                    empty_squares += int(char) - 1
+                else:
+                    is_white = char.isupper()
+                    piece_color = Color.WHITE if is_white else Color.BLACK
+                    piece_type = piece_from_char.get(char)
+                    if piece_type is None:
+                        raise ValueError(f"Invalid piece in FEN: {char}")
+                    piece = piece_type(piece_color)
+                    coord = Square(row, col + empty_squares)
+                    board[coord] = piece
+                    piece.square = coord
+        return board
+
+    def _get_fen_row(self, row) -> str:
+        empty_squares = 0
+        fen_row_string = ""
+        for col in range(8):
+            coord = Square(row, col)
+            piece = self.board.get(coord)
+
+            if piece is None:
+                empty_squares += 1
+                continue
+
+            if empty_squares > 0:
+                fen_row_string += str(empty_squares)
+                empty_squares = 0
+
+            fen_row_string += piece.fen
+
+        if empty_squares > 0:
+            fen_row_string += str(empty_squares)
+        return fen_row_string
+
+    def _get_piece_placement_fen(self) -> str:
+        fen_rows = (self._get_fen_row(row) for row in range(8))
+        return "/".join(fen_rows)
+
+    def print(self):
+        """Print the chess board.
+
+        Draws a unicode based 2d-list representing the board state.
+        printed output example:
+            [♜, ♞, ♝, ♛, ♚, ♝, ♞, ♜]
+            [♟, ♟, ♟, ♟, ♟, ♟, ♟, ♟]
+            [0, 0, 0, 0, 0, 0, 0, 0]
+            [0, 0, 0, 0, 0, 0, 0, 0]
+            [0, 0, 0, 0, 0, 0, 0, 0]
+            [0, 0, 0, 0, 0, 0, 0, 0]
+            [♙, ♙, ♙, ♙, ♙, ♙, ♙, ♙]
+            [♖, ♘, ♗, ♕, ♔, ♗, ♘, ♖]
+        """
+        grid = [[self.get_piece((r, c)) or 0 for c in range(8)] for r in range(8)]
+        for row in grid:
+            print([f"{piece}" for piece in row])
+
+    def __str__(self):
+        return self.fen
+
+    def is_pawn_move(self, move: Move) -> bool:
+        return isinstance(self.get_piece(move.start), Pawn)
+
+    def is_capture(self, move: Move) -> bool:
+        return self.get_piece(move.end) is not None or move.is_en_passant
+
+    def unblocked_path(self, piece: Piece, path: list[Square]) -> list[Square]:
+        try:
+            stop_index = next(
+                i for i, coord in enumerate(path) if self.get_piece(coord) is not None
+            )
+        except StopIteration:
+            return path
+
+        target_piece = self.get_piece(path[stop_index])
+
+        if target_piece and target_piece.color != piece.color:
+            return path[: stop_index + 1]
+        else:
+            return path[:stop_index]
+
+    def unblocked_paths(self, piece: Piece) -> list[Square]:
+        """Return all unblocked squares in a piece's moveset"""
+        unblocked_paths = [
+            self.unblocked_path(piece, path) for path in piece.theoretical_move_paths
+        ]
+        return list(chain.from_iterable(unblocked_paths))
+
+    def _update_en_passant_square(self, move: Move):
+        piece = self.get_piece(move.end)
+        if piece is None or piece.square is None:
+            raise ValueError("Invalid piece at move end.")
+        direction = Direction.DOWN if piece.color == Color.WHITE else Direction.UP
+        if isinstance(piece, Pawn) and abs(move.start.row - move.end.row) > 1:
+            en_passant_square = piece.square.adjacent(direction)
+            return en_passant_square
+        return None
+
+    def remove_castling_rights(self, rights: set | CastlingRight):
+        if isinstance(rights, CastlingRight):
+            rights = {rights}
+        for castling_right in rights:
+            if castling_right in self.castling_rights:
+                self.castling_rights.remove(castling_right)
+
+
+    def update_castling_rights(self):
+        rook_squares = {str(rook.square) for rook in self.get_pieces(Rook)}
+        king_squares = {str(king.square) for king in self.get_pieces(King)}
+        king_starting_squares = {
+            "e1": {CastlingRight.WHITE_SHORT, CastlingRight.WHITE_LONG},
+            "e8": {CastlingRight.BLACK_SHORT, CastlingRight.BLACK_LONG},
+        }
+        rook_starting_squares = {
+            "a1": {CastlingRight.WHITE_LONG},
+            "a8": {CastlingRight.BLACK_LONG},
+            "h1": {CastlingRight.WHITE_SHORT},
+            "h8": {CastlingRight.BLACK_SHORT},
+        }
+        for square in king_starting_squares:
+            if not square in king_squares:
+                self.remove_castling_rights(king_starting_squares[square])
+        for square in rook_starting_squares:
+            if not square in rook_squares:
+                self.remove_castling_rights(rook_starting_squares[square])
+
+
+    def increment_turn_counters(self, move: Move):
+        if self or self.is_capture(move):
+            self.halfmove_clock = 0
+        else:
+            self.halfmove_clock += 1
+
+
 
     def move_piece(self, piece: Piece, end: Square):
         if piece.square is None:

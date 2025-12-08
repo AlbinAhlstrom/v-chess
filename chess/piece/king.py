@@ -15,21 +15,6 @@ class King(Piece):
     moveset = Direction.straight_and_diagonal()
     MAX_STEPS = 1
 
-    @property
-    def theoretical_move_paths(self) -> list[list[Square]]:
-        """Move paths adjusted to allow for castling."""
-        if self.has_moved:
-            return super().theoretical_move_paths
-
-        if self.square is None:
-            return []
-
-        castling = {Direction.LEFT, Direction.RIGHT}
-        return [
-            direction.get_path(self.square, 2 if direction in castling else self.MAX_STEPS)
-            for direction in self.moveset
-        ]
-
 
     def __str__(self):
         match self.color:

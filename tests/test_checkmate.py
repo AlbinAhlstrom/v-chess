@@ -17,7 +17,7 @@ def test_checkmate():
 
 
 def test_checkmate_on_backrank():
-    fen = 'Q1q1kbnr/2pppppp/8/2n5/8/8/1PPPPPPP/RNBQKBNR w KQk - 0 11'
+    fen = 'Q1q1kbnr/2pppppp/n7/8/8/8/1PPPPPPP/RNBQKBNR w KQk - 0 11'
     board = Board.from_fen(fen)
     game = Game(board)
     move = Move.from_uci("a8c8")

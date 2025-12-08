@@ -4,8 +4,10 @@ from chess.board import Board
 from chess.move import Move
 from chess.piece.king import King
 from chess.piece.pawn import Pawn
-from chess.enums import Color
+from chess.enums import Color, CastlingRight
+from chess.square import Square
 from chess.exceptions import IllegalMoveException
+from chess.piece.rook import Rook # Import Rook class
 
 
 class Game:
@@ -36,6 +38,7 @@ class Game:
 
     def is_move_pseudo_legal(self, move: Move) -> tuple[bool, str]:
         """Determine if a move is pseudolegal."""
+        print(f"Game.is_move_pseudo_legal: Checking move {move}")
         piece = self.board.get_piece(move.start)
         target = self.board.get_piece(move.end)
 
@@ -44,6 +47,10 @@ class Game:
 
         if piece.color != self.board.player_to_move:
             return False, "Wrong piece color."
+
+        if isinstance(piece, King) and abs(move.start.col - move.end.col) == 2:
+            print(f"Game.is_move_pseudo_legal: Potential castling move: {move}")
+            return self._is_castling_pseudo_legal(move, piece)
 
         if move.end not in piece.theoretical_moves:
             return False, "Move not in piece moveset."
@@ -75,6 +82,52 @@ class Game:
                 return False, "Can't promote to king."
 
         return True, "Move is pseudo legal."
+
+    def _is_castling_pseudo_legal(self, move: Move, piece: King) -> tuple[bool, str]:
+        """Determine if a castling move is pseudolegal."""
+        print(f"Game._is_castling_pseudo_legal: Checking castling for move {move}, piece {piece}")
+        required_right = None
+        squares_to_check = []
+        rook_start_square = None # New variable to store rook's starting square
+
+        if piece.color == Color.WHITE:
+            if move.end == Square(0, 6):  # White Kingside (g1)
+                required_right = CastlingRight.WHITE_SHORT
+                squares_to_check = [Square(0, 5), Square(0, 6)]  # f1, g1
+                rook_start_square = Square(0, 7) # h1
+            elif move.end == Square(0, 2):  # White Queenside (c1)
+                required_right = CastlingRight.WHITE_LONG
+                squares_to_check = [Square(0, 3), Square(0, 2)]  # d1, c1
+                rook_start_square = Square(0, 0) # a1
+        else:  # Black King
+            if move.end == Square(7, 6):  # Black Kingside (g8)
+                required_right = CastlingRight.BLACK_SHORT
+                squares_to_check = [Square(7, 5), Square(7, 6)]  # f8, g8
+                rook_start_square = Square(7, 7) # h8
+            elif move.end == Square(7, 2):  # Black Queenside (c8)
+                required_right = CastlingRight.BLACK_LONG
+                squares_to_check = [Square(7, 3), Square(7, 2)]  # d8, c8
+                rook_start_square = Square(7, 0) # a8
+
+        if required_right is None:
+            return False, "Invalid castling move."
+
+        if required_right not in self.board.castling_rights:
+            return False, f"Castling right {required_right.value} not available."
+
+        # Check for rook presence and type
+        rook_piece = self.board.get_piece(rook_start_square)
+        if not (rook_piece and isinstance(rook_piece, Rook) and rook_piece.color == piece.color):
+            return False, f"Rook not present at {rook_start_square} or is not a {piece.color.name} Rook for castling."
+
+        if self.board.player_in_check(piece.color):
+            return False, "Cannot castle while in check."
+
+        for sq in squares_to_check:
+            if self.board.is_under_attack(sq, piece.color.opposite):
+                return False, f"Cannot castle through or into attacked square {sq}."
+        
+        return True, ""
 
     @property
     def theoretical_moves(self):
@@ -131,11 +184,13 @@ class Game:
         and reverting another board object. Since move references the old
         board object new squares need to be fetched.
         """
+        print(f"Game.take_turn: Received move from frontend: {move}")
         piece = self.board.get_piece(move.start)
         if isinstance(piece, Pawn) and move.is_diagonal and self.board.get_piece(move.end) is None and move.end == self.board.en_passant_square:
             move = Move(move.start, move.end, is_en_passant=True)
 
         is_legal, reason = self.is_move_legal(move)
+        print(f"Game.take_turn: is_move_legal for {move}: {is_legal}, Reason: {reason}")
         if not is_legal:
             raise IllegalMoveException(reason)
 
@@ -156,4 +211,3 @@ class Game:
     @property
     def repetitions_of_position(self) -> int:
         return sum(1 for past in self.history if past.board == self.board)
-
