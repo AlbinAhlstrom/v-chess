@@ -77,7 +77,7 @@ def get_board_state(req: GameRequest):
 @app.post("/api/move")
 def make_move(req: MoveRequest):
     game = get_game(req.game_id)
-    
+
     try:
         move = Move.from_uci(req.move_uci, game.board.player_to_move)
     except ValueError as e:
@@ -86,9 +86,9 @@ def make_move(req: MoveRequest):
     is_legal, reason = game.is_move_legal(move)
     if not is_legal:
         raise HTTPException(status_code=400, detail=f"Illegal move: {reason}")
-    
+
     game.take_turn(move)
-    
+
     status = "active"
     if game.is_checkmate:
         status = "checkmate"
@@ -106,11 +106,11 @@ def make_move(req: MoveRequest):
 @app.post("/api/square/select")
 def check_square_selectability(req: SquareSelection):
     game = get_game(req.game_id)
-    
+
     try:
         piece = game.board.get_piece(req.square)
         is_selectable = bool(piece) and piece.color == game.board.player_to_move
-        
+
         return {
             "is_selectable": is_selectable,
             "status": "success",
@@ -123,14 +123,14 @@ def check_square_selectability(req: SquareSelection):
 @app.post("/api/moves/legal")
 def get_legal_moves_for_square(req: SquareRequest):
     game = get_game(req.game_id)
-    
+
     try:
         sq_obj = Square.from_any(req.square)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid square format.")
 
     piece = game.board.get_piece(sq_obj)
-    
+
     if piece is None:
         return {"moves": [], "status": "success"}
 
@@ -139,7 +139,7 @@ def get_legal_moves_for_square(req: SquareRequest):
 
     all_legal_moves = game.legal_moves
     piece_moves = [
-        m.uci for m in all_legal_moves 
+        m.uci for m in all_legal_moves
         if m.start == sq_obj
     ]
 

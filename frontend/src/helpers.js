@@ -1,5 +1,11 @@
 export const fileIntToString = file => String.fromCharCode(file + 97)
 
+export const coordsToAlgebraic = (fileIndex, rankIndex) => {
+    const file = fileIntToString(fileIndex);
+    const rank = 8 - rankIndex;
+    return `${file}${rank}`;
+};
+
 export const fenToPosition = (fenString) => {
     const piecesFen = fenString.split(' ')[0];
     let position = Array(8).fill().map(() => Array(8).fill(''));
@@ -20,3 +26,7 @@ export const fenToPosition = (fenString) => {
 
     return position;
 };
+
+export const copyPosition = position => {
+    return position
+}
