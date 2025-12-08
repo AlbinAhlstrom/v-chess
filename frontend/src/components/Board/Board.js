@@ -1,5 +1,5 @@
 import './Board.css'
-import { fileIntToString } from '../helpers.js'
+import { fileIntToString } from '../../helpers.js'
 
 const Board = () => {
     const getSquareColor = (i, j) => {
