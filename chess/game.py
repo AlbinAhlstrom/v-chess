@@ -136,9 +136,7 @@ class Game:
         self.increment_turn_counters(move)
 
     def increment_turn_counters(self, move: Move):
-        piece = self.board.get_piece(move.end)
-        is_pawn_move = isinstance(piece, Pawn)
-        if is_pawn_move or move.is_capture:
+        if self.board.is_pawn_move(move) or self.board.is_capture(move):
             self.board.halfmove_clock = 0
         else:
             self.board.halfmove_clock += 1
@@ -158,3 +156,4 @@ class Game:
     @property
     def repetitions_of_position(self) -> int:
         return sum(1 for past in self.history if past.board == self.board)
+

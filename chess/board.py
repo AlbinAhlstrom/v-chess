@@ -162,11 +162,9 @@ class Board:
             raise ValueError(f"Piece {piece} has no square.")
 
         is_castling = isinstance(piece, King) and abs(move.start.col - move.end.col) == 2
-        is_pawn_move = isinstance(piece, Pawn)
-        is_capture = self.get_piece(move.end) is not None or move.is_en_passant
 
         self.halfmove_clock += 1
-        if is_pawn_move or is_capture:
+        if self.is_pawn_move(move) or self.is_capture(move):
             self.halfmove_clock = 0
 
         if self.player_to_move == Color.BLACK:
@@ -186,7 +184,7 @@ class Board:
             self.board[move.end] = move.promotion_piece
             move.promotion_piece.square = move.end
 
-        self.en_passant_square = self._update_en_passant_square(move, is_pawn_move)
+        self.en_passant_square = self._update_en_passant_square(move)
         self._update_castling_rights(piece, move.start)
         self.switch_active_player()
 
@@ -212,12 +210,12 @@ class Board:
         ]
         return list(chain.from_iterable(unblocked_paths))
 
-    def _update_en_passant_square(self, move: Move, is_pawn_move: bool):
+    def _update_en_passant_square(self, move: Move):
         piece = self.get_piece(move.end)
         if piece is None or piece.square is None:
             raise ValueError("Invalid piece at move end.")
         direction = Direction.DOWN if piece.color == Color.WHITE else Direction.UP
-        if is_pawn_move and abs(move.start.row - move.end.row) > 1:
+        if self.is_pawn_move(move) and abs(move.start.row - move.end.row) > 1:
             en_passant_square = piece.square.adjacent(direction)
             return en_passant_square
         return None
@@ -388,3 +386,9 @@ class Board:
 
     def __str__(self):
         return self.fen
+
+    def is_pawn_move(self, move: Move) -> bool:
+        return isinstance(self.get_piece(move.start), Pawn)
+
+    def is_capture(self, move: Move) -> bool:
+        return self.get_piece(move.end) is not None or move.is_en_passant
