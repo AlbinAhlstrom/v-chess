@@ -14,12 +14,17 @@ function Piece({ piece, file, rank }) {
         }, 0)
     }
 
+    const onDragEnd = e => {
+        e.target.style.display = "block"
+    }
+
     return (
         <div
             className={`piece ${piece}`}
             style={pieceStyle}
             draggable={true}
             onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
         />
     );
 }

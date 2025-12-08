@@ -1,15 +1,45 @@
 import './Pieces.css'
 import Piece from './Piece'
 import { fenToPosition, coordsToAlgebraic } from '../../helpers.js'
-import { getFen } from '../../api.js'
-import { useState, useRef } from 'react'
+import { createGame } from '../../api.js'
+import { useState, useRef, useEffect } from 'react'
 
 
 function Pieces() {
     const ref = useRef()
-    const [state, setState] = useState(getFen())
+    const [fen, setFen] = useState();
+    const ws = useRef(null);
 
-    const position = fenToPosition(state);
+    useEffect(() => {
+        const newGame = async () => {
+            const { game_id: newGameId, fen: initialFen } = await createGame();
+            setFen(initialFen);
+
+            ws.current = new WebSocket(`ws://127.0.0.1:8000/ws/${newGameId}`);
+
+            ws.current.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                if (message.type === "game_state") {
+                    setFen(message.fen);
+                } else if (message.type === "error") {
+                    console.error("WebSocket error:", message.message);
+                    // You might want to show a message to the user here
+                }
+            };
+
+            ws.current.onclose = () => console.log("WebSocket disconnected");
+            ws.current.onerror = (error) => console.error("WebSocket error:", error);
+        };
+        newGame();
+
+        return () => {
+            if (ws.current) {
+                ws.current.close();
+            }
+        };
+    }, []);
+
+    const position = fen ? fenToPosition(fen) : [];
 
     const calculateSquare = e => {
         const {width,left,top} = ref.current.getBoundingClientRect()
@@ -19,16 +49,22 @@ function Pieces() {
         return coordsToAlgebraic(file, rank)
     }
 
-    const onDrop = e => {
-        const newPosition = state
+    const onDrop = async e => {
         const toSquare = calculateSquare(e)
-        const [piece, fromFileStr, fromRankStr] = e.dataTransfer.getData("text").split(",")
+        const [, fromFileStr, fromRankStr] = e.dataTransfer.getData("text").split(",")
         const fromFileIndex = parseInt(fromFileStr, 10);
         const fromRankIndex = parseInt(fromRankStr, 10);
         const fromSquare = coordsToAlgebraic(fromFileIndex, fromRankIndex)
-        const newFen = getFen() //state, fromSquare, toSquare)
-        console.log(fromSquare)
-        console.log(toSquare)
+
+        try {
+            const moveUci = `${fromSquare}${toSquare}`;
+            if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+                ws.current.send(JSON.stringify({ type: "move", uci: moveUci }));
+            }
+        } catch (error) {
+            console.error("Failed to make move:", error);
+            // You might want to show a message to the user here
+        }
     }
     const onDragOver = e => e.preventDefault()
 

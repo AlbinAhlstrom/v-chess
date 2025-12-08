@@ -1,30 +1,23 @@
-export const fileIntToString = file => String.fromCharCode(file + 97)
+export const fileIntToString = n => 'abcdefgh'.split('')[n]
+export const coordsToAlgebraic = (file, rank) => `${fileIntToString(file)}${8-rank}`
 
-export const coordsToAlgebraic = (fileIndex, rankIndex) => {
-    const file = fileIntToString(fileIndex);
-    const rank = 8 - rankIndex;
-    return `${file}${rank}`;
-};
-
-export const fenToPosition = (fenString) => {
-    const piecesFen = fenString.split(' ')[0];
-    let position = Array(8).fill().map(() => Array(8).fill(''));
-    let rankIndex = 0;
-    let fileIndex = 0;
-
-    for (const char of piecesFen) {
-        if (char === '/') {
-            rankIndex++;
-            fileIndex = 0;
-        } else if (!isNaN(parseInt(char))) {
-            fileIndex += parseInt(char);
+export const fenToPosition = (fen) => {
+    const [pieceData] = fen.split(" ");
+    const ranks = pieceData.split("/");
+    return ranks.map(rank => {
+      const expandedRank = [];
+      rank.split("").forEach(char => {
+        const charAsInt = parseInt(char, 10);
+        if (isNaN(charAsInt)) {
+          expandedRank.push(char);
         } else {
-            position[rankIndex][fileIndex] = char;
-            fileIndex++;
+          for (let i = 0; i < charAsInt; i++) {
+            expandedRank.push(null);
+          }
         }
-    }
-
-    return position;
+      });
+      return expandedRank;
+    });
 };
 
 export const copyPosition = position => {
