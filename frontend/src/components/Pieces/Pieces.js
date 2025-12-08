@@ -6,12 +6,13 @@ import { createGame } from '../../api.js'
 import { useState, useRef, useEffect } from 'react'
 
 
-function Pieces() {
+export function Pieces() {
     const ref = useRef()
     const [fen, setFen] = useState();
     const ws = useRef(null);
     const [isPromotionDialogOpen, setPromotionDialogOpen] = useState(false);
     const [promotionMove, setPromotionMove] = useState(null);
+    const [gameStatus, setGameStatus] = useState("active"); // Initialize gameStatus
 
     useEffect(() => {
         const newGame = async () => {
@@ -24,6 +25,12 @@ function Pieces() {
                 const message = JSON.parse(event.data);
                 if (message.type === "game_state") {
                     setFen(message.fen);
+                    setGameStatus(message.status); // Update gameStatus
+                    if (message.status === "checkmate") {
+                        console.log("Checkmate detected!");
+                    } else if (message.status === "draw") {
+                        console.log("Draw detected!");
+                    }
                 } else if (message.type === "error") {
                     console.error("WebSocket error:", message.message);
                     // You might want to show a message to the user here
@@ -102,7 +109,7 @@ function Pieces() {
             className="pieces"
             ref={ref}
             onDragOver={onDragOver}
-            onDrop={onDrop}>
+            onDrop={gameStatus === 'active' ? onDrop : undefined}>
 
             {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
 
