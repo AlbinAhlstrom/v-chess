@@ -25,6 +25,10 @@ class Piece(ABC):
         self.has_moved = has_moved
 
     @property
+    def start_rank(self) -> int:
+        return 7 if self.color == Color.WHITE else 0
+
+    @property
     @abstractmethod
     def moveset(self) -> set[Direction]:
         """Return the directions the piece can move in."""

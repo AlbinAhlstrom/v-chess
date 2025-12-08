@@ -13,6 +13,10 @@ class Pawn(Piece):
     moveset = Direction.up_straight_or_diagonal
 
     @property
+    def start_rank(self) -> int:
+        return 6 if self.color == Color.WHITE else 1
+
+    @property
     def direction(self) -> Direction:
         if self.color == Color.WHITE:
             return Direction.UP

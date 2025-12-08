@@ -5,9 +5,7 @@ from chess.move import Move
 from chess.piece.king import King
 from chess.piece.pawn import Pawn
 from chess.enums import Color
-
-
-class IllegalMoveException(Exception): ...
+from chess.exceptions import IllegalMoveException
 
 
 class Game:
@@ -92,6 +90,7 @@ class Game:
 
     @property
     def legal_moves(self) -> list[Move]:
+        self.board.update_castling_rights()
         return [move for move in self.theoretical_moves if self.is_move_legal(move)[0]]
 
     def is_move_legal(self, move: Move) -> tuple[bool, str]:
@@ -142,16 +141,8 @@ class Game:
 
         self.add_to_history()
         self.board.make_move(move)
-        self.increment_turn_counters(move)
-
-    def increment_turn_counters(self, move: Move):
-        if self.board.is_pawn_move(move) or self.board.is_capture(move):
-            self.board.halfmove_clock = 0
-        else:
-            self.board.halfmove_clock += 1
-
-        if self.board.player_to_move == Color.WHITE:
-            self.board.fullmove_count += 1
+        self.board.update_castling_rights()
+        self.board.increment_turn_counters(move)
 
     def undo_last_move(self) -> str:
         """Revert to the previous board state."""
