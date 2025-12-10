@@ -8,8 +8,8 @@ def test_checkmate():
     board = Board.from_fen(fen)
     game = Game(board)
     move = Move.from_uci("d8h4")
-    is_legal, reason = game.is_move_legal(move)
-    assert is_legal, reason
+    is_legal = game.is_move_legal(move)
+    assert is_legal, game.move_legality_reason(move)
     game.take_turn(move)
     assert game.is_over
     assert game.is_checkmate
@@ -21,9 +21,19 @@ def test_checkmate_on_backrank():
     board = Board.from_fen(fen)
     game = Game(board)
     move = Move.from_uci("a8c8")
-    is_legal, reason = game.is_move_legal(move)
-    assert is_legal, reason
+    is_legal = game.is_move_legal(move)
+    assert is_legal, game.move_legality_reason(move)
     game.take_turn(move)
     assert game.is_over
     assert game.is_checkmate
 
+def test_scholars_mate():
+    fen = 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 1'
+    board = Board.from_fen(fen)
+    game = Game(board)
+    move = Move.from_uci("h5f7")
+    is_legal = game.is_move_legal(move)
+    assert is_legal, game.move_legality_reason(move)
+    game.take_turn(move)
+    assert game.is_over
+    assert game.is_checkmate

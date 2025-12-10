@@ -146,17 +146,20 @@ class Game:
     @property
     def legal_moves(self) -> list[Move]:
         self.board.update_castling_rights()
-        return [move for move in self.theoretical_moves if self.is_move_legal(move)[0]]
+        return [move for move in self.theoretical_moves if self.is_move_legal(move)]
 
-    def is_move_legal(self, move: Move) -> tuple[bool, str]:
+    def is_move_legal(self, move: Move) -> bool:
+        return self.move_legality_reason(move) == "Move is legal"
+
+    def move_legality_reason(self, move: Move) -> str:
         is_pseudo_legal, reason = self.is_move_pseudo_legal(move)
         if not is_pseudo_legal:
-            return False, reason
+            return reason
 
         if self.king_left_in_check(move):
-            return False, "King left in check"
+            return "King left in check"
 
-        return True, "Move is legal"
+        return "Move is legal"
 
     def render(self):
         """Print the board."""

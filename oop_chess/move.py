@@ -75,7 +75,7 @@ class Move:
                 move =  cls.from_uci("e8g8")
         else:
             if color == Color.WHITE:
-                move = cls.from_uci("e1c8")
+                move = cls.from_uci("e8c8")
             else:
                 move = cls.from_uci("e8c8")
         return move
@@ -130,7 +130,7 @@ class Move:
         legal_moves = [
             Move(piece.square, end_square, promotion_piece)
             for piece in candidates
-            if game.is_move_legal(Move(piece.square, end_square, promotion_piece))[0]
+            if game.is_move_legal(Move(piece.square, end_square, promotion_piece))
         ]
 
         if len(legal_moves) != 1:
