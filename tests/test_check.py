@@ -1,10 +1,10 @@
 from hypothesis import given, assume, strategies as st
 
-from chess.board import Board
-from chess.game import Game
-from chess.move import Move
-from chess.enums import Color
-from chess.piece import King, Queen, Rook, Bishop, Knight, Pawn
+from oop_chess.board import Board
+from oop_chess.game import Game
+from oop_chess.move import Move
+from oop_chess.enums import Color
+from oop_chess.piece import King, Queen, Rook, Bishop, Knight, Pawn
 
 
 def test_king_attacked_by_pawn_is_check():

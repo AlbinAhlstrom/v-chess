@@ -1,9 +1,9 @@
 from hypothesis import strategies as st
 
-from chess.square import Square
-from chess.enums import Color
-from chess.piece.piece import Piece
-from chess.piece import piece_from_char
+from oop_chess.square import Square
+from oop_chess.enums import Color
+from oop_chess.piece.piece import Piece
+from oop_chess.piece import piece_from_char
 from typing import Type
 
 

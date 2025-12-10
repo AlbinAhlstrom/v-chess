@@ -1,11 +1,11 @@
 from hypothesis import given, strategies as st
-from chess.game import Game
-from chess.board import Board
-from chess.move import Move
-from chess.square import Square
-from chess.enums import Color
-from chess.piece.pawn import Pawn
-from chess.piece.rook import Rook
+from oop_chess.game import Game
+from oop_chess.board import Board
+from oop_chess.move import Move
+from oop_chess.square import Square
+from oop_chess.enums import Color
+from oop_chess.piece.pawn import Pawn
+from oop_chess.piece.rook import Rook
 
 def board():
     """Generates a board in the standard starting position."""
@@ -111,7 +111,7 @@ def test_pseudo_legal_pawn_diagonal_requires_capture(board):
 
     board.set_piece(Pawn(Color.WHITE), start)
     board.remove_piece(end) # Ensure target is empty
-    board.en_passant_square = None # Ensure not en passant
+    board.ep_square = None # Ensure not en passant
 
     move = Move(start, end)
 

@@ -4,10 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import json
 
-from chess.game import Game, IllegalMoveException
-from chess.board import Board
-from chess.move import Move
-from chess.square import Square
+from oop_chess.game import Game, IllegalMoveException
+from oop_chess.board import Board
+from oop_chess.move import Move
+from oop_chess.square import Square
 
 
 app = FastAPI()

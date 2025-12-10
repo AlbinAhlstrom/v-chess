@@ -1,6 +1,6 @@
-from chess.board import Board
-from chess.game import Game
-from chess.move import Move
+from oop_chess.board import Board
+from oop_chess.game import Game
+from oop_chess.move import Move
 
 
 def test_checkmate():

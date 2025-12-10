@@ -1,16 +1,16 @@
 from hypothesis import given
 from math import inf
 
-from chess.piece.bishop import Bishop
-from chess.piece.king import King
-from chess.piece.knight import Knight
-from chess.piece.pawn import Pawn
-from chess.piece.piece import Piece
-from chess.enums import Color
-from chess.board import Board
-from chess.piece.queen import Queen
-from chess.piece.rook import Rook
-from chess.square import Square
+from oop_chess.piece.bishop import Bishop
+from oop_chess.piece.king import King
+from oop_chess.piece.knight import Knight
+from oop_chess.piece.pawn import Pawn
+from oop_chess.piece.piece import Piece
+from oop_chess.enums import Color
+from oop_chess.board import Board
+from oop_chess.piece.queen import Queen
+from oop_chess.piece.rook import Rook
+from oop_chess.square import Square
 from conftest import random_square, random_piece
 
 

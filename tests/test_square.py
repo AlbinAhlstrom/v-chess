@@ -1,5 +1,5 @@
 from hypothesis import given
-from chess.square import Square
+from oop_chess.square import Square
 from conftest import random_row_col, random_square, random_square_str
 
 

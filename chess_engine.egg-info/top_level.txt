@@ -1,5 +1,0 @@
-backend
-chess
-frontend
-tests
-venv

@@ -1,10 +1,10 @@
 from hypothesis import given
 
-from chess.board import Board
-from chess.square import Square
-from chess.piece import Piece
-from chess.piece.pawn import Pawn
-from chess.enums import Color
+from oop_chess.board import Board
+from oop_chess.square import Square
+from oop_chess.piece import Piece
+from oop_chess.piece.pawn import Pawn
+from oop_chess.enums import Color
 from conftest import random_square, random_piece
 from test_theoretical_moves import empty_board_with_piece
 
