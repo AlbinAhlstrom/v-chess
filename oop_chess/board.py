@@ -112,16 +112,16 @@ class Board:
 
         return StatusReason.VALID
 
+    def is_attacking(self, piece, square):
+        if isinstance(piece, Pawn):
+            return square in piece.capture_squares
+        else:
+            return square in self.unblocked_paths(piece)
+
     def is_under_attack(self, square: Square, by_color: Color) -> bool:
         """Check if square is attacked by the given color."""
         attackers = self.get_pieces(color=by_color)
-        for piece in attackers:
-            if isinstance(piece, Pawn):
-                if square in piece.capture_squares:
-                    return True
-            elif square in self.unblocked_paths(piece):
-                return True
-        return False
+        return any([self.is_attacking(piece, square) for piece in attackers])
 
     def player_in_check(self, color: Color) -> bool:
         king = self.get_pieces(King, color)[0]
@@ -179,8 +179,9 @@ class Board:
             raise ValueError(f"No piece found at start coord: {move.start}.")
 
         is_castling = isinstance(piece, King) and abs(move.start.col - move.end.col) == 2
-        is_capture = self.get_piece(move.end) is not None or move.is_en_passant
         is_pawn_move = isinstance(piece, Pawn)
+        is_en_passant = is_pawn_move and move.end == self.ep_square
+        is_capture = self.get_piece(move.end) is not None or is_en_passant
 
         self.halfmove_clock += 1
         if is_pawn_move or is_capture:
@@ -188,7 +189,7 @@ class Board:
 
         self.move_piece(piece, move.end)
 
-        if move.is_en_passant:
+        if is_en_passant:
             direction = Direction.DOWN if piece.color == Color.WHITE else Direction.UP
             captured_coordinate = piece.square.adjacent(direction)
             self.remove_piece(captured_coordinate)
@@ -206,7 +207,7 @@ class Board:
             self.board[move.end] = move.promotion_piece
             move.promotion_piece.square = move.end
 
-        self.ep_square = self._update_en_passant_square(move)
+        self.ep_square = self.get_en_passant_square(move)
         self.switch_active_player()
 
     def unblocked_path(self, piece: Piece, path: list[Square]) -> list[Square]:
@@ -231,10 +232,10 @@ class Board:
         ]
         return list(chain.from_iterable(unblocked_paths))
 
-    def _update_en_passant_square(self, move: Move):
+    def get_en_passant_square(self, move: Move):
         piece = self.get_piece(move.end)
-        if piece is None or piece.square is None:
-            raise ValueError("Invalid piece at move end.")
+        if piece is None:
+            raise ValueError("No piece moved.")
         direction = Direction.DOWN if piece.color == Color.WHITE else Direction.UP
         if isinstance(piece, Pawn) and abs(move.start.row - move.end.row) > 1:
             ep_square = piece.square.adjacent(direction)

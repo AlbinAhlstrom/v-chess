@@ -86,14 +86,14 @@ class Game:
         """Determine if a castling move is pseudolegal."""
         required_right = None
         squares_to_check = []
-        rook_start_square = None # New variable to store rook's starting square
+        rook_start_square = None
 
         if piece.color == Color.WHITE:
             if move.end == Square(7, 6):  # White Kingside (g1)
                 required_right = CastlingRight.WHITE_SHORT
                 squares_to_check = [Square(7, 5), Square(7, 6)]  # f1, g1
                 rook_start_square = Square(7, 7) # h1
-            elif move.end == Square(7, 2):  # White Queenside (c1)
+            else:
                 required_right = CastlingRight.WHITE_LONG
                 squares_to_check = [Square(7, 3), Square(7, 2)]  # d1, c1
                 rook_start_square = Square(7, 0) # a1
@@ -102,7 +102,7 @@ class Game:
                 required_right = CastlingRight.BLACK_SHORT
                 squares_to_check = [Square(0, 5), Square(0, 6)]  # f8, g8
                 rook_start_square = Square(0, 7) # h8
-            elif move.end == Square(0, 2):  # Black Queenside (c8)
+            else:
                 required_right = CastlingRight.BLACK_LONG
                 squares_to_check = [Square(0, 3), Square(0, 2)]  # d8, c8
                 rook_start_square = Square(0, 0) # a8
@@ -113,7 +113,6 @@ class Game:
         if required_right not in self.board.castling_rights:
             return False, f"Castling right {required_right.value} not available."
 
-        # Check for rook presence and type
         rook_piece = self.board.get_piece(rook_start_square)
         if not (rook_piece and isinstance(rook_piece, Rook) and rook_piece.color == piece.color):
             return False, f"Rook not present at {rook_start_square} or is not a {piece.color.name} Rook for castling."
@@ -136,19 +135,7 @@ class Game:
 
         for piece in pieces:
             for end in piece.theoretical_moves:
-                is_en_passant = False
-                if isinstance(piece, Pawn):
-                    # A diagonal pawn move is an en passant if the end square is the
-                    # board's en passant square and there's no piece on it.
-                    if (
-                        abs(piece.square.col - end.col) == 1
-                        and abs(piece.square.row - end.row) == 1
-                        and end == self.board.ep_square
-                        and self.board.get_piece(end) is None
-                    ):
-                        is_en_passant = True
-
-                moves.append(Move(piece.square, end, is_en_passant=is_en_passant))
+                moves.append(Move(piece.square, end))
         return moves
 
 

@@ -153,7 +153,7 @@ def test_theoretical_moves_are_valid(square: Square, piece: Piece):
     assert piece.square is not None
 
     theoretical_moves = piece.theoretical_moves
-    assert len(theoretical_moves) == len(set(theoretical_moves))
+    assert len(theoretical_moves) == len(set(theoretical_moves)), f"Expected: {theoretical_moves}, got: {set(theoretical_moves)}"
 
     for end_square in theoretical_moves:
         assert isinstance(end_square, Square)

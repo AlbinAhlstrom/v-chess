@@ -161,6 +161,10 @@ class Direction(Enum):
         return {cls.UP, cls.UP_LEFT, cls.UP_RIGHT}
 
     @classmethod
+    def down_straight_or_diagonal(cls) -> set[Direction]:
+        return {cls.DOWN, cls.DOWN_LEFT, cls.DOWN_RIGHT}
+
+    @classmethod
     def two_left_or_right(cls) -> set[Direction]:
         return {cls.TWO_LEFT, cls.TWO_RIGHT}
 
