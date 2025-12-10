@@ -41,6 +41,9 @@ class Game:
         piece = self.board.get_piece(move.start)
         target = self.board.get_piece(move.end)
 
+        if move is None:
+            return False, "No move made"
+
         if piece is None:
             return False, "No piece moved."
 
@@ -66,7 +69,7 @@ class Game:
                 and move.end != self.board.ep_square
             ):
                 return False, "Diagonal pawn move requires a capture."
-            if move.end.row == piece.promotion_row and not move.is_promotion:
+            if move.end.row == piece.promotion_row and not move.promotion_piece is not None:
                 return False, "Pawns must promote when reaching last row."
 
         if not isinstance(piece, Pawn):

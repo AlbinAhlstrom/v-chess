@@ -15,10 +15,6 @@ class Move:
     is_en_passant: bool = False
 
     @property
-    def is_promotion(self) -> bool:
-        return self.promotion_piece is not None
-
-    @property
     def is_vertical(self) -> bool:
         return self.start.col == self.end.col
 
