@@ -89,23 +89,23 @@ class Game:
         rook_start_square = None
 
         if piece.color == Color.WHITE:
-            if move.end == Square(7, 6):  # White Kingside (g1)
+            if move.end == Square(7, 6):
                 required_right = CastlingRight.WHITE_SHORT
-                squares_to_check = [Square(7, 5), Square(7, 6)]  # f1, g1
-                rook_start_square = Square(7, 7) # h1
+                squares_to_check = [Square(7, 5), Square(7, 6)]
+                rook_start_square = Square(7, 7)
             else:
                 required_right = CastlingRight.WHITE_LONG
-                squares_to_check = [Square(7, 3), Square(7, 2)]  # d1, c1
-                rook_start_square = Square(7, 0) # a1
-        else:  # Black King
-            if move.end == Square(0, 6):  # Black Kingside (g8)
+                squares_to_check = [Square(7, 3), Square(7, 2)]
+                rook_start_square = Square(7, 0)
+        else:
+            if move.end == Square(0, 6):
                 required_right = CastlingRight.BLACK_SHORT
-                squares_to_check = [Square(0, 5), Square(0, 6)]  # f8, g8
-                rook_start_square = Square(0, 7) # h8
+                squares_to_check = [Square(0, 5), Square(0, 6)]
+                rook_start_square = Square(0, 7)
             else:
                 required_right = CastlingRight.BLACK_LONG
-                squares_to_check = [Square(0, 3), Square(0, 2)]  # d8, c8
-                rook_start_square = Square(0, 0) # a8
+                squares_to_check = [Square(0, 3), Square(0, 2)]
+                rook_start_square = Square(0, 0)
 
         if required_right is None:
             return False, "Invalid castling move."
@@ -172,7 +172,6 @@ class Game:
         self.board = Board.from_fen(self.board.fen)
         self.board.make_move(move)
 
-        # Turn has switched after making move
         is_check = self.board.inactive_player_in_check
 
         self.board = real_board
