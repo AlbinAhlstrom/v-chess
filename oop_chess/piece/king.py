@@ -28,6 +28,14 @@ class King(Piece):
         """Theoretical move paths adjusted to allow for castling."""
         return [direction.get_path(self.square, self._max_steps(direction)) for direction in self.moveset]
 
+    @property
+    def capture_squares(self) -> list[Square]:
+        return [
+            square
+            for direction in self.moveset
+            for square in direction.get_path(self.square, self.MAX_STEPS)
+        ]
+
     def __str__(self):
         match self.color:
             case Color.WHITE:

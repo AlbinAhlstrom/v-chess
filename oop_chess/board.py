@@ -8,6 +8,7 @@ from oop_chess.piece.pawn import Pawn
 from oop_chess.piece.king import King
 from oop_chess.piece.piece import Piece
 from oop_chess.piece.rook import Rook
+from oop_chess.piece.knight import Knight
 from oop_chess.square import Coordinate, NoSquare, Square
 
 
@@ -113,7 +114,7 @@ class Board:
         return StatusReason.VALID
 
     def is_attacking(self, piece, square):
-        if isinstance(piece, Pawn):
+        if isinstance(piece, (Pawn, King, Knight)):
             return square in piece.capture_squares
         else:
             return square in self.unblocked_paths(piece)

@@ -62,3 +62,7 @@ class Piece(ABC):
     def theoretical_moves(self) -> list[Square]:
         """All moves legal on an empty board"""
         return list(chain.from_iterable(self.theoretical_move_paths))
+
+    @property
+    def capture_squares(self) -> list[Square]:
+        return self.theoretical_moves
