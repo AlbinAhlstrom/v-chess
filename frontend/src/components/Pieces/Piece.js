@@ -1,7 +1,7 @@
 import React from 'react';
 import './Pieces.css';
 
-function Piece({ piece, file, rank }) {
+function Piece({ piece, file, rank, onDragStartCallback, onDragEndCallback }) {
 
     const pieceStyle = {
 
@@ -19,6 +19,10 @@ function Piece({ piece, file, rank }) {
 
         e.dataTransfer.effectAllowed = "move"
 
+        if (onDragStartCallback) {
+            onDragStartCallback({ file, rank, piece });
+        }
+
         setTimeout(() => {
 
             e.target.style.display = "none"
@@ -32,6 +36,9 @@ function Piece({ piece, file, rank }) {
     const onDragEnd = e => {
 
         e.target.style.display = "block"
+        if (onDragEndCallback) {
+            onDragEndCallback();
+        }
 
     }
 

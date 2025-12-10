@@ -1,14 +1,17 @@
 import './Pieces.css'
 import Piece from './Piece'
+import LegalMoveDot from '../LegalMoveDot/LegalMoveDot.js';
 import PromotionDialog from '../PromotionDialog/PromotionDialog.js';
-import { fenToPosition, coordsToAlgebraic } from '../../helpers.js'
-import { createGame } from '../../api.js'
+import { fenToPosition, coordsToAlgebraic, algebraicToCoords } from '../../helpers.js'
+import { createGame, getLegalMoves } from '../../api.js'
 import { useState, useRef, useEffect } from 'react'
 
 
 export function Pieces({ onFenChange }) { // Accept onFenChange prop
     const ref = useRef()
     const [fen, setFen] = useState();
+    const [gameId, setGameId] = useState(null);
+    const [legalMoves, setLegalMoves] = useState([]);
     const ws = useRef(null);
     const [isPromotionDialogOpen, setPromotionDialogOpen] = useState(false);
     const [promotionMove, setPromotionMove] = useState(null);
@@ -18,6 +21,7 @@ export function Pieces({ onFenChange }) { // Accept onFenChange prop
         const newGame = async () => {
             const { game_id: newGameId, fen: initialFen } = await createGame();
             setFen(initialFen);
+            setGameId(newGameId);
 
             ws.current = new WebSocket(`ws://127.0.0.1:8000/ws/${newGameId}`);
 
@@ -67,6 +71,7 @@ export function Pieces({ onFenChange }) { // Accept onFenChange prop
     }
 
     const onDrop = async e => {
+        setLegalMoves([]); // Clear legal moves on drop
         const { rank: toRank, algebraic: toSquare } = calculateSquare(e);
         const [piece, fromFileStr, fromRankStr] = e.dataTransfer.getData("text").split(",");
         const fromFileIndex = parseInt(fromFileStr, 10);
@@ -107,6 +112,24 @@ export function Pieces({ onFenChange }) { // Accept onFenChange prop
         setPromotionDialogOpen(false);
         setPromotionMove(null);
     };
+
+    const handlePieceDragStart = async ({ file, rank, piece }) => {
+        if (!gameId) return;
+        const square = coordsToAlgebraic(file, rank);
+        try {
+            const response = await getLegalMoves(gameId, square);
+            if (response.status === "success") {
+                setLegalMoves(response.moves); // Array of UCI moves like "e2e4"
+            }
+        } catch (error) {
+            console.error("Failed to fetch legal moves:", error);
+        }
+    };
+
+    const handlePieceDragEnd = () => {
+        setLegalMoves([]);
+    };
+
     const onDragOver = e => e.preventDefault()
     const promotionColor = fen && fen.split(' ')[1] === 'w' ? 'w' : 'b';
 
@@ -120,6 +143,13 @@ export function Pieces({ onFenChange }) { // Accept onFenChange prop
 
             {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
 
+            {legalMoves.map((moveUci, index) => {
+                // moveUci is like "e2e4". Target is the last 2 chars.
+                const targetSquare = moveUci.slice(2, 4);
+                const { file, rank } = algebraicToCoords(targetSquare);
+                return <LegalMoveDot key={index} file={file} rank={rank} />;
+            })}
+
             {position.map((rankArray, rankIndex) =>
                 rankArray.map((pieceType, fileIndex) =>
                     pieceType
@@ -128,6 +158,8 @@ export function Pieces({ onFenChange }) { // Accept onFenChange prop
                             rank={rankIndex}
                             file={fileIndex}
                             piece={pieceType}
+                            onDragStartCallback={handlePieceDragStart}
+                            onDragEndCallback={handlePieceDragEnd}
                           />
                         : null
                 )
