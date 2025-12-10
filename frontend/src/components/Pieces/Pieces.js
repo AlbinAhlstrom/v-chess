@@ -1,17 +1,19 @@
 import './Pieces.css'
 import Piece from './Piece'
 import LegalMoveDot from '../LegalMoveDot/LegalMoveDot.js';
+import HighlightSquare from '../HighlightSquare/HighlightSquare.js';
 import PromotionDialog from '../PromotionDialog/PromotionDialog.js';
 import { fenToPosition, coordsToAlgebraic, algebraicToCoords } from '../../helpers.js'
 import { createGame, getLegalMoves } from '../../api.js'
 import { useState, useRef, useEffect } from 'react'
 
 
-export function Pieces({ onFenChange }) { // Accept onFenChange prop
+export function Pieces({ onFenChange }) {
     const ref = useRef()
     const [fen, setFen] = useState();
     const [gameId, setGameId] = useState(null);
     const [legalMoves, setLegalMoves] = useState([]);
+    const [selectedSquare, setSelectedSquare] = useState(null);
     const ws = useRef(null);
     const [isPromotionDialogOpen, setPromotionDialogOpen] = useState(false);
     const [promotionMove, setPromotionMove] = useState(null);
@@ -29,6 +31,9 @@ export function Pieces({ onFenChange }) { // Accept onFenChange prop
                 const message = JSON.parse(event.data);
                 if (message.type === "game_state") {
                     setFen(message.fen);
+                    setSelectedSquare(null);
+                    setLegalMoves([]);
+
                     if (message.status === "checkmate") {
                         console.log("Checkmate detected!");
                     } else if (message.status === "draw") {
@@ -36,7 +41,6 @@ export function Pieces({ onFenChange }) { // Accept onFenChange prop
                     }
                 } else if (message.type === "error") {
                     console.error("WebSocket error:", message.message);
-                    // You might want to show a message to the user here
                 }
             };
 
@@ -52,7 +56,6 @@ export function Pieces({ onFenChange }) { // Accept onFenChange prop
         };
     }, []);
 
-    // Call onFenChange whenever fen state updates
     useEffect(() => {
         if (fen && fen !== lastNotifiedFen.current) {
             onFenChange(fen);
@@ -71,7 +74,8 @@ export function Pieces({ onFenChange }) { // Accept onFenChange prop
     }
 
     const onDrop = async e => {
-        setLegalMoves([]); // Clear legal moves on drop
+        setLegalMoves([]);
+        setSelectedSquare(null);
         const { rank: toRank, algebraic: toSquare } = calculateSquare(e);
         const [piece, fromFileStr, fromRankStr] = e.dataTransfer.getData("text").split(",");
         const fromFileIndex = parseInt(fromFileStr, 10);
@@ -92,7 +96,6 @@ export function Pieces({ onFenChange }) { // Accept onFenChange prop
                 }
             } catch (error) {
                 console.error("Failed to make move:", error);
-                // You might want to show a message to the user here
             }
         }
     }
@@ -114,12 +117,13 @@ export function Pieces({ onFenChange }) { // Accept onFenChange prop
     };
 
     const handlePieceDragStart = async ({ file, rank, piece }) => {
+        setSelectedSquare(null);
         if (!gameId) return;
         const square = coordsToAlgebraic(file, rank);
         try {
             const response = await getLegalMoves(gameId, square);
             if (response.status === "success") {
-                setLegalMoves(response.moves); // Array of UCI moves like "e2e4"
+                setLegalMoves(response.moves);
             }
         } catch (error) {
             console.error("Failed to fetch legal moves:", error);
@@ -128,6 +132,67 @@ export function Pieces({ onFenChange }) { // Accept onFenChange prop
 
     const handlePieceDragEnd = () => {
         setLegalMoves([]);
+    };
+
+    const handleSquareClick = async (e) => {
+        if (!gameId || !fen) return;
+
+        const { file, rank, algebraic: clickedSquare } = calculateSquare(e);
+
+
+        const isMyPiece = (f, r) => {
+            const piece = position[r][f];
+            if (!piece) return false;
+            const turn = fen.split(' ')[1];
+            const isWhitePiece = piece === piece.toUpperCase();
+            return (turn === 'w' && isWhitePiece) || (turn === 'b' && !isWhitePiece);
+        };
+
+        if (selectedSquare) {
+            const movesToTarget = legalMoves.filter(m => m.slice(2, 4) === clickedSquare);
+
+            if (movesToTarget.length > 0) {
+                if (movesToTarget.length > 1 || movesToTarget[0].length === 5) {
+                    setPromotionMove({ from: selectedSquare, to: clickedSquare });
+                    setPromotionDialogOpen(true);
+                } else {
+                    const moveUci = movesToTarget[0];
+                    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+                        ws.current.send(JSON.stringify({ type: "move", uci: moveUci }));
+                    }
+                }
+            } else {
+                if (clickedSquare === selectedSquare) {
+                    setSelectedSquare(null);
+                    setLegalMoves([]);
+                } else if (isMyPiece(file, rank)) {
+                    setSelectedSquare(clickedSquare);
+                    try {
+                        const response = await getLegalMoves(gameId, clickedSquare);
+                        if (response.status === "success") {
+                            setLegalMoves(response.moves);
+                        }
+                    } catch (error) {
+                        console.error("Failed to fetch legal moves:", error);
+                    }
+                } else {
+                    setSelectedSquare(null);
+                    setLegalMoves([]);
+                }
+            }
+        } else {
+            if (isMyPiece(file, rank)) {
+                setSelectedSquare(clickedSquare);
+                try {
+                    const response = await getLegalMoves(gameId, clickedSquare);
+                    if (response.status === "success") {
+                        setLegalMoves(response.moves);
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch legal moves:", error);
+                }
+            }
+        }
     };
 
     const onDragOver = e => e.preventDefault()
@@ -139,12 +204,23 @@ export function Pieces({ onFenChange }) { // Accept onFenChange prop
             className="pieces"
             ref={ref}
             onDragOver={onDragOver}
-            onDrop={onDrop}>
+            onDrop={onDrop}
+            onClick={handleSquareClick}
+            >
 
             {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
 
+            {selectedSquare && (() => {
+                const { file, rank } = algebraicToCoords(selectedSquare);
+                const isDark = (file + rank) % 2 !== 0; // Chessboard pattern
+                return <HighlightSquare
+                    file={file}
+                    rank={rank}
+                    isDark={isDark}
+                />;
+            })()}
+
             {legalMoves.map((moveUci, index) => {
-                // moveUci is like "e2e4". Target is the last 2 chars.
                 const targetSquare = moveUci.slice(2, 4);
                 const { file, rank } = algebraicToCoords(targetSquare);
                 return <LegalMoveDot key={index} file={file} rank={rank} />;
