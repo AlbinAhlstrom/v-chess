@@ -29,7 +29,7 @@ class Board:
         halfmove_clock: int,
         fullmove_count: int,
     ):
-        self.board: dict[Square, Piece | None] = board
+        self.board = board
         self.player_to_move = player_to_move
         self.castling_rights = castling_rights
         self.ep_square = ep_square
@@ -177,8 +177,6 @@ class Board:
 
         if piece is None:
             raise ValueError(f"No piece found at start coord: {move.start}.")
-        if piece.square is None:
-            raise ValueError(f"Piece {piece} has no square.")
 
         is_castling = isinstance(piece, King) and abs(move.start.col - move.end.col) == 2
         is_capture = self.get_piece(move.end) is not None or move.is_en_passant
@@ -264,9 +262,6 @@ class Board:
             self.castling_rights.remove(castling_right)
 
     def move_piece(self, piece: Piece, end: Square):
-        if piece.square is None:
-            raise ValueError("Piece has no square.")
-
         start = piece.square
         self.set_piece(piece, end)
         self.remove_piece(start)

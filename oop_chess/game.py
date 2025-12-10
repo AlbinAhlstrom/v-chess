@@ -135,8 +135,6 @@ class Game:
             raise AttributeError("Found piece without square")
 
         for piece in pieces:
-            if piece.square is None:
-                continue
             for end in piece.theoretical_moves:
                 is_en_passant = False
                 if isinstance(piece, Pawn):

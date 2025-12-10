@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 
 from oop_chess.enums import Color, Direction
+from typing import TypeAlias
 
-
+Coordinate: TypeAlias = str | tuple[int, int]
 @dataclass(frozen=True)
 class Square:
     """Represents a coordinate on a chessboard.
@@ -15,10 +16,15 @@ class Square:
     row: int
     col: int
 
+    @property
+    def is_none_square(self):
+        return self.row == -1 and self.col == -1
+
     def __post_init__(self):
-        """Initial validation check, should only be called by the constructor."""
-        if not self.is_valid(self.row, self.col):
-            raise ValueError(f"Invalid Square {self}")
+        """Initial validation check, only be called by the constructor."""
+        if self.is_valid(self.row, self.col) or self.is_none_square:
+            return
+        raise ValueError(f"Invalid Square {self}")
 
     @staticmethod
     def is_valid(row: int, col: int) -> bool:
@@ -90,3 +96,6 @@ class Square:
     def __str__(self):
         """Return algebraic notation."""
         return f"{chr(self.col + ord('a'))}{8 - self.row}"
+
+
+NoSquare = Square(-1, -1)

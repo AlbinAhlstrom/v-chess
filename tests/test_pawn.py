@@ -22,7 +22,6 @@ def test_pawn_two_step_move(square: Square, piece: Piece):
 
     piece.has_moved = False
     start_square = piece.square
-    assert start_square is not None
 
     single_step = start_square.get_step(piece.direction)
     double_step = single_step.get_step(piece.direction) if single_step else None
@@ -37,7 +36,6 @@ def test_pawn_capture(square: Square, piece: Piece):
     board = Board.empty()
     board.set_piece(piece, square)
 
-    assert piece.square is not None
 
     if not isinstance(piece, Pawn):
         return

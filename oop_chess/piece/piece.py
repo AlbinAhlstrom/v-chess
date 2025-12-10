@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from itertools import chain
 
-from oop_chess.square import Square
+from oop_chess.square import NoSquare, Square
 from oop_chess.enums import Color, Direction
 
 
@@ -12,14 +12,12 @@ class Piece(ABC):
 
     Attributes:
         color: Piece color
-        square: Current position on the board, None if captured
+        square: Current position on the board
         has_moved: True if piece has moved from starting position.
     """
     MAX_STEPS = 7
 
-    def __init__(
-        self, color: Color, square: Square | None = None, has_moved: bool = False, 
-    ):
+    def __init__(self, color: Color, square: Square = NoSquare, has_moved: bool = False):
         self.color = color
         self.square = square
         self.has_moved = has_moved
