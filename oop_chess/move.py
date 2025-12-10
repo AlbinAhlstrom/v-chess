@@ -94,7 +94,7 @@ class Move:
         Raises:
             ValueError: If the move is ambiguous, illegal, or the format is invalid.
         """
-        clean_san = san_str.replace("x", "").replace("+", "").replace("#", "")
+        clean_san = san_str.replace("x", "").replace("+", "").replace("#", "").replace("(", "").replace(")", "")
 
         promotion_piece = None
         if "=" in clean_san:
@@ -102,6 +102,14 @@ class Move:
             promotion_piece = piece_from_char[promotion_char](
                 game.board.player_to_move
             )
+        elif clean_san and clean_san[-1].isalpha() and clean_san[-1] in piece_from_char:
+            # Handle implicit promotion (e.g., "a8Q")
+            promotion_char = clean_san[-1]
+            if promotion_char.upper() in ["Q", "R", "B", "N"]:
+                clean_san = clean_san[:-1]
+                promotion_piece = piece_from_char[promotion_char](
+                    game.board.player_to_move
+                )
 
         end_square = Square.from_str(clean_san[-2:])
         piece_indicator = clean_san[:-2]
