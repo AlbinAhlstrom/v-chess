@@ -96,6 +96,13 @@ class Move:
         """
         clean_san = san_str.replace("x", "").replace("+", "").replace("#", "")
 
+        promotion_piece = None
+        if "=" in clean_san:
+            clean_san, promotion_char = clean_san.split("=")
+            promotion_piece = piece_from_char[promotion_char](
+                game.board.player_to_move
+            )
+
         end_square = Square.from_str(clean_san[-2:])
         piece_indicator = clean_san[:-2]
 
@@ -121,9 +128,9 @@ class Move:
                 candidates = [p for p in candidates if p.square.col == col and p.square.row == row]
 
         legal_moves = [
-            Move(piece.square, end_square)
+            Move(piece.square, end_square, promotion_piece)
             for piece in candidates
-            if game.is_move_legal(Move(piece.square, end_square))[0]
+            if game.is_move_legal(Move(piece.square, end_square, promotion_piece))[0]
         ]
 
         if len(legal_moves) != 1:
