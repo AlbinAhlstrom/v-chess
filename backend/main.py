@@ -125,6 +125,27 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                     "in_check": game.is_check,
                     "status": status
                 }))
+            elif message["type"] == "undo":
+                try:
+                    game.undo_move()
+                except ValueError as e:
+                    await websocket.send_text(json.dumps({"type": "error", "message": str(e)}))
+                    continue
+                
+                status = "active"
+                if game.is_checkmate:
+                    status = "checkmate"
+                elif game.is_draw:
+                    status = "draw"
+
+                await manager.broadcast(game_id, json.dumps({
+                    "type": "game_state",
+                    "fen": game.board.fen,
+                    "turn": game.board.player_to_move.value,
+                    "is_over": game.is_over,
+                    "in_check": game.is_check,
+                    "status": status
+                }))
 
     except WebSocketDisconnect:
         manager.disconnect(websocket, game_id)

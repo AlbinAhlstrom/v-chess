@@ -196,13 +196,13 @@ class Game:
         self.board.make_move(move)
         self.board.update_castling_rights()
 
-    def undo_last_move(self) -> str:
+    def undo_move(self) -> str:
         """Revert to the previous board state."""
         if not self.history:
             raise ValueError("No moves to undo.")
 
         self.board = self.history.pop()
-        self.board.switch_active_player()
+        print(f"Undo move. Restored FEN: {self.board.fen}")
         return self.board.fen
 
     @property

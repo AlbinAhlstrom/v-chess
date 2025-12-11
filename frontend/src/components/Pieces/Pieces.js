@@ -230,21 +230,85 @@ export function Pieces({ onFenChange }) {
         
         // ...
     
-            const isCaptureMove = (file, rank) => {
-                if (!selectedSquare) return false;
-                const targetSquare = coordsToAlgebraic(file, rank);
-                return legalMoves.some(m => m.slice(2, 4) === targetSquare);
-            };
-        
-            const promotionColor = fen && fen.split(' ')[1] === 'w' ? 'w' : 'b';
-        
-            return (
-                <div
-                    className="pieces"                ref={ref}
-                onClick={handleSquareClick}
-                >
+                const handleUndo = (e) => {
     
-                            {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
+                    e.stopPropagation();
+    
+                    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+    
+                        ws.current.send(JSON.stringify({ type: "undo" }));
+    
+                    }
+    
+                };
+    
+            
+    
+                const isCaptureMove = (file, rank) => {
+    
+                    if (!selectedSquare) return false;
+    
+                    const targetSquare = coordsToAlgebraic(file, rank);
+    
+                    return legalMoves.some(m => m.slice(2, 4) === targetSquare);
+    
+                };
+    
+            
+    
+                const promotionColor = fen && fen.split(' ')[1] === 'w' ? 'w' : 'b';
+    
+            
+    
+                return (
+    
+                    <div
+    
+                        className="pieces"
+    
+                        ref={ref}
+    
+                        onClick={handleSquareClick}
+    
+                        >
+    
+            
+    
+                        <button 
+    
+                            onClick={handleUndo}
+    
+                            style={{
+    
+                                position: 'absolute',
+    
+                                top: '100%',
+    
+                                left: '50%',
+    
+                                transform: 'translateX(-50%)',
+    
+                                marginTop: '10px',
+    
+                                padding: '10px 20px',
+    
+                                fontSize: '16px',
+    
+                                cursor: 'pointer',
+    
+                                zIndex: 10
+    
+                            }}
+    
+                        >
+    
+                            Undo
+    
+                        </button>
+    
+            
+    
+                        {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
     
                 
     
