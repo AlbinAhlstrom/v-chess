@@ -116,8 +116,6 @@ export function Pieces({ onFenChange }) {
     }
 
     const handleManualDrop = ({ clientX, clientY, piece, file, rank }) => {
-        setLegalMoves([]);
-        setSelectedSquare(null);
         
         // Mock event object for calculateSquare
         const mockEvent = { clientX, clientY };
@@ -160,9 +158,9 @@ export function Pieces({ onFenChange }) {
     };
 
     const handlePieceDragStart = async ({ file, rank, piece }) => {
-        setSelectedSquare(null);
         if (!gameId) return;
         const square = coordsToAlgebraic(file, rank);
+        setSelectedSquare(square);
         try {
             const response = await getLegalMoves(gameId, square);
             if (response.status === "success") {
@@ -174,7 +172,7 @@ export function Pieces({ onFenChange }) {
     };
 
     const handlePieceDragEnd = () => {
-        setLegalMoves([]);
+        
     };
 
     const handleSquareClick = async (e) => {
