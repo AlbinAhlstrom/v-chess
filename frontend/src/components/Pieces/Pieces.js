@@ -235,22 +235,21 @@ export function Pieces({ onFenChange }) {
     
                 {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
     
-                {hoveredSquare && (
-                    <div style={{
-                        position: 'absolute',
-                        left: `calc(${hoveredSquare.file} * var(--square-size))`,
-                        top: `calc(${hoveredSquare.rank} * var(--square-size))`,
-                        width: 'var(--square-size)',
-                        height: 'var(--square-size)',
-                        border: (hoveredSquare.file + hoveredSquare.rank) % 2 !== 0 
-                            ? '5px solid rgba(100, 100, 100, 0.5)' // Darker border for dark squares
-                            : '5px solid rgba(255, 255, 255, 0.8)', // Very light grey (white-ish) for light squares
-                        boxSizing: 'border-box',
-                        zIndex: 5, 
-                        pointerEvents: 'none'
-                    }}/>
-                )}
-    
+                            {hoveredSquare && (
+                                <div style={{
+                                    position: 'absolute',
+                                    left: `calc(${hoveredSquare.file} * var(--square-size))`,
+                                    top: `calc(${hoveredSquare.rank} * var(--square-size))`,
+                                    width: 'var(--square-size)',
+                                    height: 'var(--square-size)',
+                                    border: (hoveredSquare.file + hoveredSquare.rank) % 2 !== 0 
+                                        ? '5px solid var(--drag-hover-dark-border)' // Darker border for dark squares
+                                        : '5px solid var(--drag-hover-light-border)', // Very light grey (white-ish) for light squares
+                                    boxSizing: 'border-box',
+                                    zIndex: 5, 
+                                    pointerEvents: 'none'
+                                }}/>
+                            )}    
                 {selectedSquare && (() => {
                     const { file, rank } = algebraicToCoords(selectedSquare);
                     const isDark = (file + rank) % 2 !== 0; // Chessboard pattern

@@ -5,4 +5,6 @@
     --bg-color: #202020;
     --highlight-light-square: #e8e680;
     --highlight-dark-square: #b9ca42;
+    --drag-hover-light-border: #fff;
+    --drag-hover-dark-border: #b4bfb7;
 }
