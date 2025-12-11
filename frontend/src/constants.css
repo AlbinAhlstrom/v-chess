@@ -14,4 +14,6 @@
     --main-font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     --button-bg-color: #373743;
     --button-text-color: #ffffff;
+    --history-bg-color: #2E2E38;
+    --history-text-color: #ccc;
 }

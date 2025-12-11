@@ -370,7 +370,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                    <div style={{
+                                                                <div style={{
     
             
     
@@ -378,7 +378,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                        position: 'absolute',
+                                                                    position: 'absolute',
     
             
     
@@ -386,7 +386,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                        left: '100%',
+                                                                    left: '100%',
     
             
     
@@ -394,7 +394,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                        top: '0',
+                                                                    top: '0',
     
             
     
@@ -402,7 +402,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                        marginLeft: '20px',
+                                                                    bottom: '0',
     
             
     
@@ -410,7 +410,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                        display: 'flex',
+                                                                    marginLeft: '20px',
     
             
     
@@ -418,7 +418,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                        flexDirection: 'column',
+                                                                    display: 'flex',
     
             
     
@@ -426,7 +426,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                        gap: '10px',
+                                                                    flexDirection: 'column',
     
             
     
@@ -434,7 +434,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                        fontFamily: 'var(--main-font-family)'
+                                                                    gap: '10px',
     
             
     
@@ -442,7 +442,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                    }}>
+                                                                    fontFamily: 'var(--main-font-family)'
     
             
     
@@ -450,7 +450,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                        <div style={{ maxHeight: '300px', overflowY: 'auto', color: '#ccc' }}>
+                                                                }}>
     
             
     
@@ -458,7 +458,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                            {moveHistory.reduce((rows, move, index) => {
+                                                                                                                    <div style={{ 
     
             
     
@@ -466,7 +466,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                if (index % 2 === 0) rows.push([move]);
+                                                                                                                        height: '50%',
     
             
     
@@ -474,7 +474,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                else rows[rows.length - 1].push(move);
+                                                                                                                        overflowY: 'auto', 
     
             
     
@@ -482,7 +482,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                return rows;
+                                                                                                                        color: 'var(--history-text-color)', 
     
             
     
@@ -490,7 +490,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                            }, []).map((row, i) => (
+                                                                                                                        minWidth: '200px',
     
             
     
@@ -498,7 +498,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                <div key={i} style={{ marginBottom: '5px' }}>
+                                                                                                                        backgroundColor: 'var(--history-bg-color)',
     
             
     
@@ -506,7 +506,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    <span style={{ width: '30px', display: 'inline-block', color: '#888' }}>{i + 1}.</span>
+                                                                                                                        borderRadius: '4px',
     
             
     
@@ -514,7 +514,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    <span style={{ width: '60px', display: 'inline-block' }}>{row[0]}</span>
+                                                                                                                        padding: '10px',
     
             
     
@@ -522,7 +522,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    {row[1] && <span>{row[1]}</span>}
+                                                                                                                        boxSizing: 'border-box'
     
             
     
@@ -530,7 +530,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                </div>
+                                                                                                                    }}>
     
             
     
@@ -538,7 +538,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                            ))}
+                                                                                                                        {moveHistory.reduce((rows, move, index) => {
     
             
     
@@ -546,7 +546,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                        </div>
+                                                                                                                            if (index % 2 === 0) rows.push([move]);
     
             
     
@@ -554,7 +554,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                        
+                                                                                                                            else rows[rows.length - 1].push(move);
     
             
     
@@ -562,7 +562,135 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                        <div style={{ display: 'flex', gap: '10px' }}>
+                                                                                                                            return rows;
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                        }, []).map((row, i) => (
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                            <div key={i} style={{ 
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                marginBottom: '5px', 
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                display: 'grid', 
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                gridTemplateColumns: '30px 1fr 1fr', 
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                gap: '10px',
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                alignItems: 'center'
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                            }}>
+    
+            
+    
+                
+    
+            
+    
+                                                                                                <span style={{ color: '#888' }}>{i + 1}.</span>
+    
+            
+    
+                
+    
+            
+    
+                                                                                                <span>{row[0]}</span>
+    
+            
+    
+                
+    
+            
+    
+                                                                                                <span>{row[1] || ''}</span>
+    
+            
+    
+                
+    
+            
+    
+                                                                                            </div>
+    
+            
+    
+                
+    
+            
+    
+                                                                                        ))}
+    
+            
+    
+                
+    
+            
+    
+                                                                                    </div>
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                    <div style={{ display: 'flex', gap: '10px', marginTop: 'auto' }}>
     
             
     
