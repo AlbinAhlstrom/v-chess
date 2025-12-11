@@ -14,6 +14,7 @@ export function Pieces({ onFenChange }) {
     const [gameId, setGameId] = useState(null);
     const [legalMoves, setLegalMoves] = useState([]);
     const [selectedSquare, setSelectedSquare] = useState(null);
+    const [hoveredSquare, setHoveredSquare] = useState(null);
     const [inCheck, setInCheck] = useState(false);
     const ws = useRef(null);
     const [isPromotionDialogOpen, setPromotionDialogOpen] = useState(false);
@@ -39,6 +40,7 @@ export function Pieces({ onFenChange }) {
                     setInCheck(message.in_check);
                     setSelectedSquare(null);
                     setLegalMoves([]);
+                    setHoveredSquare(null);
 
                     if (message.status === "checkmate") {
                         console.log("Checkmate detected!");
@@ -115,8 +117,21 @@ export function Pieces({ onFenChange }) {
         return { file, rank, algebraic: coordsToAlgebraic(file, rank) };
     }
 
+    const handlePieceDragHover = (clientX, clientY) => {
+        if (!clientX || !clientY) {
+            setHoveredSquare(null);
+            return;
+        }
+        const { file, rank } = calculateSquare({ clientX, clientY });
+        if (file >= 0 && file <= 7 && rank >= 0 && rank <= 7) {
+             setHoveredSquare({ file, rank });
+        } else {
+             setHoveredSquare(null);
+        }
+    }
+
     const handleManualDrop = ({ clientX, clientY, piece, file, rank }) => {
-        
+        setHoveredSquare(null);
         // Mock event object for calculateSquare
         const mockEvent = { clientX, clientY };
         const { rank: toRank, algebraic: toSquare } = calculateSquare(mockEvent);
@@ -245,6 +260,22 @@ export function Pieces({ onFenChange }) {
 
             {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
 
+            {hoveredSquare && (
+                <div style={{
+                    position: 'absolute',
+                    left: `calc(${hoveredSquare.file} * var(--square-size))`,
+                    top: `calc(${hoveredSquare.rank} * var(--square-size))`,
+                    width: 'var(--square-size)',
+                    height: 'var(--square-size)',
+                    border: (hoveredSquare.file + hoveredSquare.rank) % 2 !== 0 
+                        ? '5px solid rgba(100, 100, 100, 0.5)' // Darker border for dark squares
+                        : '5px solid rgba(255, 255, 255, 0.8)', // Very light grey (white-ish) for light squares
+                    boxSizing: 'border-box',
+                    zIndex: 5, 
+                    pointerEvents: 'none'
+                }}/>
+            )}
+
             {selectedSquare && (() => {
                 const { file, rank } = algebraicToCoords(selectedSquare);
                 const isDark = (file + rank) % 2 !== 0; // Chessboard pattern
@@ -272,6 +303,7 @@ export function Pieces({ onFenChange }) {
                             onDragStartCallback={handlePieceDragStart}
                             onDragEndCallback={handlePieceDragEnd}
                             onDropCallback={handleManualDrop}
+                            onDragHoverCallback={handlePieceDragHover}
                           />
                         : null
                 )

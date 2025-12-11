@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import './Pieces.css';
 
-function Piece({ piece, file, rank, onDragStartCallback, onDragEndCallback, onDropCallback }) {
+function Piece({ piece, file, rank, onDragStartCallback, onDragEndCallback, onDropCallback, onDragHoverCallback }) {
     const ghostRef = useRef(null);
 
     const pieceStyle = {
@@ -50,6 +50,9 @@ function Piece({ piece, file, rank, onDragStartCallback, onDragEndCallback, onDr
                 ghostRef.current.style.left = `${moveEvent.clientX - offsetX}px`;
                 ghostRef.current.style.top = `${moveEvent.clientY - offsetY}px`;
             }
+            if (onDragHoverCallback) {
+                onDragHoverCallback(moveEvent.clientX, moveEvent.clientY);
+            }
         };
 
         const handleMouseUp = (upEvent) => {
@@ -78,6 +81,11 @@ function Piece({ piece, file, rank, onDragStartCallback, onDragEndCallback, onDr
                     file,
                     rank
                 });
+            }
+
+            // Clear hover
+            if (onDragHoverCallback) {
+                onDragHoverCallback(null);
             }
 
             // Notify end
