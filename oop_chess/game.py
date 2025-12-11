@@ -189,8 +189,10 @@ class Game:
         """Make a move by finding the corresponding legal move."""
         if not self.board.is_legal:
             raise IllegalBoardException(f"Board state is illegal. Reason: {self.board.status}")
-        if not self.is_move_legal(move):
-            raise IllegalMoveException(f"No legal move found for {move}")
+        
+        reason = self.move_legality_reason(move)
+        if reason != "Move is legal":
+            raise IllegalMoveException(f"Illegal move: {reason}")
 
         self.add_to_history()
         self.board.make_move(move)

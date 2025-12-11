@@ -2,11 +2,13 @@
     --square-size: 100px;
     --light-square: #ECE4B7;
     --dark-square: #63934D;
-    --bg-color: #202020;
+    --bg-color: #25252D;
     --highlight-light-square: #D8C86E;
     --highlight-dark-square: #D4C25E;
     --drag-hover-light-border: #F6F3DF;
     --drag-hover-dark-border: #77AB5F;
-    --legal-move-dot-color: rgba(0, 0, 0, 0.1);
-    --legal-move-dot-size: 33%;
+    --legal-move-dot-color: rgba(0, 128, 0, 0.8);
+    --legal-move-dot-size: 30%;
+    --king-check-flash-color: #D36135;
+    --king-check-flash-duration: 1.5s;
 }

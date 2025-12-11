@@ -16,20 +16,27 @@ export function Pieces({ onFenChange }) {
     const [legalMoves, setLegalMoves] = useState([]);
     const [selectedSquare, setSelectedSquare] = useState(null);
     const [inCheck, setInCheck] = useState(false);
+    const [flashKingSquare, setFlashKingSquare] = useState(null);
     const ws = useRef(null);
     const [isPromotionDialogOpen, setPromotionDialogOpen] = useState(false);
     const [promotionMove, setPromotionMove] = useState(null);
     const lastNotifiedFen = useRef(null);
     const dragStartSelectionState = useRef(false);
+    const isPromoting = useRef(false);
     const moveSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3"));
     const captureSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3"));
     const castleSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/castle.mp3"));
     const checkSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-check.mp3"));
+    const gameEndSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_WEBM_/default/game-end.webm"));
+    const gameStartSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/game-start.mp3"));
+    const promotionSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/promote.mp3"));
+    const illegalSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/illegal.mp3"));
 
     useEffect(() => {
         const newGame = async () => {
             const { game_id: newGameId, fen: initialFen } = await createGame();
             setFen(initialFen);
+            gameStartSound.current.play().catch(e => console.error("Error playing game start sound:", e));
             setGameId(newGameId);
 
             ws.current = new WebSocket(`ws://127.0.0.1:8000/ws/${newGameId}`);
@@ -45,11 +52,36 @@ export function Pieces({ onFenChange }) {
 
                     if (message.status === "checkmate") {
                         console.log("Checkmate detected!");
+                        gameEndSound.current.play().catch(e => console.error("Error playing game end sound:", e));
                     } else if (message.status === "draw") {
                         console.log("Draw detected!");
+                        gameEndSound.current.play().catch(e => console.error("Error playing game end sound:", e));
                     }
                 } else if (message.type === "error") {
                     console.error("WebSocket error:", message.message);
+                    if (message.message.toLowerCase().includes("check") && lastNotifiedFen.current) {
+                        illegalSound.current.play().catch(e => console.error("Error playing illegal move sound:", e));
+                        const currentFen = lastNotifiedFen.current;
+                        const isWhite = currentFen.split(' ')[1] === 'w';
+                        const grid = fenToPosition(currentFen);
+                        const kingChar = isWhite ? 'K' : 'k';
+                        let kingCoords = null;
+                        
+                        for (let r = 0; r < 8; r++) {
+                            for (let c = 0; c < 8; c++) {
+                                if (grid[r][c] === kingChar) {
+                                    kingCoords = { file: c, rank: r };
+                                    break;
+                                }
+                            }
+                            if (kingCoords) break;
+                        }
+                        
+                        if (kingCoords) {
+                            setFlashKingSquare(kingCoords);
+                            setTimeout(() => setFlashKingSquare(null), 500);
+                        }
+                    }
                 }
             };
 
@@ -95,6 +127,9 @@ export function Pieces({ onFenChange }) {
 
                 if (inCheck) {
                     checkSound.current.play().catch(e => console.error("Error playing check sound:", e));
+                } else if (isPromoting.current) {
+                    promotionSound.current.play().catch(e => console.error("Error playing promotion sound:", e));
+                    isPromoting.current = false;
                 } else if (isCastling) {
                     castleSound.current.play().catch(e => console.error("Error playing castle sound:", e));
                 } else if (currentCount < prevCount) {
@@ -178,6 +213,7 @@ export function Pieces({ onFenChange }) {
 
     const handlePromotion = (promotionPiece) => {
         if (promotionMove) {
+            isPromoting.current = true;
             const moveUci = `${promotionMove.from}${promotionMove.to}${promotionPiece}`;
             if (ws.current && ws.current.readyState === WebSocket.OPEN) {
                 ws.current.send(JSON.stringify({ type: "move", uci: moveUci }));
@@ -308,13 +344,59 @@ export function Pieces({ onFenChange }) {
     
             
     
-                        {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
+                                    {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
     
-                
+            
     
-                            <div 
+                        
     
-                                ref={highlightRef}
+            
+    
+                                    {flashKingSquare && (
+    
+            
+    
+                                        <div 
+    
+            
+    
+                                            className="king-flash"
+    
+            
+    
+                                            style={{
+    
+            
+    
+                                                left: `calc(${flashKingSquare.file} * var(--square-size))`,
+    
+            
+    
+                                                top: `calc(${flashKingSquare.rank} * var(--square-size))`
+    
+            
+    
+                                            }}
+    
+            
+    
+                                        />
+    
+            
+    
+                                    )}
+    
+            
+    
+                        
+    
+            
+    
+                                    <div 
+    
+            
+    
+                                        ref={highlightRef}
     
                                 style={{
     

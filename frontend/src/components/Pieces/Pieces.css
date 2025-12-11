@@ -19,3 +19,21 @@
 .piece:active {
     cursor: grabbing;
 }
+
+@keyframes flash-animation {
+    0% { background-color: transparent; }
+    50% { background-color: var(--king-check-flash-color); }
+    100% { background-color: transparent; }
+}
+
+.king-flash {
+    position: absolute;
+    width: var(--square-size);
+    height: var(--square-size);
+    pointer-events: none;
+    z-index: 4; /* Below pieces (10), selected (5 - wait, HighlightSquare is 5? drag hover is 6). Check z-indices. */
+    /* HighlightSquare is 5. If this is "warning", maybe on top of highlight? Or below piece? */
+    /* Pieces are z-index 10. This should be visible under the King. */
+    animation: flash-animation var(--king-check-flash-duration) ease-in-out;
+    animation-iteration-count: 2;
+}
