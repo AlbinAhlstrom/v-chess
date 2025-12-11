@@ -96,6 +96,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
             "turn": game.board.player_to_move.value,
             "is_over": game.is_over,
             "in_check": game.is_check,
+            "move_history": game.move_history,
             "status": "connected"
         }))
         while True:
@@ -123,6 +124,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                     "turn": game.board.player_to_move.value,
                     "is_over": game.is_over,
                     "in_check": game.is_check,
+                    "move_history": game.move_history,
                     "status": status
                 }))
             elif message["type"] == "undo":
@@ -144,6 +146,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                     "turn": game.board.player_to_move.value,
                     "is_over": game.is_over,
                     "in_check": game.is_check,
+                    "move_history": game.move_history,
                     "status": status
                 }))
 

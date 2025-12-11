@@ -20,6 +20,7 @@ class Game:
     def __init__(self, board: Board):
         self.board = board
         self.history = []
+        self.move_history = []
 
     @property
     def is_over(self):
@@ -195,6 +196,7 @@ class Game:
             raise IllegalMoveException(f"Illegal move: {reason}")
 
         self.add_to_history()
+        self.move_history.append(move.uci)
         self.board.make_move(move)
         self.board.update_castling_rights()
 
@@ -204,6 +206,8 @@ class Game:
             raise ValueError("No moves to undo.")
 
         self.board = self.history.pop()
+        if self.move_history:
+            self.move_history.pop()
         print(f"Undo move. Restored FEN: {self.board.fen}")
         return self.board.fen
 

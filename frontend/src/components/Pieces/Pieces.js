@@ -17,6 +17,7 @@ export function Pieces({ onFenChange }) {
     const [selectedSquare, setSelectedSquare] = useState(null);
     const [inCheck, setInCheck] = useState(false);
     const [flashKingSquare, setFlashKingSquare] = useState(null);
+    const [moveHistory, setMoveHistory] = useState([]);
     const ws = useRef(null);
     const [isPromotionDialogOpen, setPromotionDialogOpen] = useState(false);
     const [promotionMove, setPromotionMove] = useState(null);
@@ -46,6 +47,7 @@ export function Pieces({ onFenChange }) {
                 if (message.type === "game_state") {
                     setFen(message.fen);
                     setInCheck(message.in_check);
+                    setMoveHistory(message.move_history || []);
                     setSelectedSquare(null);
                     setLegalMoves([]);
                     if (highlightRef.current) highlightRef.current.style.display = 'none';
@@ -292,59 +294,699 @@ export function Pieces({ onFenChange }) {
     
             
     
-                const promotionColor = fen && fen.split(' ')[1] === 'w' ? 'w' : 'b';
+                    const copyFenToClipboard = async () => {
     
             
     
-                return (
-    
-                    <div
-    
-                        className="pieces"
-    
-                        ref={ref}
-    
-                        onClick={handleSquareClick}
-    
-                        >
+                        if (!fen) return;
     
             
     
-                        <button 
-    
-                            onClick={handleUndo}
-    
-                            style={{
-    
-                                position: 'absolute',
-    
-                                top: '100%',
-    
-                                left: '50%',
-    
-                                transform: 'translateX(-50%)',
-    
-                                marginTop: '10px',
-    
-                                padding: '10px 20px',
-    
-                                fontSize: '16px',
-    
-                                cursor: 'pointer',
-    
-                                zIndex: 10
-    
-                            }}
-    
-                        >
-    
-                            Undo
-    
-                        </button>
+                        try {
     
             
     
-                                    {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
+                            await navigator.clipboard.writeText(fen);
+    
+            
+    
+                        } catch (err) {
+    
+            
+    
+                            console.error('Failed to copy FEN: ', err);
+    
+            
+    
+                        }
+    
+            
+    
+                    };
+    
+            
+    
+                
+    
+            
+    
+                    const promotionColor = fen && fen.split(' ')[1] === 'w' ? 'w' : 'b';
+    
+            
+    
+                
+    
+            
+    
+                
+    
+            
+    
+                    return (
+    
+            
+    
+                        <div
+    
+            
+    
+                            className="pieces"
+    
+            
+    
+                            ref={ref}
+    
+            
+    
+                            onClick={handleSquareClick}
+    
+            
+    
+                            >
+    
+            
+    
+                
+    
+            
+    
+                                                    <div style={{
+    
+            
+    
+                
+    
+            
+    
+                                                        position: 'absolute',
+    
+            
+    
+                
+    
+            
+    
+                                                        left: '100%',
+    
+            
+    
+                
+    
+            
+    
+                                                        top: '0',
+    
+            
+    
+                
+    
+            
+    
+                                                        marginLeft: '20px',
+    
+            
+    
+                
+    
+            
+    
+                                                        display: 'flex',
+    
+            
+    
+                
+    
+            
+    
+                                                        flexDirection: 'column',
+    
+            
+    
+                
+    
+            
+    
+                                                        gap: '10px',
+    
+            
+    
+                
+    
+            
+    
+                                                        fontFamily: 'var(--main-font-family)'
+    
+            
+    
+                
+    
+            
+    
+                                                    }}>
+    
+            
+    
+                
+    
+            
+    
+                                                        <div style={{ maxHeight: '300px', overflowY: 'auto', color: '#ccc' }}>
+    
+            
+    
+                
+    
+            
+    
+                                                            {moveHistory.reduce((rows, move, index) => {
+    
+            
+    
+                
+    
+            
+    
+                                                                if (index % 2 === 0) rows.push([move]);
+    
+            
+    
+                
+    
+            
+    
+                                                                else rows[rows.length - 1].push(move);
+    
+            
+    
+                
+    
+            
+    
+                                                                return rows;
+    
+            
+    
+                
+    
+            
+    
+                                                            }, []).map((row, i) => (
+    
+            
+    
+                
+    
+            
+    
+                                                                <div key={i} style={{ marginBottom: '5px' }}>
+    
+            
+    
+                
+    
+            
+    
+                                                                    <span style={{ width: '30px', display: 'inline-block', color: '#888' }}>{i + 1}.</span>
+    
+            
+    
+                
+    
+            
+    
+                                                                    <span style={{ width: '60px', display: 'inline-block' }}>{row[0]}</span>
+    
+            
+    
+                
+    
+            
+    
+                                                                    {row[1] && <span>{row[1]}</span>}
+    
+            
+    
+                
+    
+            
+    
+                                                                </div>
+    
+            
+    
+                
+    
+            
+    
+                                                            ))}
+    
+            
+    
+                
+    
+            
+    
+                                                        </div>
+    
+            
+    
+                
+    
+            
+    
+                                        
+    
+            
+    
+                
+    
+            
+    
+                                                        <div style={{ display: 'flex', gap: '10px' }}>
+    
+            
+    
+                
+    
+            
+    
+                                                            <button 
+    
+            
+    
+                
+    
+            
+    
+                                                                onClick={handleUndo}
+    
+            
+    
+                
+    
+            
+    
+                                                                title="Undo"
+    
+            
+    
+                
+    
+            
+    
+                                                                style={{
+    
+            
+    
+                
+    
+            
+    
+                                                                    padding: '10px',
+    
+            
+    
+                
+    
+            
+    
+                                                                    fontSize: '16px',
+    
+            
+    
+                
+    
+            
+    
+                                                                    cursor: 'pointer',
+    
+            
+    
+                
+    
+            
+    
+                                                                    whiteSpace: 'nowrap',
+    
+            
+    
+                
+    
+            
+    
+                                                                    fontFamily: 'inherit',
+    
+            
+    
+                
+    
+            
+    
+                                                                    backgroundColor: 'var(--button-bg-color)',
+    
+            
+    
+                
+    
+            
+    
+                                                                    color: 'var(--button-text-color)',
+    
+            
+    
+                
+    
+            
+    
+                                                                    border: 'none',
+    
+            
+    
+                
+    
+            
+    
+                                                                    borderRadius: '4px',
+    
+            
+    
+                
+    
+            
+    
+                                                                    display: 'flex',
+    
+            
+    
+                
+    
+            
+    
+                                                                    alignItems: 'center',
+    
+            
+    
+                
+    
+            
+    
+                                                                    justifyContent: 'center',
+    
+            
+    
+                
+    
+            
+    
+                                                                    width: '44px',
+    
+            
+    
+                
+    
+            
+    
+                                                                    height: '44px'
+    
+            
+    
+                
+    
+            
+    
+                                                                }}
+    
+            
+    
+                
+    
+            
+    
+                                                            >
+    
+            
+    
+                
+    
+            
+    
+                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" width="20" height="20">
+    
+            
+    
+                
+    
+            
+    
+                                                                    {/* Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. */}
+    
+            
+    
+                
+    
+            
+    
+                                                                    <path d="M48.5 224H40c-13.3 0-24-10.7-24-24V72c0-9.7 5.8-18.5 14.8-22.2s19.3-1.7 26.2 5.2L98.6 96.6c87.6-86.5 228.7-86.2 315.8 1c87.5 87.5 87.5 229.3 0 316.8s-229.3 87.5-316.8 0c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0c62.5 62.5 163.8 62.5 226.3 0s62.5-163.8 0-226.3c-62.2-62.2-162.7-62.5-225.3-1L185 183c6.9 6.9 8.9 17.2 5.2 26.2s-12.5 14.8-22.2 14.8H48.5z"/>
+    
+            
+    
+                
+    
+            
+    
+                                                                </svg>
+    
+            
+    
+                
+    
+            
+    
+                                                            </button>
+    
+            
+    
+                
+    
+            
+    
+                                                            <button 
+    
+            
+    
+                
+    
+            
+    
+                                                                onClick={copyFenToClipboard}
+    
+            
+    
+                
+    
+            
+    
+                                                                title="Export Game"
+    
+            
+    
+                
+    
+            
+    
+                                                                style={{
+    
+            
+    
+                
+    
+            
+    
+                                                                    padding: '10px',
+    
+            
+    
+                
+    
+            
+    
+                                                                    fontSize: '16px',
+    
+            
+    
+                
+    
+            
+    
+                                                                    cursor: 'pointer',
+    
+            
+    
+                
+    
+            
+    
+                                                                    whiteSpace: 'nowrap',
+    
+            
+    
+                
+    
+            
+    
+                                                                    fontFamily: 'inherit',
+    
+            
+    
+                
+    
+            
+    
+                                                                    backgroundColor: 'var(--button-bg-color)',
+    
+            
+    
+                
+    
+            
+    
+                                                                    color: 'var(--button-text-color)',
+    
+            
+    
+                
+    
+            
+    
+                                                                    border: 'none',
+    
+            
+    
+                
+    
+            
+    
+                                                                    borderRadius: '4px',
+    
+            
+    
+                
+    
+            
+    
+                                                                    display: 'flex',
+    
+            
+    
+                
+    
+            
+    
+                                                                    alignItems: 'center',
+    
+            
+    
+                
+    
+            
+    
+                                                                    justifyContent: 'center',
+    
+            
+    
+                
+    
+            
+    
+                                                                    width: '44px',
+    
+            
+    
+                
+    
+            
+    
+                                                                    height: '44px'
+    
+            
+    
+                
+    
+            
+    
+                                                                }}
+    
+            
+    
+                
+    
+            
+    
+                                                            >
+    
+            
+    
+                
+    
+            
+    
+                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" width="20" height="20">
+    
+            
+    
+                
+    
+            
+    
+                                                                    {/* Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. */}
+    
+            
+    
+                
+    
+            
+    
+                                                                    <path d="M307 34.8c-11.5 5.1-19 16.6-19 29.2v64H176C78.8 128 0 206.8 0 304C0 417.3 81.5 467.9 100.2 478.1c2.5 1.4 5.3 1.9 7.8 1.9c10.9 0 19.7-8.9 19.7-19.7c0-7.5-4.3-14.4-9.8-19.5C108.8 431.9 96 414.4 96 384c0-53 43-96 96-96h96v64c0 12.6 7.4 24.1 19 29.2s25 3 34.4-5.4l160-144c6.7-6.1 10.6-14.7 10.6-24s-3.9-17.9-10.6-24l-160-144c-9.4-8.5-22.9-10.6-34.4-5.4z"/>
+    
+            
+    
+                
+    
+            
+    
+                                                                </svg>
+    
+            
+    
+                
+    
+            
+    
+                                                            </button>
+    
+            
+    
+                
+    
+            
+    
+                                                        </div>
+    
+            
+    
+                
+    
+            
+    
+                                                    </div>
+    
+            
+    
+                
+    
+            
+    
+                            {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
     
             
     
