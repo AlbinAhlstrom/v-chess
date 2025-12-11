@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import './Pieces.css';
 
-function Piece({ piece, file, rank, onDragStartCallback, onDragEndCallback, onDropCallback, onDragHoverCallback }) {
+function Piece({ piece, file, rank, onDragStartCallback, onDragEndCallback, onDropCallback, onDragHoverCallback, isCapture }) {
     const ghostRef = useRef(null);
 
     const pieceStyle = {
@@ -16,7 +16,11 @@ function Piece({ piece, file, rank, onDragStartCallback, onDragEndCallback, onDr
 
         // 1. Notify start
         if (onDragStartCallback) {
-            onDragStartCallback({ file, rank, piece });
+            onDragStartCallback({ file, rank, piece, isCapture });
+        }
+
+        if (isCapture) {
+            return;
         }
 
         // 2. Create custom ghost (fully opaque)
