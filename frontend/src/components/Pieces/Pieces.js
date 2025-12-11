@@ -370,7 +370,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                <div style={{
+                                                                                        <div style={{
     
             
     
@@ -378,7 +378,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    position: 'absolute',
+                                                                                            position: 'absolute',
     
             
     
@@ -386,7 +386,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    left: '100%',
+                                                                                            left: '100%',
     
             
     
@@ -394,7 +394,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    top: '0',
+                                                                                            top: '50%',
     
             
     
@@ -402,7 +402,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    bottom: '0',
+                                                                                            transform: 'translateY(-50%)',
     
             
     
@@ -410,7 +410,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    marginLeft: '20px',
+                                                                                            marginLeft: '20px',
     
             
     
@@ -418,7 +418,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    display: 'flex',
+                                                                                            display: 'flex',
     
             
     
@@ -426,7 +426,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    flexDirection: 'column',
+                                                                                            flexDirection: 'column',
     
             
     
@@ -434,7 +434,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    gap: '10px',
+                                                                                            gap: '10px',
     
             
     
@@ -442,7 +442,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    fontFamily: 'var(--main-font-family)'
+                                                                                            fontFamily: 'var(--main-font-family)',
     
             
     
@@ -450,7 +450,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                }}>
+                                                                                            width: 'var(--history-width)'
     
             
     
@@ -458,7 +458,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                    <div style={{ 
+                                                                                        }}>
     
             
     
@@ -466,7 +466,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                        height: '50%',
+                                                                                                            <div style={{ 
     
             
     
@@ -474,7 +474,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                        overflowY: 'auto', 
+                                                                                                                height: 'calc(4 * var(--square-size))',
     
             
     
@@ -482,7 +482,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                        color: 'var(--history-text-color)', 
+                                                                                                                overflowY: 'auto', 
     
             
     
@@ -490,7 +490,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                        minWidth: '200px',
+                                                                                                                color: 'var(--history-text-color)', 
     
             
     
@@ -498,7 +498,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                        backgroundColor: 'var(--history-bg-color)',
+                                                                                                                width: '100%',
     
             
     
@@ -506,7 +506,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                        borderRadius: '4px',
+                                                                                                                backgroundColor: 'var(--history-bg-color)',
     
             
     
@@ -514,7 +514,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                        padding: '10px',
+                                                                                                                borderRadius: '4px',
     
             
     
@@ -522,7 +522,223 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                        boxSizing: 'border-box'
+                                                                                                                padding: '10px',
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                boxSizing: 'border-box',
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                display: 'flex',
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                flexDirection: 'column'
+    
+            
+    
+                
+    
+            
+    
+                                                                                                            }}>
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                <div style={{ 
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                    position: 'sticky', 
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                    top: 0, 
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                    backgroundColor: 'var(--history-bg-color)', 
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                    paddingBottom: '5px', 
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                    marginBottom: '5px', 
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                    borderBottom: '1px solid #444',
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                    fontWeight: 'bold',
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                    zIndex: 1
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                }}>
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                    Moves
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                </div>
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                {moveHistory.reduce((rows, move, index) => {
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                    if (index % 2 === 0) rows.push([move]);
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                    else rows[rows.length - 1].push(move);
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                    return rows;
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                }, []).map((row, i) => (
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                    <div key={i} style={{ 
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                        marginBottom: '5px', 
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                        display: 'grid', 
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                        gridTemplateColumns: '30px 1fr 1fr', 
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                        gap: '10px',
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                        alignItems: 'center'
     
             
     
@@ -538,7 +754,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                        {moveHistory.reduce((rows, move, index) => {
+                                                                                                                        <span style={{ color: '#888' }}>{i + 1}.</span>
     
             
     
@@ -546,7 +762,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                            if (index % 2 === 0) rows.push([move]);
+                                                                                                                        <span>{row[0]}</span>
     
             
     
@@ -554,7 +770,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                            else rows[rows.length - 1].push(move);
+                                                                                                                        <span>{row[1] || ''}</span>
     
             
     
@@ -562,7 +778,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                            return rows;
+                                                                                                                    </div>
     
             
     
@@ -570,7 +786,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                        }, []).map((row, i) => (
+                                                                                                                ))}
     
             
     
@@ -578,7 +794,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                            <div key={i} style={{ 
+                                                                                                            </div>
     
             
     
@@ -586,7 +802,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                                marginBottom: '5px', 
+                                                                            
     
             
     
@@ -594,87 +810,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                                display: 'grid', 
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                gridTemplateColumns: '30px 1fr 1fr', 
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                gap: '10px',
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                alignItems: 'center'
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                            }}>
-    
-            
-    
-                
-    
-            
-    
-                                                                                                <span style={{ color: '#888' }}>{i + 1}.</span>
-    
-            
-    
-                
-    
-            
-    
-                                                                                                <span>{row[0]}</span>
-    
-            
-    
-                
-    
-            
-    
-                                                                                                <span>{row[1] || ''}</span>
-    
-            
-    
-                
-    
-            
-    
-                                                                                            </div>
-    
-            
-    
-                
-    
-            
-    
-                                                                                        ))}
-    
-            
-    
-                
-    
-            
-    
-                                                                                    </div>
+                                                                                            <div style={{ display: 'flex', gap: '10px' }}>
     
             
     
@@ -690,7 +826,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                    <div style={{ display: 'flex', gap: '10px', marginTop: 'auto' }}>
+                                                                                                                        <button 
     
             
     
@@ -698,7 +834,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                            <button 
+                                                                    
     
             
     
@@ -706,7 +842,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                onClick={handleUndo}
+                                                                                                                            onClick={handleUndo}
     
             
     
@@ -714,7 +850,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                title="Undo"
+                                                                    
     
             
     
@@ -722,7 +858,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                style={{
+                                                                                                                            title="Undo"
     
             
     
@@ -730,7 +866,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    padding: '10px',
+                                                                    
     
             
     
@@ -738,7 +874,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    fontSize: '16px',
+                                                                                                                            style={{
     
             
     
@@ -746,7 +882,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    cursor: 'pointer',
+                                                                    
     
             
     
@@ -754,7 +890,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    whiteSpace: 'nowrap',
+                                                                                                                                padding: '0',
     
             
     
@@ -762,7 +898,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    fontFamily: 'inherit',
+                                                                    
     
             
     
@@ -770,7 +906,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    backgroundColor: 'var(--button-bg-color)',
+                                                                                                                                fontSize: '16px',
     
             
     
@@ -778,7 +914,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    color: 'var(--button-text-color)',
+                                                                    
     
             
     
@@ -786,7 +922,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    border: 'none',
+                                                                                                                                cursor: 'pointer',
     
             
     
@@ -794,7 +930,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    borderRadius: '4px',
+                                                                    
     
             
     
@@ -802,7 +938,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    display: 'flex',
+                                                                                                                                whiteSpace: 'nowrap',
     
             
     
@@ -810,7 +946,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    alignItems: 'center',
+                                                                    
     
             
     
@@ -818,7 +954,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    justifyContent: 'center',
+                                                                                                                                fontFamily: 'inherit',
     
             
     
@@ -826,7 +962,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    width: '44px',
+                                                                    
     
             
     
@@ -834,7 +970,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    height: '44px'
+                                                                                                                                backgroundColor: 'var(--button-bg-color)',
     
             
     
@@ -842,7 +978,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                }}
+                                                                    
     
             
     
@@ -850,7 +986,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                            >
+                                                                                                                                color: 'var(--button-text-color)',
     
             
     
@@ -858,7 +994,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" width="20" height="20">
+                                                                    
     
             
     
@@ -866,7 +1002,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    {/* Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. */}
+                                                                                                                                border: 'none',
     
             
     
@@ -874,7 +1010,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    <path d="M48.5 224H40c-13.3 0-24-10.7-24-24V72c0-9.7 5.8-18.5 14.8-22.2s19.3-1.7 26.2 5.2L98.6 96.6c87.6-86.5 228.7-86.2 315.8 1c87.5 87.5 87.5 229.3 0 316.8s-229.3 87.5-316.8 0c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0c62.5 62.5 163.8 62.5 226.3 0s62.5-163.8 0-226.3c-62.2-62.2-162.7-62.5-225.3-1L185 183c6.9 6.9 8.9 17.2 5.2 26.2s-12.5 14.8-22.2 14.8H48.5z"/>
+                                                                    
     
             
     
@@ -882,7 +1018,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                </svg>
+                                                                                                                                borderRadius: '4px',
     
             
     
@@ -890,7 +1026,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                            </button>
+                                                                    
     
             
     
@@ -898,7 +1034,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                            <button 
+                                                                                                                                display: 'flex',
     
             
     
@@ -906,7 +1042,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                onClick={copyFenToClipboard}
+                                                                    
     
             
     
@@ -914,7 +1050,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                title="Export Game"
+                                                                                                                                alignItems: 'center',
     
             
     
@@ -922,7 +1058,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                style={{
+                                                                    
     
             
     
@@ -930,7 +1066,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    padding: '10px',
+                                                                                                                                justifyContent: 'center',
     
             
     
@@ -938,7 +1074,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    fontSize: '16px',
+                                                                    
     
             
     
@@ -946,7 +1082,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    cursor: 'pointer',
+                                                                                                                                width: 'var(--button-size)',
     
             
     
@@ -954,7 +1090,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    whiteSpace: 'nowrap',
+                                                                    
     
             
     
@@ -962,7 +1098,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    fontFamily: 'inherit',
+                                                                                                                                height: 'var(--button-height)'
     
             
     
@@ -970,7 +1106,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    backgroundColor: 'var(--button-bg-color)',
+                                                                    
     
             
     
@@ -978,7 +1114,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    color: 'var(--button-text-color)',
+                                                                                                                            }}
     
             
     
@@ -986,7 +1122,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    border: 'none',
+                                                                    
     
             
     
@@ -994,7 +1130,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    borderRadius: '4px',
+                                                                                                                        >
     
             
     
@@ -1002,7 +1138,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    display: 'flex',
+                                                                    
     
             
     
@@ -1010,7 +1146,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    alignItems: 'center',
+                                                                                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
     
             
     
@@ -1018,7 +1154,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    justifyContent: 'center',
+                                                                    
     
             
     
@@ -1026,7 +1162,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    width: '44px',
+                                                                                                                                {/* Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. */}
     
             
     
@@ -1034,7 +1170,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    height: '44px'
+                                                                    
     
             
     
@@ -1042,7 +1178,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                }}
+                                                                                                                                <path d="M48.5 224H40c-13.3 0-24-10.7-24-24V72c0-9.7 5.8-18.5 14.8-22.2s19.3-1.7 26.2 5.2L98.6 96.6c87.6-86.5 228.7-86.2 315.8 1c87.5 87.5 87.5 229.3 0 316.8s-229.3 87.5-316.8 0c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0c62.5 62.5 163.8 62.5 226.3 0s62.5-163.8 0-226.3c-62.2-62.2-162.7-62.5-225.3-1L185 183c6.9 6.9 8.9 17.2 5.2 26.2s-12.5 14.8-22.2 14.8H48.5z"/>
     
             
     
@@ -1050,7 +1186,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                            >
+                                                                    
     
             
     
@@ -1058,7 +1194,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" width="20" height="20">
+                                                                                                                            </svg>
     
             
     
@@ -1066,7 +1202,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    {/* Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. */}
+                                                                    
     
             
     
@@ -1074,7 +1210,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                    <path d="M307 34.8c-11.5 5.1-19 16.6-19 29.2v64H176C78.8 128 0 206.8 0 304C0 417.3 81.5 467.9 100.2 478.1c2.5 1.4 5.3 1.9 7.8 1.9c10.9 0 19.7-8.9 19.7-19.7c0-7.5-4.3-14.4-9.8-19.5C108.8 431.9 96 414.4 96 384c0-53 43-96 96-96h96v64c0 12.6 7.4 24.1 19 29.2s25 3 34.4-5.4l160-144c6.7-6.1 10.6-14.7 10.6-24s-3.9-17.9-10.6-24l-160-144c-9.4-8.5-22.9-10.6-34.4-5.4z"/>
+                                                                                                                        </button>
     
             
     
@@ -1082,7 +1218,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                </svg>
+                                                                    
     
             
     
@@ -1090,7 +1226,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                            </button>
+                                                                                                                        <button 
     
             
     
@@ -1098,7 +1234,399 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                        </div>
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                            onClick={copyFenToClipboard}
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                            title="Export Game"
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                            style={{
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                padding: '0',
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                fontSize: '16px',
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                cursor: 'pointer',
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                whiteSpace: 'nowrap',
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                fontFamily: 'inherit',
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                backgroundColor: 'var(--button-bg-color)',
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                color: 'var(--button-text-color)',
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                border: 'none',
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                borderRadius: '4px',
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                display: 'flex',
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                alignItems: 'center',
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                justifyContent: 'center',
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                width: 'var(--button-size)',
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                height: 'var(--button-height)'
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                            }}
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                        >
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                {/* Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. */}
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                <path d="M307 34.8c-11.5 5.1-19 16.6-19 29.2v64H176C78.8 128 0 206.8 0 304C0 417.3 81.5 467.9 100.2 478.1c2.5 1.4 5.3 1.9 7.8 1.9c10.9 0 19.7-8.9 19.7-19.7c0-7.5-4.3-14.4-9.8-19.5C108.8 431.9 96 414.4 96 384c0-53 43-96 96-96h96v64c0 12.6 7.4 24.1 19 29.2s25 3 34.4-5.4l160-144c6.7-6.1 10.6-14.7 10.6-24s-3.9-17.9-10.6-24l-160-144c-9.4-8.5-22.9-10.6-34.4-5.4z"/>
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                            </svg>
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                        </button>
+    
+            
+    
+                
+    
+            
+    
+                                                                    
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                    </div>
     
             
     

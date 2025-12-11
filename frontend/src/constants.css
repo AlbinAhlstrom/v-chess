@@ -7,7 +7,7 @@
     --highlight-dark-square: #D4C25E;
     --drag-hover-light-border: #F6F3DF;
     --drag-hover-dark-border: #77AB5F;
-    --legal-move-dot-color: rgba(0, 128, 0, 0.8);
+    --legal-move-dot-color: rgba(0, 0, 0, 0.2);
     --legal-move-dot-size: 30%;
     --king-check-flash-color: #D36135;
     --king-check-flash-duration: 0.25s;
@@ -16,4 +16,8 @@
     --button-text-color: #ffffff;
     --history-bg-color: #2E2E38;
     --history-text-color: #ccc;
+    --button-size: var(--square-size);
+    --button-height: calc(var(--button-size) / 2);
+    --button-icon-size: 25px;
+    --history-width: calc(2 * var(--button-size) + 10px);
 }
