@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from oop_chess.piece.pawn import Pawn
+from oop_chess.piece.king import King
 from oop_chess.square import Square
 from oop_chess.enums import Color
 from oop_chess.piece.piece import Piece
@@ -36,6 +37,77 @@ class Move:
         if self.promotion_piece:
             move_str += self.promotion_piece.fen
         return move_str
+
+    def get_san(self, game: "Game") -> str:
+        """Returns the Standard Algebraic Notation (SAN) string for the move."""
+        piece = game.board.get_piece(self.start)
+        if piece is None:
+            return self.uci
+
+        # Castling
+        if isinstance(piece, King) and abs(self.start.col - self.end.col) == 2:
+            if self.end.col > self.start.col:
+                return "O-O"
+            else:
+                return "O-O-O"
+
+        san = ""
+        piece_char = str(piece).upper()
+        
+        if not isinstance(piece, Pawn):
+            san += piece_char
+
+        # Disambiguation
+        candidates = []
+        # Find all pieces of the same type and color
+        same_pieces = game.board.get_pieces(type(piece), piece.color)
+        for p in same_pieces:
+            if p.square == self.start:
+                continue
+            # Check if this piece can also move to the target square
+            # We construct a temporary move
+            candidate_move = Move(p.square, self.end, self.promotion_piece)
+            if game.is_move_legal(candidate_move):
+                candidates.append(p)
+
+        if candidates:
+            # Need disambiguation
+            # 1. File if different
+            file_distinct = True
+            for c in candidates:
+                if c.square.col == self.start.col:
+                    file_distinct = False
+                    break
+            
+            # 2. Rank if different (or if file not distinct)
+            rank_distinct = True
+            for c in candidates:
+                if c.square.row == self.start.row:
+                    rank_distinct = False
+                    break
+
+            if file_distinct:
+                san += str(self.start).lower()[0]
+            elif rank_distinct:
+                san += str(self.start).lower()[1]
+            else:
+                san += str(self.start).lower()
+
+        # Capture
+        target = game.board.get_piece(self.end)
+        is_en_passant = isinstance(piece, Pawn) and self.start.col != self.end.col and target is None
+        
+        if target is not None or is_en_passant:
+            if isinstance(piece, Pawn):
+                san += str(self.start).lower()[0] # Pawn capture requires file
+            san += "x"
+        
+        san += str(self.end).lower()
+
+        if self.promotion_piece:
+            san += "=" + str(self.promotion_piece).upper()
+
+        return san
 
     @staticmethod
     def is_uci_valid(uci_str: str):

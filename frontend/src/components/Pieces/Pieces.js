@@ -466,7 +466,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                            <div style={{ 
+                                                                                                                            <div style={{ 
     
             
     
@@ -474,7 +474,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                height: 'calc(4 * var(--square-size))',
+                                                                                                                                height: 'calc(4 * var(--square-size))',
     
             
     
@@ -482,7 +482,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                overflowY: 'auto', 
+                                                                                                                                overflowY: 'auto', 
     
             
     
@@ -490,7 +490,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                color: 'var(--history-text-color)', 
+                                                                                                                                color: 'var(--history-text-color)', 
     
             
     
@@ -498,7 +498,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                width: '100%',
+                                                                                                                                width: '100%',
     
             
     
@@ -506,7 +506,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                backgroundColor: 'var(--history-bg-color)',
+                                                                                                                                backgroundColor: 'var(--history-bg-color)',
     
             
     
@@ -514,7 +514,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                borderRadius: '4px',
+                                                                                                                                borderRadius: '4px',
     
             
     
@@ -522,7 +522,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                padding: '10px',
+                                                                                                                                padding: '10px',
     
             
     
@@ -530,7 +530,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                boxSizing: 'border-box',
+                                                                                                                                boxSizing: 'border-box',
     
             
     
@@ -538,7 +538,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                display: 'flex',
+                                                                                                                                display: 'flex',
     
             
     
@@ -546,7 +546,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                flexDirection: 'column'
+                                                                                                                                flexDirection: 'column',
     
             
     
@@ -554,7 +554,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                            }}>
+                                                                                                                                fontWeight: '600'
     
             
     
@@ -562,7 +562,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                <div style={{ 
+                                                                                                                            }}>
     
             
     
@@ -570,7 +570,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                    position: 'sticky', 
+                                                                                                                                <div style={{ 
     
             
     
@@ -578,7 +578,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                    top: 0, 
+                                                                                                                                    position: 'sticky', 
     
             
     
@@ -586,7 +586,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                    backgroundColor: 'var(--history-bg-color)', 
+                                                                                                                                    top: 0, 
     
             
     
@@ -594,7 +594,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                    paddingBottom: '5px', 
+                                                                                                                                    backgroundColor: 'var(--history-bg-color)', 
     
             
     
@@ -602,7 +602,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                    marginBottom: '5px', 
+                                                                                                                                    paddingBottom: '5px', 
     
             
     
@@ -610,7 +610,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                    borderBottom: '1px solid #444',
+                                                                                                                                    marginBottom: '5px', 
     
             
     
@@ -618,7 +618,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                    fontWeight: 'bold',
+                                                                                                                                    borderBottom: '1px solid #444',
     
             
     
@@ -626,7 +626,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                    zIndex: 1
+                                                                                                                                    fontWeight: '700',
     
             
     
@@ -634,7 +634,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                }}>
+                                                                                                                                    zIndex: 1
     
             
     
@@ -642,7 +642,7 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                    Moves
+                                                                                                                                }}>
     
             
     
@@ -650,7 +650,15 @@ export function Pieces({ onFenChange }) {
     
             
     
-                                                                                                                </div>
+                                                                                                                                    Moves
+    
+            
+    
+                
+    
+            
+    
+                                                                                                                                </div>
     
             
     

@@ -195,10 +195,18 @@ class Game:
         if reason != "Move is legal":
             raise IllegalMoveException(f"Illegal move: {reason}")
 
+        san = move.get_san(self)
+
         self.add_to_history()
-        self.move_history.append(move.uci)
         self.board.make_move(move)
         self.board.update_castling_rights()
+
+        if self.is_checkmate:
+            san += "#"
+        elif self.is_check:
+            san += "+"
+        
+        self.move_history.append(san)
 
     def undo_move(self) -> str:
         """Revert to the previous board state."""
