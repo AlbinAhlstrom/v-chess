@@ -7,6 +7,23 @@ import { fenToPosition, coordsToAlgebraic, algebraicToCoords } from '../../helpe
 import { createGame, getLegalMoves } from '../../api.js'
 import { useState, useRef, useEffect } from 'react'
 
+const UNDO_ICON = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
+        <path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/>
+    </svg>
+);
+
+const EXPORT_ICON = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
+        <path d="M307 34.8c-11.5 5.1-19 16.6-19 29.2v64H176C78.8 128 0 206.8 0 304C0 417.3 81.5 467.9 100.2 478.1c2.5 1.4 5.3 1.9 7.8 1.9c10.9 0 19.7-8.9 19.7-19.7c0-7.5-4.3-14.4-9.8-19.5C108.8 431.9 96 414.4 96 384c0-53 43-96 96-96h96v64c0 12.6 7.4 24.1 19 29.2s25 3 34.4-5.4l160-144c6.7-6.1 10.6-14.7 10.6-24s-3.9-17.9-10.6-24l-160-144c-9.4-8.5-22.9-10.6-34.4-5.4z"/>
+    </svg>
+);
+
+const RESET_ICON = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
+        <path d="M463.5 224H472c13.3 0 24-10.7 24-24V72c0-9.7-5.8-18.5-14.8-22.2s-19.3-1.7-26.2 5.2L413.4 96.6c-87.6-86.5-228.7-86.2-315.8 1c-87.5 87.5-87.5 229.3 0 316.8s229.3 87.5 316.8 0c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0c-62.5 62.5-163.8 62.5-226.3 0s-62.5-163.8 0-226.3c62.2-62.2 162.7-62.5 225.3-1L327 183c-6.9 6.9-8.9 17.2-5.2 26.2s12.5 14.8 22.2 14.8H463.5z"/>
+    </svg>
+);
 
 export function Pieces({ onFenChange }) {
     const ref = useRef()
@@ -24,6 +41,8 @@ export function Pieces({ onFenChange }) {
     const lastNotifiedFen = useRef(null);
     const dragStartSelectionState = useRef(false);
     const isPromoting = useRef(false);
+    
+    // Sounds
     const moveSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3"));
     const captureSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3"));
     const castleSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/castle.mp3"));
@@ -33,65 +52,76 @@ export function Pieces({ onFenChange }) {
     const promotionSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/promote.mp3"));
     const illegalSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/illegal.mp3"));
 
-    useEffect(() => {
-        const newGame = async () => {
-            const { game_id: newGameId, fen: initialFen } = await createGame();
-            setFen(initialFen);
-            gameStartSound.current.play().catch(e => console.error("Error playing game start sound:", e));
-            setGameId(newGameId);
+    const initializeGame = async () => {
+        if (ws.current) {
+            ws.current.close();
+        }
 
-            ws.current = new WebSocket(`ws://127.0.0.1:8000/ws/${newGameId}`);
+        const { game_id: newGameId, fen: initialFen } = await createGame();
+        setFen(initialFen);
+        setGameId(newGameId);
+        setMoveHistory([]);
+        setLegalMoves([]);
+        setSelectedSquare(null);
+        setInCheck(false);
+        setFlashKingSquare(null);
+        if (highlightRef.current) highlightRef.current.style.display = 'none';
+        
+        gameStartSound.current.play().catch(e => console.error("Error playing game start sound:", e));
 
-            ws.current.onmessage = (event) => {
-                const message = JSON.parse(event.data);
-                if (message.type === "game_state") {
-                    setFen(message.fen);
-                    setInCheck(message.in_check);
-                    setMoveHistory(message.move_history || []);
-                    setSelectedSquare(null);
-                    setLegalMoves([]);
-                    if (highlightRef.current) highlightRef.current.style.display = 'none';
+        ws.current = new WebSocket(`ws://127.0.0.1:8000/ws/${newGameId}`);
 
-                    if (message.status === "checkmate") {
-                        console.log("Checkmate detected!");
-                        gameEndSound.current.play().catch(e => console.error("Error playing game end sound:", e));
-                    } else if (message.status === "draw") {
-                        console.log("Draw detected!");
-                        gameEndSound.current.play().catch(e => console.error("Error playing game end sound:", e));
-                    }
-                } else if (message.type === "error") {
-                    console.error("WebSocket error:", message.message);
-                    if (message.message.toLowerCase().includes("check") && lastNotifiedFen.current) {
-                        illegalSound.current.play().catch(e => console.error("Error playing illegal move sound:", e));
-                        const currentFen = lastNotifiedFen.current;
-                        const isWhite = currentFen.split(' ')[1] === 'w';
-                        const grid = fenToPosition(currentFen);
-                        const kingChar = isWhite ? 'K' : 'k';
-                        let kingCoords = null;
-                        
-                        for (let r = 0; r < 8; r++) {
-                            for (let c = 0; c < 8; c++) {
-                                if (grid[r][c] === kingChar) {
-                                    kingCoords = { file: c, rank: r };
-                                    break;
-                                }
+        ws.current.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            if (message.type === "game_state") {
+                setFen(message.fen);
+                setInCheck(message.in_check);
+                setMoveHistory(message.move_history || []);
+                setSelectedSquare(null);
+                setLegalMoves([]);
+                if (highlightRef.current) highlightRef.current.style.display = 'none';
+
+                if (message.status === "checkmate") {
+                    console.log("Checkmate detected!");
+                    gameEndSound.current.play().catch(e => console.error("Error playing game end sound:", e));
+                } else if (message.status === "draw") {
+                    console.log("Draw detected!");
+                    gameEndSound.current.play().catch(e => console.error("Error playing game end sound:", e));
+                }
+            } else if (message.type === "error") {
+                console.error("WebSocket error:", message.message);
+                if (message.message.toLowerCase().includes("check") && lastNotifiedFen.current) {
+                    illegalSound.current.play().catch(e => console.error("Error playing illegal move sound:", e));
+                    const currentFen = lastNotifiedFen.current;
+                    const isWhite = currentFen.split(' ')[1] === 'w';
+                    const grid = fenToPosition(currentFen);
+                    const kingChar = isWhite ? 'K' : 'k';
+                    let kingCoords = null;
+                    
+                    for (let r = 0; r < 8; r++) {
+                        for (let c = 0; c < 8; c++) {
+                            if (grid[r][c] === kingChar) {
+                                kingCoords = { file: c, rank: r };
+                                break;
                             }
-                            if (kingCoords) break;
                         }
-                        
-                        if (kingCoords) {
-                            setFlashKingSquare(kingCoords);
-                            setTimeout(() => setFlashKingSquare(null), 500);
-                        }
+                        if (kingCoords) break;
+                    }
+                    
+                    if (kingCoords) {
+                        setFlashKingSquare(kingCoords);
+                        setTimeout(() => setFlashKingSquare(null), 500);
                     }
                 }
-            };
-
-            ws.current.onclose = () => console.log("WebSocket disconnected");
-            ws.current.onerror = (error) => console.error("WebSocket error:", error);
+            }
         };
-        newGame();
 
+        ws.current.onclose = () => console.log("WebSocket disconnected");
+        ws.current.onerror = (error) => console.error("WebSocket error:", error);
+    };
+
+    useEffect(() => {
+        initializeGame();
         return () => {
             if (ws.current) {
                 ws.current.close();
@@ -230,1534 +260,315 @@ export function Pieces({ onFenChange }) {
         setPromotionMove(null);
     };
 
-        const handlePieceDragStart = async ({ file, rank, piece, isCapture }) => {
-            if (!gameId) return;
-            const square = coordsToAlgebraic(file, rank);
-    
-            if (isCapture && selectedSquare) {
-                 const moveUci = `${selectedSquare}${square}`;
-                 if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-                     ws.current.send(JSON.stringify({ type: "move", uci: moveUci }));
-                 }
-                 setSelectedSquare(null);
-                 setLegalMoves([]);
-                 return;
-            }
-            
-            dragStartSelectionState.current = (selectedSquare === square);
-            setSelectedSquare(square);
-            
-            try {
-                const response = await getLegalMoves(gameId, square);
-                if (response.status === "success") {
-                    setLegalMoves(response.moves);
-                }
-            } catch (error) {
-                console.error("Failed to fetch legal moves:", error);
-            }
-        };
-    
-        const handlePieceDragEnd = () => {
-            
-        };
-    
-        const handleSquareClick = async (e) => {
-            if (!gameId || !fen) return;
-            // ... (rest of function unchanged, but effectively bypassed for pieces now)
-        };
+    const handlePieceDragStart = async ({ file, rank, piece, isCapture }) => {
+        if (!gameId) return;
+        const square = coordsToAlgebraic(file, rank);
+
+        if (isCapture && selectedSquare) {
+             const moveUci = `${selectedSquare}${square}`;
+             if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+                 ws.current.send(JSON.stringify({ type: "move", uci: moveUci }));
+             }
+             setSelectedSquare(null);
+             setLegalMoves([]);
+             return;
+        }
         
-        // ...
-    
-                const handleUndo = (e) => {
-    
-                    e.stopPropagation();
-    
+        dragStartSelectionState.current = (selectedSquare === square);
+        setSelectedSquare(square);
+        
+        try {
+            const response = await getLegalMoves(gameId, square);
+            if (response.status === "success") {
+                setLegalMoves(response.moves);
+            }
+        } catch (error) {
+            console.error("Failed to fetch legal moves:", error);
+        }
+    };
+
+    const handlePieceDragEnd = () => {
+        
+    };
+
+    const handleSquareClick = async (e) => {
+        if (!gameId || !fen) return;
+
+        const { file, rank, algebraic: clickedSquare } = calculateSquare(e);
+
+
+        const isPiece = (f, r) => {
+            const piece = position[r][f];
+            return !!piece;
+        };
+
+        if (selectedSquare) {
+            const movesToTarget = legalMoves.filter(m => m.slice(2, 4) === clickedSquare);
+
+            if (movesToTarget.length > 0) {
+                if (movesToTarget.length > 1 || movesToTarget[0].length === 5) {
+                    setPromotionMove({ from: selectedSquare, to: clickedSquare });
+                    setPromotionDialogOpen(true);
+                } else {
+                    const moveUci = movesToTarget[0];
                     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-    
-                        ws.current.send(JSON.stringify({ type: "undo" }));
-    
+                        ws.current.send(JSON.stringify({ type: "move", uci: moveUci }));
                     }
-    
-                };
-    
-            
-    
-                const isCaptureMove = (file, rank) => {
-    
-                    if (!selectedSquare) return false;
-    
-                    const targetSquare = coordsToAlgebraic(file, rank);
-    
-                    return legalMoves.some(m => m.slice(2, 4) === targetSquare);
-    
-                };
-    
-            
-    
-                    const copyFenToClipboard = async () => {
-    
-            
-    
-                        if (!fen) return;
-    
-            
-    
-                        try {
-    
-            
-    
-                            await navigator.clipboard.writeText(fen);
-    
-            
-    
-                        } catch (err) {
-    
-            
-    
-                            console.error('Failed to copy FEN: ', err);
-    
-            
-    
+                }
+            } else {
+                if (clickedSquare === selectedSquare) {
+                    setSelectedSquare(null);
+                    setLegalMoves([]);
+                } else if (isPiece(file, rank)) {
+                    setSelectedSquare(clickedSquare);
+                    try {
+                        const response = await getLegalMoves(gameId, clickedSquare);
+                        if (response.status === "success") {
+                            setLegalMoves(response.moves);
                         }
-    
-            
-    
-                    };
-    
-            
-    
-                
-    
-            
-    
-                    const promotionColor = fen && fen.split(' ')[1] === 'w' ? 'w' : 'b';
-    
-            
-    
-                
-    
-            
-    
-                
-    
-            
-    
-                    return (
-    
-            
-    
-                        <div
-    
-            
-    
-                            className="pieces"
-    
-            
-    
-                            ref={ref}
-    
-            
-    
-                            onClick={handleSquareClick}
-    
-            
-    
-                            >
-    
-            
-    
-                
-    
-            
-    
-                                                                                        <div style={{
-    
-            
-    
-                
-    
-            
-    
-                                                                                            position: 'absolute',
-    
-            
-    
-                
-    
-            
-    
-                                                                                            left: '100%',
-    
-            
-    
-                
-    
-            
-    
-                                                                                            top: '50%',
-    
-            
-    
-                
-    
-            
-    
-                                                                                            transform: 'translateY(-50%)',
-    
-            
-    
-                
-    
-            
-    
-                                                                                            marginLeft: '20px',
-    
-            
-    
-                
-    
-            
-    
-                                                                                            display: 'flex',
-    
-            
-    
-                
-    
-            
-    
-                                                                                            flexDirection: 'column',
-    
-            
-    
-                
-    
-            
-    
-                                                                                            gap: '10px',
-    
-            
-    
-                
-    
-            
-    
-                                                                                            fontFamily: 'var(--main-font-family)',
-    
-            
-    
-                
-    
-            
-    
-                                                                                            width: 'var(--history-width)'
-    
-            
-    
-                
-    
-            
-    
-                                                                                        }}>
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                            <div style={{ 
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                height: 'calc(4 * var(--square-size))',
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                overflowY: 'auto', 
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                color: 'var(--history-text-color)', 
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                width: '100%',
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                backgroundColor: 'var(--history-bg-color)',
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                borderRadius: '4px',
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                padding: '10px',
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                boxSizing: 'border-box',
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                display: 'flex',
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                flexDirection: 'column',
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                fontWeight: '600'
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                            }}>
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                <div style={{ 
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                    position: 'sticky', 
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                    top: 0, 
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                    backgroundColor: 'var(--history-bg-color)', 
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                    paddingBottom: '5px', 
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                    marginBottom: '5px', 
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                    borderBottom: '1px solid #444',
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                    fontWeight: '700',
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                    zIndex: 1
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                }}>
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                    Moves
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                </div>
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                {moveHistory.reduce((rows, move, index) => {
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                    if (index % 2 === 0) rows.push([move]);
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                    else rows[rows.length - 1].push(move);
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                    return rows;
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                }, []).map((row, i) => (
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                    <div key={i} style={{ 
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                        marginBottom: '5px', 
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                        display: 'grid', 
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                        gridTemplateColumns: '30px 1fr 1fr', 
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                        gap: '10px',
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                        alignItems: 'center'
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                    }}>
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                        <span style={{ color: '#888' }}>{i + 1}.</span>
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                        <span>{row[0]}</span>
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                        <span>{row[1] || ''}</span>
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                    </div>
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                ))}
-    
-            
-    
-                
-    
-            
-    
-                                                                                                            </div>
-    
-            
-    
-                
-    
-            
-    
-                                                                            
-    
-            
-    
-                
-    
-            
-    
-                                                                                            <div style={{ display: 'flex', gap: '10px' }}>
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                        <button 
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                            onClick={handleUndo}
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                            title="Undo"
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                            style={{
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                padding: '0',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                fontSize: '16px',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                cursor: 'pointer',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                whiteSpace: 'nowrap',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                fontFamily: 'inherit',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                backgroundColor: 'var(--button-bg-color)',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                color: 'var(--button-text-color)',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                border: 'none',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                borderRadius: '4px',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                display: 'flex',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                alignItems: 'center',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                justifyContent: 'center',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                width: 'var(--button-size)',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                height: 'var(--button-height)'
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                            }}
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                        >
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                {/* Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. */}
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                <path d="M48.5 224H40c-13.3 0-24-10.7-24-24V72c0-9.7 5.8-18.5 14.8-22.2s19.3-1.7 26.2 5.2L98.6 96.6c87.6-86.5 228.7-86.2 315.8 1c87.5 87.5 87.5 229.3 0 316.8s-229.3 87.5-316.8 0c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0c62.5 62.5 163.8 62.5 226.3 0s62.5-163.8 0-226.3c-62.2-62.2-162.7-62.5-225.3-1L185 183c6.9 6.9 8.9 17.2 5.2 26.2s-12.5 14.8-22.2 14.8H48.5z"/>
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                            </svg>
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                        </button>
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                        <button 
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                            onClick={copyFenToClipboard}
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                            title="Export Game"
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                            style={{
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                padding: '0',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                fontSize: '16px',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                cursor: 'pointer',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                whiteSpace: 'nowrap',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                fontFamily: 'inherit',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                backgroundColor: 'var(--button-bg-color)',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                color: 'var(--button-text-color)',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                border: 'none',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                borderRadius: '4px',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                display: 'flex',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                alignItems: 'center',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                justifyContent: 'center',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                width: 'var(--button-size)',
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                height: 'var(--button-height)'
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                            }}
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                        >
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                {/* Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. */}
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                                <path d="M307 34.8c-11.5 5.1-19 16.6-19 29.2v64H176C78.8 128 0 206.8 0 304C0 417.3 81.5 467.9 100.2 478.1c2.5 1.4 5.3 1.9 7.8 1.9c10.9 0 19.7-8.9 19.7-19.7c0-7.5-4.3-14.4-9.8-19.5C108.8 431.9 96 414.4 96 384c0-53 43-96 96-96h96v64c0 12.6 7.4 24.1 19 29.2s25 3 34.4-5.4l160-144c6.7-6.1 10.6-14.7 10.6-24s-3.9-17.9-10.6-24l-160-144c-9.4-8.5-22.9-10.6-34.4-5.4z"/>
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                            </svg>
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                        </button>
-    
-            
-    
-                
-    
-            
-    
-                                                                    
-    
-            
-    
-                
-    
-            
-    
-                                                                                                                    </div>
-    
-            
-    
-                
-    
-            
-    
-                                                    </div>
-    
-            
-    
-                
-    
-            
-    
-                            {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
-    
-            
-    
-                        
-    
-            
-    
-                                    {flashKingSquare && (
-    
-            
-    
-                                        <div 
-    
-            
-    
-                                            className="king-flash"
-    
-            
-    
-                                            style={{
-    
-            
-    
-                                                left: `calc(${flashKingSquare.file} * var(--square-size))`,
-    
-            
-    
-                                                top: `calc(${flashKingSquare.rank} * var(--square-size))`
-    
-            
-    
-                                            }}
-    
-            
-    
-                                        />
-    
-            
-    
-                                    )}
-    
-            
-    
-                        
-    
-            
-    
-                                    <div 
-    
-            
-    
-                                        ref={highlightRef}
-    
-                                style={{
-    
-                                    position: 'absolute',
-    
-                                    width: 'var(--square-size)',
-    
-                                    height: 'var(--square-size)',
-    
-                                    boxSizing: 'border-box',
-    
-                                    zIndex: 6, 
-    
-                                    pointerEvents: 'none',
-    
-                                    display: 'none'
-    
-                                }}
-    
-                            />
-    
-                
-    
-                            {selectedSquare && (() => {
-                    const { file, rank } = algebraicToCoords(selectedSquare);
-                    const isDark = (file + rank) % 2 !== 0; // Chessboard pattern
-                    return <HighlightSquare
-                        file={file}
-                        rank={rank}
-                        isDark={isDark}
-                    />;
-                })()}
-    
-                {legalMoves.map((moveUci, index) => {
-                    const targetSquare = moveUci.slice(2, 4);
-                    const { file, rank } = algebraicToCoords(targetSquare);
-                    return <LegalMoveDot key={index} file={file} rank={rank} />;
-                })}
-    
-                {position.map((rankArray, rankIndex) =>
-                    rankArray.map((pieceType, fileIndex) =>
-                        pieceType
-                            ? <Piece
-                                key={`p-${rankIndex}-${fileIndex}`}
-                                rank={rankIndex}
-                                file={fileIndex}
-                                piece={pieceType}
-                                onDragStartCallback={handlePieceDragStart}
-                                onDragEndCallback={handlePieceDragEnd}
-                                onDropCallback={handleManualDrop}
-                                onDragHoverCallback={handlePieceDragHover}
-                                isCapture={isCaptureMove(fileIndex, rankIndex)}
-                              />
-                            : null
-                    )
-                )}
+                    } catch (error) {
+                        console.error("Failed to fetch legal moves:", error);
+                    }
+                } else {
+                    setSelectedSquare(null);
+                    setLegalMoves([]);
+                }
+            }
+        } else {
+            if (isPiece(file, rank)) {
+                setSelectedSquare(clickedSquare);
+                try {
+                    const response = await getLegalMoves(gameId, clickedSquare);
+                    if (response.status === "success") {
+                        setLegalMoves(response.moves);
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch legal moves:", error);
+                }
+            }
+        }
+    };
+
+    const handleReset = (e) => {
+        e.stopPropagation();
+        initializeGame();
+    };
+
+    const handleUndo = (e) => {
+        e.stopPropagation();
+        if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+            ws.current.send(JSON.stringify({ type: "undo" }));
+        }
+    };
+
+    const isCaptureMove = (file, rank) => {
+        if (!selectedSquare) return false;
+        const targetSquare = coordsToAlgebraic(file, rank);
+        return legalMoves.some(m => m.slice(2, 4) === targetSquare);
+    };
+
+    const copyFenToClipboard = async () => {
+        if (!fen) return;
+        try {
+            await navigator.clipboard.writeText(fen);
+        } catch (err) {
+            console.error('Failed to copy FEN: ', err);
+        }
+    };
+
+    const promotionColor = fen && fen.split(' ')[1] === 'w' ? 'w' : 'b';
+
+    return (
+        <div
+            className="pieces"
+            ref={ref}
+            onClick={handleSquareClick}
+            >
+
+            <div style={{
+                position: 'absolute',
+                left: '100%',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                marginLeft: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                fontFamily: 'var(--main-font-family)',
+                width: 'var(--history-width)'
+            }}>
+                <div style={{ 
+                    height: 'calc(4 * var(--square-size))',
+                    overflowY: 'auto', 
+                    color: 'var(--history-text-color)', 
+                    width: '100%',
+                    backgroundColor: 'var(--history-bg-color)',
+                    borderRadius: '4px',
+                    padding: '10px',
+                    boxSizing: 'border-box',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    fontWeight: '600'
+                }}>
+                    <div style={{ 
+                        position: 'sticky', 
+                        top: 0, 
+                        backgroundColor: 'var(--history-bg-color)', 
+                        paddingBottom: '5px', 
+                        marginBottom: '5px', 
+                        borderBottom: '1px solid #444',
+                        fontWeight: '700',
+                        zIndex: 1
+                    }}>
+                        Moves
+                    </div>
+                    {moveHistory.reduce((rows, move, index) => {
+                        if (index % 2 === 0) rows.push([move]);
+                        else rows[rows.length - 1].push(move);
+                        return rows;
+                    }, []).map((row, i) => (
+                        <div key={i} style={{ 
+                            marginBottom: '5px', 
+                            display: 'grid', 
+                            gridTemplateColumns: '30px 1fr 1fr', 
+                            gap: '10px',
+                            alignItems: 'center'
+                        }}>
+                            <span style={{ color: '#888' }}>{i + 1}.</span>
+                            <span>{row[0]}</span>
+                            <span>{row[1] || ''}</span>
+                        </div>
+                    ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button 
+                        onClick={handleUndo}
+                        title="Undo"
+                        style={{
+                            padding: '0',
+                            fontSize: '16px',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            fontFamily: 'inherit',
+                            backgroundColor: 'var(--button-bg-color)',
+                            color: 'var(--button-text-color)',
+                            border: 'none',
+                            borderRadius: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 'var(--button-size)',
+                            height: 'var(--button-height)'
+                        }}
+                    >
+                        {UNDO_ICON}
+                    </button>
+                    <button 
+                        onClick={copyFenToClipboard}
+                        title="Export Game"
+                        style={{
+                            padding: '0',
+                            fontSize: '16px',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            fontFamily: 'inherit',
+                            backgroundColor: 'var(--button-bg-color)',
+                            color: 'var(--button-text-color)',
+                            border: 'none',
+                            borderRadius: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 'var(--button-size)',
+                            height: 'var(--button-height)'
+                        }}
+                    >
+                        {EXPORT_ICON}
+                    </button>
+                    <button 
+                        onClick={handleReset}
+                        title="Reset Game"
+                        style={{
+                            padding: '0',
+                            fontSize: '16px',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            fontFamily: 'inherit',
+                            backgroundColor: 'var(--button-bg-color)',
+                            color: 'var(--button-text-color)',
+                            border: 'none',
+                            borderRadius: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 'var(--button-size)',
+                            height: 'var(--button-height)'
+                        }}
+                    >
+                        {RESET_ICON}
+                    </button>
+                </div>
             </div>
-        );}
+
+            {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
+
+            {flashKingSquare && (
+                <div 
+                    className="king-flash"
+                    style={{
+                        left: `calc(${flashKingSquare.file} * var(--square-size))`,
+                        top: `calc(${flashKingSquare.rank} * var(--square-size))`
+                    }}
+                />
+            )}
+
+            <div 
+                ref={highlightRef}
+                style={{
+                    position: 'absolute',
+                    width: 'var(--square-size)',
+                    height: 'var(--square-size)',
+                    boxSizing: 'border-box',
+                    zIndex: 6, 
+                    pointerEvents: 'none',
+                    display: 'none'
+                }}
+            />
+
+            {selectedSquare && (() => {
+                const { file, rank } = algebraicToCoords(selectedSquare);
+                const isDark = (file + rank) % 2 !== 0; // Chessboard pattern
+                return <HighlightSquare
+                    file={file}
+                    rank={rank}
+                    isDark={isDark}
+                />;
+            })()}
+
+            {legalMoves.map((moveUci, index) => {
+                const targetSquare = moveUci.slice(2, 4);
+                const { file, rank } = algebraicToCoords(targetSquare);
+                return <LegalMoveDot key={index} file={file} rank={rank} />;
+            })}
+
+            {position.map((rankArray, rankIndex) =>
+                rankArray.map((pieceType, fileIndex) =>
+                    pieceType
+                        ? <Piece
+                            key={`p-${rankIndex}-${fileIndex}`}
+                            rank={rankIndex}
+                            file={fileIndex}
+                            piece={pieceType}
+                            onDragStartCallback={handlePieceDragStart}
+                            onDragEndCallback={handlePieceDragEnd}
+                            onDropCallback={handleManualDrop}
+                            onDragHoverCallback={handlePieceDragHover}
+                            isCapture={isCaptureMove(fileIndex, rankIndex)}
+                          />
+                        : null
+                )
+            )}
+        </div>
+    );
+}

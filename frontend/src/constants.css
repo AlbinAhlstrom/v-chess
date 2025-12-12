@@ -19,5 +19,5 @@
     --button-size: var(--square-size);
     --button-height: calc(var(--button-size) / 2);
     --button-icon-size: 25px;
-    --history-width: calc(2 * var(--button-size) + 10px);
+    --history-width: calc(3 * var(--button-size) + 20px);
 }
