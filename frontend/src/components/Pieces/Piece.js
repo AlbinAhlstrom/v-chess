@@ -43,7 +43,7 @@ function Piece({ piece, file, rank, onDragStartCallback, onDragEndCallback, onDr
         ghostRef.current = ghost;
 
         // 3. Hide original
-        e.target.style.display = "none";
+        e.target.style.opacity = "0";
 
         // 4. Set global cursor
         document.body.style.cursor = "grabbing";
@@ -71,7 +71,7 @@ function Piece({ piece, file, rank, onDragStartCallback, onDragEndCallback, onDr
             }
 
             // Restore original visibility
-            e.target.style.display = "block";
+            e.target.style.opacity = "1";
 
             // Restore cursor
             document.body.style.cursor = "default";
@@ -108,6 +108,11 @@ function Piece({ piece, file, rank, onDragStartCallback, onDragEndCallback, onDr
             className="piece"
             style={pieceStyle}
             onMouseDown={handleMouseDown}
+            onClick={(e) => {
+                if (!isCapture) {
+                    e.stopPropagation();
+                }
+            }}
         />
     );
 }
