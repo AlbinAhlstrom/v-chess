@@ -344,19 +344,20 @@ class StandardRules(Rules):
         return invalid
 
 class AntichessRules(StandardRules):
-    def is_move_legal(self, state: GameState, move: Move) -> bool:
-        if self.move_pseudo_legality_reason(state, move) != MoveLegalityReason.LEGAL:
-            return False
+    def move_legality_reason(self, state: GameState, move: Move) -> str:
+        pseudo_reason = self.move_pseudo_legality_reason(state, move)
+        if pseudo_reason != MoveLegalityReason.LEGAL:
+            return pseudo_reason.value
 
         if self._is_capture(state, move):
-            return True
+            return "Move is legal"
 
         # If move is not a capture, ensure no captures are available
         for opt_move in self.get_theoretical_moves(state):
             if self.move_pseudo_legality_reason(state, opt_move) == MoveLegalityReason.LEGAL:
                 if self._is_capture(state, opt_move):
-                    return False
-        return True
+                    return "Mandatory capture available."
+        return "Move is legal"
 
     def _is_capture(self, state: GameState, move: Move) -> bool:
         if state.board.get_piece(move.end):
