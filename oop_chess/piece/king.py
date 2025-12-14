@@ -11,8 +11,11 @@ class King(Piece):
 
     Moves one square in any direction.
     """
-    moveset = Direction.straight_and_diagonal()
     MAX_STEPS = 1
+
+    @property
+    def moveset(self):
+        return Direction.straight_and_diagonal()
 
     def __str__(self):
         match self.color:

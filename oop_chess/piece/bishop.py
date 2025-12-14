@@ -9,7 +9,9 @@ class Bishop(Piece):
 
     Moves any number of squares diagonally.
     """
-    moveset = Direction.diagonal()
+    @property
+    def moveset(self):
+        return Direction.diagonal()
 
     def __str__(self):
         match self.color:

@@ -9,8 +9,11 @@ class Knight(Piece):
 
     Moves two squares in one direction and one square perpendicular.
     """
-    moveset = Direction.two_straight_one_sideways()
     MAX_STEPS = 1
+
+    @property
+    def moveset(self):
+        return Direction.two_straight_one_sideways()
 
     def __str__(self):
         match self.color:

@@ -9,7 +9,9 @@ class Rook(Piece):
 
     Moves any number of squares horizontally or vertically.
     """
-    moveset = Direction.straight()
+    @property
+    def moveset(self):
+        return Direction.straight()
 
     def __str__(self) -> str:
         match self.color:
