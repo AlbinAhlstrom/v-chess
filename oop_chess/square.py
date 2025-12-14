@@ -69,7 +69,9 @@ class Square:
         return cls(row, col)
 
     @classmethod
-    def from_coord(cls, coordinate: Coordinate) -> "Square":
+    def from_coord(cls, coordinate: Coordinate | None) -> "Square":
+        if coordinate is None:
+            return NoSquare
         if isinstance(coordinate, cls):
             return coordinate
         elif isinstance(coordinate, str):
