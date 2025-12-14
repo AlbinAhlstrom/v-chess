@@ -6,6 +6,7 @@ from oop_chess.square import Square
 from oop_chess.enums import Color
 from oop_chess.piece.pawn import Pawn
 from oop_chess.piece.rook import Rook
+from tests.conftest import random_square
 
 def board():
     """Generates a board in the standard starting position."""
@@ -111,7 +112,7 @@ def test_pseudo_legal_pawn_diagonal_requires_capture(board):
 
     board.set_piece(Pawn(Color.WHITE), start)
     board.remove_piece(end) # Ensure target is empty
-    board.ep_square = None # Ensure not en passant
+    # Note: Game(board) creates default state (EP=None), so this check is valid
 
     move = Move(start, end)
 
@@ -139,22 +140,22 @@ def test_pseudo_legal_path_is_blocked(board):
 
     assert not is_legal, f"Expected 'Path is blocked'. got {reason}"
     assert reason == "Path is blocked."
-    assert end not in board.unblocked_paths(board.get_piece(start))
+    # Fixed argument
+    piece = board.get_piece(start)
+    assert end not in board.unblocked_paths(piece, piece.theoretical_move_paths(start))
 
 def test_leaving_king_in_check_is_pseudo_legal():
     fen = "k7/r7/8/8/8/8/R7/K7 w - - 0 1"
-    board = Board.from_fen(fen)
+    game = Game(fen=fen)
     move = Move.from_uci("a2h2")
 
-    game = Game(board)
     assert game.is_move_pseudo_legal(move)[0]
 
 def test_pseudo_legal_en_passant_is_legal():
     """Test that a valid en passant capture is recognized as pseudo-legal."""
     # FEN: White pawn on e5, black on d5, en passant on d6
     fen = "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1"
-    board = Board.from_fen(fen)
-    game = Game(board)
+    game = Game(fen=fen)
 
     # White's en passant capture: e5xd6
     move = Move.from_uci("e5d6")
@@ -164,8 +165,7 @@ def test_pseudo_legal_en_passant_is_legal():
 
 def test_fen_after_initial_pawn_move():
     """Test that the FEN's en passant field is correctly 'a3' after 1. a4."""
-    board = Board.starting_setup()
-    game = Game(board)
+    game = Game()
 
     # Make the move 1. a4
     move = Move.from_uci("a2a4")
@@ -173,18 +173,17 @@ def test_fen_after_initial_pawn_move():
 
     # The FEN should have 'a3' for the en passant square
     expected_fen = "rnbqkbnr/pppppppp/8/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq a3 0 1"
-    assert game.board.fen == expected_fen
+    assert game.state.fen == expected_fen
 
 def test_en_passant_capture_removes_pawn():
     """Test that an en passant capture correctly removes the captured pawn."""
     # FEN: White pawn on e5, black on d5, en passant on d6
     fen = "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1"
-    board = Board.from_fen(fen)
-    game = Game(board)
+    game = Game(fen=fen)
     captured_pawn_square = Square.from_coord('d5')
 
     # Ensure the black pawn is on d5 before the move
-    assert board.get_piece(captured_pawn_square) is not None
+    assert game.board.get_piece(captured_pawn_square) is not None
 
     # White's en passant capture: e5xd6
     move = Move.from_uci("e5d6")
@@ -193,13 +192,12 @@ def test_en_passant_capture_removes_pawn():
     game.take_turn(move)
 
     # After the move, the white pawn should be on d6, and the black pawn on d5 should be gone
-    assert board.get_piece(captured_pawn_square) is None
-    assert isinstance(board.get_piece(Square.from_coord('d6')), Pawn)
+    assert game.board.get_piece(captured_pawn_square) is None
+    assert isinstance(game.board.get_piece(Square.from_coord('d6')), Pawn)
 
 def test_en_passant_capture_from_start():
     """Test a specific en passant capture sequence from the starting position."""
-    board = Board.starting_setup()
-    game = Game(board)
+    game = Game()
 
     moves_uci = ["a2a4", "a7a6", "a4a5", "b7b5", "a5b6"]
     for uci in moves_uci:
@@ -209,11 +207,10 @@ def test_en_passant_capture_from_start():
     captured_pawn_square = Square.from_coord('b5')
     assert game.board.get_piece(captured_pawn_square) is None
 
-    assert game.board.fen != 'rnbqkbnr/2pppppp/pP6/1p6/8/8/1PPPPPPP/RNBQKBNR b KQkq - 0 3'
+    assert game.state.fen != 'rnbqkbnr/2pppppp/pP6/1p6/8/8/1PPPPPPP/RNBQKBNR b KQkq - 0 3'
     assert isinstance(game.board.get_piece(Square.from_coord('b6')), Pawn)
 
 def test_en_passant_valid():
     fen = 'rnbqkbnr/2pppppp/p7/Pp6/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 3'
-    board = Board.from_fen(fen)
-    game = Game(board)
+    game = Game(fen=fen)
     move = Move.from_uci("a5b5")

@@ -60,29 +60,28 @@ class Move:
         # Disambiguation
         candidates = []
         # Find all pieces of the same type and color
-        same_pieces = game.board.get_pieces(type(piece), piece.color)
-        for p in same_pieces:
-            if p.square == self.start:
-                continue
-            # Check if this piece can also move to the target square
-            # We construct a temporary move
-            candidate_move = Move(p.square, self.end, self.promotion_piece)
-            if game.is_move_legal(candidate_move):
-                candidates.append(p)
+        for sq, p in game.board.board.items():
+            if p and isinstance(p, type(piece)) and p.color == piece.color:
+                if sq == self.start:
+                    continue
+                # Check if this piece can also move to the target square
+                candidate_move = Move(sq, self.end, self.promotion_piece)
+                if game.is_move_legal(candidate_move):
+                    candidates.append(sq)
 
         if candidates:
             # Need disambiguation
             # 1. File if different
             file_distinct = True
-            for c in candidates:
-                if c.square.col == self.start.col:
+            for c_sq in candidates:
+                if c_sq.col == self.start.col:
                     file_distinct = False
                     break
             
             # 2. Rank if different (or if file not distinct)
             rank_distinct = True
-            for c in candidates:
-                if c.square.row == self.start.row:
+            for c_sq in candidates:
+                if c_sq.row == self.start.row:
                     rank_distinct = False
                     break
 
@@ -95,6 +94,7 @@ class Move:
 
         # Capture
         target = game.board.get_piece(self.end)
+        # En Passant: Pawn moves diagonally to empty square
         is_en_passant = isinstance(piece, Pawn) and self.start.col != self.end.col and target is None
         
         if target is not None or is_en_passant:
@@ -139,7 +139,7 @@ class Move:
 
     @classmethod
     def from_san_castling(cls, san_str: str, game: "Game") -> "Move":
-        color = game.board.player_to_move
+        color = game.state.turn
         if san_str == "O-O":
             if color == Color.WHITE:
                 move = cls.from_uci("e1g1")
@@ -172,7 +172,7 @@ class Move:
         if "=" in clean_san:
             clean_san, promotion_char = clean_san.split("=")
             promotion_piece = piece_from_char[promotion_char](
-                game.board.player_to_move
+                game.state.turn
             )
         elif clean_san and clean_san[-1].isalpha() and clean_san[-1] in piece_from_char:
             # Handle implicit promotion (e.g., "a8Q")
@@ -180,7 +180,7 @@ class Move:
             if promotion_char.upper() in ["Q", "R", "B", "N"]:
                 clean_san = clean_san[:-1]
                 promotion_piece = piece_from_char[promotion_char](
-                    game.board.player_to_move
+                    game.state.turn
                 )
 
         end_square = Square.from_str(clean_san[-2:])
@@ -193,24 +193,28 @@ class Move:
             piece_type = Pawn
             disambiguation = piece_indicator
 
-        candidates = game.board.get_pieces(piece_type, game.board.player_to_move)
+        # Find candidates (Squares)
+        candidates = []
+        for sq, p in game.board.board.items():
+            if p and isinstance(p, piece_type) and p.color == game.state.turn:
+                 candidates.append(sq)
 
         if disambiguation:
             if disambiguation.isalpha():
                 col = ord(disambiguation) - ord("a")
-                candidates = [p for p in candidates if p.square.col == col]
+                candidates = [sq for sq in candidates if sq.col == col]
             elif disambiguation.isdigit():
                 row = 8 - int(disambiguation)
-                candidates = [p for p in candidates if p.square.row == row]
+                candidates = [sq for sq in candidates if sq.row == row]
             elif len(disambiguation) == 2:
                 col = ord(disambiguation[0]) - ord("a")
                 row = 8 - int(disambiguation[1])
-                candidates = [p for p in candidates if p.square.col == col and p.square.row == row]
+                candidates = [sq for sq in candidates if sq.col == col and sq.row == row]
 
         legal_moves = [
-            Move(piece.square, end_square, promotion_piece)
-            for piece in candidates
-            if game.is_move_legal(Move(piece.square, end_square, promotion_piece))
+            Move(sq, end_square, promotion_piece)
+            for sq in candidates
+            if game.is_move_legal(Move(sq, end_square, promotion_piece))
         ]
 
         if len(legal_moves) != 1:

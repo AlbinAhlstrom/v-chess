@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
 from itertools import chain
+from dataclasses import dataclass
 
-from oop_chess.square import NoSquare, Square
+from oop_chess.square import Square
 from oop_chess.enums import Color, Direction
 
 
+@dataclass(frozen=True)
 class Piece(ABC):
     """Abstract base class for chess pieces.
 
@@ -12,15 +14,9 @@ class Piece(ABC):
 
     Attributes:
         color: Piece color
-        square: Current position on the board
-        has_moved: True if piece has moved from starting position.
     """
+    color: Color
     MAX_STEPS = 7
-
-    def __init__(self, color: Color, square: Square = NoSquare, has_moved: bool = False):
-        self.color = color
-        self.square = square
-        self.has_moved = has_moved
 
     @property
     def start_rank(self) -> int:
@@ -53,16 +49,17 @@ class Piece(ABC):
     def css_class(self):
         return f"{self.color}-{self.__class__.__name__.lower()}"
 
-    @property
-    def theoretical_move_paths(self) -> list[list[Square]]:
+    def theoretical_move_paths(self, start: Square) -> list[list[Square]]:
         """List of squares reachable when moving in all directions in moveset."""
-        return [direction.get_path(self.square, self.MAX_STEPS) for direction in self.moveset]
+        return [direction.get_path(start, self.MAX_STEPS) for direction in self.moveset]
 
-    @property
-    def theoretical_moves(self) -> list[Square]:
+    def theoretical_moves(self, start: Square) -> list[Square]:
         """All moves legal on an empty board"""
-        return list(chain.from_iterable(self.theoretical_move_paths))
+        return list(chain.from_iterable(self.theoretical_move_paths(start)))
 
-    @property
-    def capture_squares(self) -> list[Square]:
-        return self.theoretical_moves
+    def capture_paths(self, start: Square) -> list[list[Square]]:
+        """List of squares in a line from start square that are under attack by the piece."""
+        return self.theoretical_move_paths(start)
+
+    def capture_squares(self, start: Square) -> list[Square]:
+        return list(chain.from_iterable(self.capture_paths(start)))

@@ -1,6 +1,9 @@
 from copy import deepcopy
+from typing import Optional
+from dataclasses import replace
 
 from oop_chess.board import Board
+from oop_chess.game_state import GameState
 from oop_chess.move import Move
 from oop_chess.piece.king import King
 from oop_chess.piece.pawn import Pawn
@@ -14,13 +17,29 @@ class Game:
     """Represents a chess game.
 
     Responsible for turn management.
-    The majority of the game logic is handled in the Board class.
     """
 
-    def __init__(self, board: Board):
-        self.board = board
-        self.history = []
-        self.move_history = []
+    def __init__(self, fen: str | Board | None = None, board: Optional[Board] = None, state: Optional[GameState] = None):
+        if isinstance(fen, Board):
+            board = fen
+            fen = None
+        
+        if state:
+            self.state = state
+        elif fen:
+            self.state = GameState.from_fen(fen)
+        elif board:
+            # Legacy support: assume standard start rights/turn
+            self.state = replace(GameState.starting_setup(), board=board)
+        else:
+            self.state = GameState.starting_setup()
+            
+        self.history: list[GameState] = []
+        self.move_history: list[str] = []
+
+    @property
+    def board(self) -> Board:
+        return self.state.board
 
     @property
     def is_over(self):
@@ -28,18 +47,20 @@ class Game:
 
     @property
     def is_checkmate(self):
-        return self.is_over and self.board.current_player_in_check
+        # Checkmate: In Check AND No Legal Moves
+        return self.is_check and self.is_over
 
     @property
     def is_check(self):
-        return self.board.current_player_in_check
+        # Check if current player is in check
+        return self.board.is_check(self.state.turn)
 
     @property
     def is_draw(self):
-         return self.is_over and not self.board.current_player_in_check
+         return self.is_over and not self.is_check
 
     def add_to_history(self):
-        self.history.append(deepcopy(self.board))
+        self.history.append(self.state)
 
     def is_move_pseudo_legal(self, move: Move) -> tuple[bool, str]:
         """Determine if a move is pseudolegal."""
@@ -49,16 +70,27 @@ class Game:
         if piece is None:
             return False, "No piece moved."
 
-        if piece.color != self.board.player_to_move:
+        if piece.color != self.state.turn:
             return False, "Wrong piece color."
 
         if isinstance(piece, King) and abs(move.start.col - move.end.col) == 2:
             return self._is_castling_pseudo_legal(move, piece)
 
-        if move.end not in piece.theoretical_moves:
-            return False, "Move not in piece moveset."
+        if move.end not in piece.theoretical_moves(move.start):
+            # Special check for Pawn double push
+            is_pawn_double_push = False
+            if isinstance(piece, Pawn):
+                is_start_rank = (move.start.row == 6 if piece.color == Color.WHITE else move.start.row == 1)
+                direction = piece.direction
+                one_step = move.start.get_step(direction)
+                two_step = one_step.get_step(direction) if one_step else None
+                if is_start_rank and move.end == two_step:
+                    is_pawn_double_push = True
+            
+            if not is_pawn_double_push:
+                return False, "Move not in piece moveset."
 
-        if target and target.color == self.board.player_to_move:
+        if target and target.color == self.state.turn:
             return False, "Can't capture own piece."
 
         if isinstance(piece, Pawn):
@@ -68,17 +100,29 @@ class Game:
             if (
                 move.is_diagonal
                 and target is None
-                and move.end != self.board.ep_square
+                and move.end != self.state.ep_square
             ):
                 return False, "Diagonal pawn move requires a capture."
             if move.end.row == piece.promotion_row and not move.promotion_piece is not None:
                 return False, "Pawns must promote when reaching last row."
 
-        if move.end not in self.board.unblocked_paths(piece):
-            return False, "Path is blocked."
+        if move.end not in self.board.unblocked_paths(piece, piece.theoretical_move_paths(move.start)):
+             # Re-check Pawn Double Push blockage
+            is_pawn_double_push = False
+            if isinstance(piece, Pawn):
+                 is_start_rank = (move.start.row == 6 if piece.color == Color.WHITE else move.start.row == 1)
+                 direction = piece.direction
+                 one_step = move.start.get_step(direction)
+                 two_step = one_step.get_step(direction) if one_step else None
+                 if is_start_rank and move.end == two_step:
+                     if self.board.get_piece(one_step) is None and self.board.get_piece(two_step) is None:
+                         is_pawn_double_push = True
+            
+            if not is_pawn_double_push:
+                return False, "Path is blocked."
 
         if move.promotion_piece:
-            if not move.end.is_promotion_row(self.board.player_to_move):
+            if not move.end.is_promotion_row(self.state.turn):
                 return False, "Can only promote on the last row."
 
             if isinstance(move.promotion_piece, King):
@@ -114,14 +158,14 @@ class Game:
         if required_right is None:
             return False, "Invalid castling move."
 
-        if required_right not in self.board.castling_rights:
+        if required_right not in self.state.castling_rights:
             return False, f"Castling right {required_right.value} not available."
 
         rook_piece = self.board.get_piece(rook_start_square)
         if not (rook_piece and isinstance(rook_piece, Rook) and rook_piece.color == piece.color):
             return False, f"Rook not present at {rook_start_square} or is not a {piece.color.name} Rook for castling."
 
-        if self.board.player_in_check(piece.color):
+        if self.board.is_check(piece.color):
             return False, "Cannot castle while in check."
 
         for sq in squares_to_check:
@@ -133,13 +177,27 @@ class Game:
     @property
     def theoretical_moves(self):
         moves = []
-        pieces = self.board.current_players_pieces
-        if any([piece.square is None for piece in pieces]):
-            raise AttributeError("Found piece without square")
+        for sq, piece in self.board.board.items():
+            if piece and piece.color == self.state.turn:
+                for end in piece.theoretical_moves(sq):
+                    moves.append(Move(sq, end))
+                
+                # Add Pawn Double Push
+                if isinstance(piece, Pawn):
+                     is_start_rank = (sq.row == 6 if piece.color == Color.WHITE else sq.row == 1)
+                     if is_start_rank:
+                         direction = piece.direction
+                         one_step = sq.get_step(direction)
+                         two_step = one_step.get_step(direction) if one_step else None
+                         if two_step:
+                             moves.append(Move(sq, two_step))
 
-        for piece in pieces:
-            for end in piece.theoretical_moves:
-                moves.append(Move(piece.square, end))
+                # Add Castling
+                if isinstance(piece, King):
+                     row = 7 if piece.color == Color.WHITE else 0
+                     moves.append(Move(sq, Square(row, 6))) # Short
+                     moves.append(Move(sq, Square(row, 2))) # Long
+
         return moves
 
 
@@ -149,7 +207,6 @@ class Game:
 
     @property
     def legal_moves(self) -> list[Move]:
-        self.board.update_castling_rights()
         return [move for move in self.theoretical_moves if self.is_move_legal(move)]
 
     def is_move_legal(self, move: Move) -> bool:
@@ -167,28 +224,23 @@ class Game:
 
     def render(self):
         """Print the board."""
-        for row in range(8):
-            pieces = [self.board.get_piece((row, col)) or 0 for col in range(8)]
-            print(pieces)
+        self.board.print()
 
     def king_left_in_check(self, move: Move) -> bool:
         """Returns True if king is left in check after a move."""
-        initial_fen = self.board.fen
-        real_board = self.board
-
-        self.board = Board.from_fen(self.board.fen)
-        self.board.make_move(move)
-
-        is_check = self.board.inactive_player_in_check
-
-        self.board = real_board
-        assert self.board.fen == initial_fen
-        return is_check
+        # Use GameState application
+        next_state = self.state.apply_move(move)
+        # Note: apply_move switches turn. 
+        # So we check if the player who MOVED (now opponent) is in check?
+        # No, 'inactive_player_in_check' checks 'state.turn.opposite'.
+        # In next_state, turn is Opponent. Opposite is Mover.
+        # So inactive_player_in_check checks Mover.
+        return next_state.inactive_player_in_check
 
     def take_turn(self, move: Move):
         """Make a move by finding the corresponding legal move."""
-        if not self.board.is_legal:
-            raise IllegalBoardException(f"Board state is illegal. Reason: {self.board.status}")
+        if not self.state.is_legal:
+            raise IllegalBoardException(f"Board state is illegal. Reason: {self.state.status}")
         
         reason = self.move_legality_reason(move)
         if reason != "Move is legal":
@@ -197,8 +249,7 @@ class Game:
         san = move.get_san(self)
 
         self.add_to_history()
-        self.board.make_move(move)
-        self.board.update_castling_rights()
+        self.state = self.state.apply_move(move)
 
         if self.is_checkmate:
             san += "#"
@@ -212,12 +263,20 @@ class Game:
         if not self.history:
             raise ValueError("No moves to undo.")
 
-        self.board = self.history.pop()
+        self.state = self.history.pop()
         if self.move_history:
             self.move_history.pop()
-        print(f"Undo move. Restored FEN: {self.board.fen}")
-        return self.board.fen
+        print(f"Undo move. Restored FEN: {self.state.fen}")
+        return self.state.fen
 
     @property
     def repetitions_of_position(self) -> int:
-        return sum(1 for past in self.history if past.board == self.board)
+        # Repetition based on FEN (or parts of it)
+        # Assuming FEN captures necessary state
+        current_fen_key = " ".join(self.state.fen.split()[:4]) # placement, turn, rights, ep
+        count = 1
+        for past_state in self.history:
+            past_fen_key = " ".join(past_state.fen.split()[:4])
+            if past_fen_key == current_fen_key:
+                count += 1
+        return count

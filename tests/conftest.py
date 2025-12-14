@@ -21,7 +21,8 @@ def random_square(draw):
 @st.composite
 def random_piece(draw):
     piece_cls = draw(random_piece_cls)
-    return draw(st.builds(piece_cls, color=random_color, square=st.none()))
+    color = draw(random_color)
+    return piece_cls(color)
 
 
 @st.composite

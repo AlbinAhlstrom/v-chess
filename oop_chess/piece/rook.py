@@ -1,7 +1,9 @@
+from dataclasses import dataclass
 from oop_chess.piece.piece import Piece
 from oop_chess.enums import Color, Direction
 
 
+@dataclass(frozen=True)
 class Rook(Piece):
     """Rook piece representation.
 

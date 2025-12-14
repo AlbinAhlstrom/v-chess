@@ -1,7 +1,9 @@
+from dataclasses import dataclass
 from oop_chess.enums import Color, Direction
 from oop_chess.piece.piece import Piece
 
 
+@dataclass(frozen=True)
 class Knight(Piece):
     """Knight piece representation.
 
