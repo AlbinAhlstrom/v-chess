@@ -1,0 +1,4 @@
+# file: /home/albin/projects/oop_chess/oop_chess/game.py
+# hypothesis_version: 6.148.5
+
+['#', '+', 'Move is legal', 'No moves to undo.']
