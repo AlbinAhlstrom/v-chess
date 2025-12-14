@@ -1,12 +1,10 @@
 from dataclasses import dataclass
-from typing import Optional, TYPE_CHECKING
+from typing import Optional
 
+from oop_chess.board import Board
+from oop_chess.square import Square
+from oop_chess.enums import Color, CastlingRight
 from oop_chess.fen_helpers import state_from_fen, state_to_fen
-
-if TYPE_CHECKING:
-    from oop_chess.board import Board
-    from oop_chess.square import Square
-    from oop_chess.enums import Color, CastlingRight
 
 
 @dataclass(frozen=True)
@@ -27,10 +25,15 @@ class GameState:
     EMPTY_BOARD_FEN = "8/8/8/8/8/8/8/8 w KQkq - 0 1"
 
     @classmethod
-    def starting_setup(cls) -> GameState:
+    def starting_setup(cls) -> "GameState":
         return state_from_fen(cls.STARTING_FEN)
 
-    def empty(cls) -> GameState:
+    @classmethod
+    def from_fen(cls, fen: str) -> "GameState":
+        return state_from_fen(fen)
+
+    @classmethod
+    def empty(cls) -> "GameState":
         return state_from_fen(cls.EMPTY_BOARD_FEN)
 
     @property

@@ -18,6 +18,9 @@ class Rules(ABC):
     def is_check(self, state: GameState) -> bool: ...
 
     @abstractmethod
+    def is_checkmate(self, state: GameState) -> bool: ...
+
+    @abstractmethod
     def is_game_over(self, state: GameState) -> bool: ...
 
     @abstractmethod
@@ -31,6 +34,9 @@ class Rules(ABC):
 
     @abstractmethod
     def board_state_legality_reason(self, state: GameState) -> StatusReason: ...
+
+    @abstractmethod
+    def status(self, state: GameState) -> StatusReason: ...
 
     @abstractmethod
     def move_legality_reason(self, state: GameState, move: Move) -> MoveLegalityReason: ...
@@ -49,19 +55,22 @@ class StandardRules(Rules):
     def is_check(self, state: GameState) -> bool:
         return self._is_color_in_check(state.board, state.turn)
 
+    def is_checkmate(self, state: GameState) -> bool:
+        return self.is_check(state) and self.is_game_over(state)
+
     def is_game_over(self, state: GameState) -> bool:
         return not bool(self.get_legal_moves(state))
 
     def game_over_reason(self, state: GameState) -> GameOverReason:
         if self.is_game_over(state) and self.is_check(state):
             return GameOverReason.CHECKMATE
-        return GameOverReason.GAME_ONGOING
+        return GameOverReason.ONGOING
 
     def is_draw(self, state: GameState) -> bool:
         return self.is_game_over(state) and not self.is_check(state)
 
     def is_move_legal(self, state: GameState, move: Move) -> bool:
-        return self.move_legality_reason(state, move) == "Move is legal"
+        return self.move_legality_reason(state, move) == MoveLegalityReason.LEGAL
 
     def move_legality_reason(self, state: GameState, move: Move) -> MoveLegalityReason:
         pseudo_reason = self.move_pseudo_legality_reason(state, move)
@@ -123,11 +132,11 @@ class StandardRules(Rules):
         new_castling_rights = set(state.castling_rights)
 
         def revoke_rights(color: Color):
-            to_remove = [r for r in new_castling_rights if r.color == color]
+            to_remove = [r for r in new_castling_rights if r != CastlingRight.NONE and r.color == color]
             for r in to_remove: new_castling_rights.discard(r)
 
         def revoke_rook_right(square: Square):
-            to_remove = [r for r in new_castling_rights if r.expected_rook_square == square]
+            to_remove = [r for r in new_castling_rights if r != CastlingRight.NONE and r.expected_rook_square == square]
             for r in to_remove: new_castling_rights.discard(r)
 
         if isinstance(piece, King):
@@ -352,6 +361,9 @@ class StandardRules(Rules):
     def inactive_player_in_check(self, state: GameState) -> bool:
         return self._is_color_in_check(state.board, state.turn.opposite)
 
+    def status(self, state: GameState) -> StatusReason:
+        return self.board_state_legality_reason(state)
+
     def invalid_castling_rights(self, state: GameState) -> list[CastlingRight]:
         invalid = []
         for right in state.castling_rights:
@@ -398,20 +410,20 @@ class StandardRules(Rules):
         return self.is_under_attack(board, king_sq, color.opposite)
 
 class AntichessRules(StandardRules):
-    def move_legality_reason(self, state: GameState, move: Move) -> str:
+    def move_legality_reason(self, state: GameState, move: Move) -> MoveLegalityReason:
         pseudo_reason = self.move_pseudo_legality_reason(state, move)
         if pseudo_reason != MoveLegalityReason.LEGAL:
-            return pseudo_reason.value
+            return pseudo_reason
 
         if self._is_capture(state, move):
-            return "Move is legal"
+            return MoveLegalityReason.LEGAL
 
         # If move is not a capture, ensure no captures are available
         for opt_move in self.get_theoretical_moves(state):
             if self.move_pseudo_legality_reason(state, opt_move) == MoveLegalityReason.LEGAL:
                 if self._is_capture(state, opt_move):
-                    return "Mandatory capture available."
-        return "Move is legal"
+                    return MoveLegalityReason.MANDATORY_CAPTURE
+        return MoveLegalityReason.LEGAL
 
     def _is_capture(self, state: GameState, move: Move) -> bool:
         if state.board.get_piece(move.end):
@@ -462,7 +474,7 @@ class AntichessRules(StandardRules):
             return StatusReason.TOO_MANY_BLACK_PAWNS
         if pawns_on_backrank:
             return StatusReason.PAWNS_ON_BACKRANK
-        
+
         if not is_ep_square_valid:
             return StatusReason.INVALID_EP_SQUARE
 

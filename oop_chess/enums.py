@@ -39,6 +39,7 @@ class MoveLegalityReason(StrEnum):
     KING_PROMOTION = "can't promote to king."
     KING_LEFT_IN_CHECK = "king left in check"
     LEGAL = "move is legal"
+    MANDATORY_CAPTURE = "mandatory capture available."
 
 
 class GameOverReason(StrEnum):
@@ -48,6 +49,7 @@ class GameOverReason(StrEnum):
     FIFTY_MOVE_RULE = "50 move rule"
     MUTUAL_AGREEMENT = "mutual agreement"
     TIMEOUT = "timeout"
+    ONGOING = "ongoing"
 
 
 class State(Enum):
@@ -138,7 +140,7 @@ class CastlingRight(StrEnum):
     @classmethod
     def from_fen(cls, fen_castling_string: str) -> tuple[CastlingRight, ...]:
         if not fen_castling_string or fen_castling_string == "-":
-            return (CastlingRight.NONE,)
+            return tuple()
         return tuple(cls(char) for char in fen_castling_string)
 
 

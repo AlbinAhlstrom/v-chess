@@ -5,6 +5,7 @@ from oop_chess.square import Square
 from oop_chess.piece import piece_from_char
 if TYPE_CHECKING:
     from oop_chess.game_state import GameState
+    from oop_chess.board import Board
 
 
 def board_from_fen(fen_board: str) -> dict[Square, Piece]:
@@ -27,28 +28,33 @@ def board_from_fen(fen_board: str) -> dict[Square, Piece]:
                 board[coord] = piece
     return board
 
-def get_fen_board_row(self, row) -> str:
-    empty_squares = 0
-    fen_row_string = ""
-    for col in range(8):
-        coord = Square(row, col)
-        piece = self.board.get(coord)
+def get_fen_from_board(board: "Board") -> str:
+    """Generates the piece placement part of FEN."""
+    fen_rows = []
+    for row in range(8):
+        empty_squares = 0
+        fen_row_string = ""
+        for col in range(8):
+            coord = Square(row, col)
+            piece = board.get_piece(coord)
 
-        if piece is None:
-            empty_squares += 1
-            continue
+            if piece is None:
+                empty_squares += 1
+                continue
+
+            if empty_squares > 0:
+                fen_row_string += str(empty_squares)
+                empty_squares = 0
+
+            fen_row_string += piece.fen
 
         if empty_squares > 0:
             fen_row_string += str(empty_squares)
-            empty_squares = 0
+        fen_rows.append(fen_row_string)
 
-        fen_row_string += piece.fen
+    return "/".join(fen_rows)
 
-    if empty_squares > 0:
-        fen_row_string += str(empty_squares)
-    return fen_row_string
-
-def state_from_fen(fen: str) -> GameState:
+def state_from_fen(fen: str) -> "GameState":
     from oop_chess.game_state import GameState
     from oop_chess.board import Board
 

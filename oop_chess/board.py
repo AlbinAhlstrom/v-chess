@@ -1,6 +1,7 @@
 from typing import TypeVar
 
-from oop_chess.fen_helpers import board_from_fen, get_fen_board_row
+from oop_chess.fen_helpers import board_from_fen, get_fen_from_board
+from oop_chess.piece import piece_from_char
 from oop_chess.enums import Color
 from oop_chess.piece.piece import Piece
 from oop_chess.square import Coordinate, Square
@@ -50,14 +51,17 @@ class Board:
         return pieces
 
     @classmethod
-    def starting_setup(cls):
-        board_from_fen(cls.STARTING_POSITION_FEN)
+    def empty(cls) -> "Board":
+        return cls(cls.EMPTY_BOARD_FEN)
+
+    @classmethod
+    def starting_setup(cls) -> "Board":
+        return cls(cls.STARTING_POSITION_FEN)
 
     @property
     def fen(self) -> str:
         """Generates the piece placement part of FEN."""
-        fen_rows = (get_fen_board_row(row) for row in range(8))
-        return "/".join(fen_rows)
+        return get_fen_from_board(self)
 
     def __str__(self):
         return self.fen
@@ -66,4 +70,19 @@ class Board:
         return Board(self.board.copy())
 
     def print(self):
-        print("printing board")
+        """Print the chess board.
+
+        Draws a unicode based 2d-list representing the board state.
+        printed output example:
+            [♜, ♞, ♝, ♛, ♚, ♝, ♞, ♜]
+            [♟, ♟, ♟, ♟, ♟, ♟, ♟, ♟]
+            [0, 0, 0, 0, 0, 0, 0, 0]
+            [0, 0, 0, 0, 0, 0, 0, 0]
+            [0, 0, 0, 0, 0, 0, 0, 0]
+            [0, 0, 0, 0, 0, 0, 0, 0]
+            [♙, ♙, ♙, ♙, ♙, ♙, ♙, ♙]
+            [♖, ♘, ♗, ♕, ♔, ♗, ♘, ♖]
+        """
+        grid = [[self.get_piece((r, c)) or 0 for c in range(8)] for r in range(8)]
+        for row in grid:
+            print([f"{piece}" for piece in row])
