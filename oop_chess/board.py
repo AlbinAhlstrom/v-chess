@@ -20,6 +20,8 @@ class Board:
     It answers queries about piece locations and paths.
     It does NOT know about game state (turn, castling rights, etc.).
     """
+    
+
 
     STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
     EMPTY_FEN = "8/8/8/8/8/8/8/8 w - - 0 1"
@@ -38,7 +40,7 @@ class Board:
     @classmethod
     def from_fen(cls, fen: str) -> "Board":
         """Parses the piece placement part of a FEN string."""
-        # Handle full FEN or just board part
+
         fen_part = fen.split()[0]
         return cls.from_fen_part(fen_part)
 
@@ -162,7 +164,7 @@ class Board:
         return "/".join(fen_rows)
 
     def __str__(self):
-        # Simple string representation
+
         return self.fen_part
 
     def copy(self) -> "Board":

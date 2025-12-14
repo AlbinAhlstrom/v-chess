@@ -55,6 +55,7 @@ def test_pgn_game(moves):
     """
     Tests a single full game by parsing moves and executing them.
     """
+
     game = Game()
     history = []
     for san_move_str in moves:

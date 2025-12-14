@@ -44,7 +44,7 @@ class Move:
         if piece is None:
             return self.uci
 
-        # Castling
+
         if isinstance(piece, King) and abs(self.start.col - self.end.col) == 2:
             if self.end.col > self.start.col:
                 return "O-O"
@@ -53,32 +53,32 @@ class Move:
 
         san = ""
         piece_char = str(piece).upper()
-        
+
         if not isinstance(piece, Pawn):
             san += piece_char
 
-        # Disambiguation
+
         candidates = []
-        # Find all pieces of the same type and color
+
         for sq, p in game.board.board.items():
             if p and isinstance(p, type(piece)) and p.color == piece.color:
                 if sq == self.start:
                     continue
-                # Check if this piece can also move to the target square
+
                 candidate_move = Move(sq, self.end, self.promotion_piece)
                 if game.is_move_legal(candidate_move):
                     candidates.append(sq)
 
         if candidates:
-            # Need disambiguation
-            # 1. File if different
+
+
             file_distinct = True
             for c_sq in candidates:
                 if c_sq.col == self.start.col:
                     file_distinct = False
                     break
-            
-            # 2. Rank if different (or if file not distinct)
+
+
             rank_distinct = True
             for c_sq in candidates:
                 if c_sq.row == self.start.row:
@@ -92,16 +92,16 @@ class Move:
             else:
                 san += str(self.start).lower()
 
-        # Capture
+
         target = game.board.get_piece(self.end)
-        # En Passant: Pawn moves diagonally to empty square
+
         is_en_passant = isinstance(piece, Pawn) and self.start.col != self.end.col and target is None
-        
+
         if target is not None or is_en_passant:
             if isinstance(piece, Pawn):
-                san += str(self.start).lower()[0] # Pawn capture requires file
+                san += str(self.start).lower()[0]
             san += "x"
-        
+
         san += str(self.end).lower()
 
         if self.promotion_piece:
@@ -166,6 +166,10 @@ class Move:
         Raises:
             ValueError: If the move is ambiguous, illegal, or the format is invalid.
         """
+
+
+
+
         clean_san = san_str.replace("x", "").replace("+", "").replace("#", "").replace("(", "").replace(")", "")
 
         promotion_piece = None
@@ -175,7 +179,7 @@ class Move:
                 game.state.turn
             )
         elif clean_san and clean_san[-1].isalpha() and clean_san[-1] in piece_from_char:
-            # Handle implicit promotion (e.g., "a8Q")
+
             promotion_char = clean_san[-1]
             if promotion_char.upper() in ["Q", "R", "B", "N"]:
                 clean_san = clean_san[:-1]
@@ -193,7 +197,7 @@ class Move:
             piece_type = Pawn
             disambiguation = piece_indicator
 
-        # Find candidates (Squares)
+
         candidates = []
         for sq, p in game.board.board.items():
             if p and isinstance(p, piece_type) and p.color == game.state.turn:

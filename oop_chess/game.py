@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import Optional
 from dataclasses import replace
 
@@ -29,7 +28,7 @@ class Game:
         elif fen:
             self.state = GameState.from_fen(fen)
         elif board:
-            # Legacy support: assume standard start rights/turn
+
             self.state = replace(GameState.starting_setup(), board=board)
         else:
             self.state = GameState.starting_setup()
@@ -47,12 +46,12 @@ class Game:
 
     @property
     def is_checkmate(self):
-        # Checkmate: In Check AND No Legal Moves
+
         return self.is_check and self.is_over
 
     @property
     def is_check(self):
-        # Check if current player is in check
+
         return self.board.is_check(self.state.turn)
 
     @property
@@ -77,7 +76,7 @@ class Game:
             return self._is_castling_pseudo_legal(move, piece)
 
         if move.end not in piece.theoretical_moves(move.start):
-            # Special check for Pawn double push
+
             is_pawn_double_push = False
             if isinstance(piece, Pawn):
                 is_start_rank = (move.start.row == 6 if piece.color == Color.WHITE else move.start.row == 1)
@@ -107,7 +106,7 @@ class Game:
                 return False, "Pawns must promote when reaching last row."
 
         if move.end not in self.board.unblocked_paths(piece, piece.theoretical_move_paths(move.start)):
-             # Re-check Pawn Double Push blockage
+
             is_pawn_double_push = False
             if isinstance(piece, Pawn):
                  is_start_rank = (move.start.row == 6 if piece.color == Color.WHITE else move.start.row == 1)
@@ -182,7 +181,7 @@ class Game:
                 for end in piece.theoretical_moves(sq):
                     moves.append(Move(sq, end))
 
-                # Add Pawn Double Push
+
                 if isinstance(piece, Pawn):
                      is_start_rank = (sq.row == 6 if piece.color == Color.WHITE else sq.row == 1)
                      if is_start_rank:
@@ -192,11 +191,11 @@ class Game:
                          if two_step:
                              moves.append(Move(sq, two_step))
 
-                # Add Castling
+
                 if isinstance(piece, King):
                      row = 7 if piece.color == Color.WHITE else 0
-                     moves.append(Move(sq, Square(row, 6))) # Short
-                     moves.append(Move(sq, Square(row, 2))) # Long
+                     moves.append(Move(sq, Square(row, 6)))
+                     moves.append(Move(sq, Square(row, 2)))
 
         return moves
 
@@ -228,13 +227,8 @@ class Game:
 
     def king_left_in_check(self, move: Move) -> bool:
         """Returns True if king is left in check after a move."""
-        # Use GameState application
+
         next_state = self.state.apply_move(move)
-        # Note: apply_move switches turn.
-        # So we check if the player who MOVED (now opponent) is in check?
-        # No, 'inactive_player_in_check' checks 'state.turn.opposite'.
-        # In next_state, turn is Opponent. Opposite is Mover.
-        # So inactive_player_in_check checks Mover.
         return next_state.inactive_player_in_check
 
     def take_turn(self, move: Move):
@@ -271,9 +265,9 @@ class Game:
 
     @property
     def repetitions_of_position(self) -> int:
-        # Repetition based on FEN (or parts of it)
-        # Assuming FEN captures necessary state
-        current_fen_key = " ".join(self.state.fen.split()[:4]) # placement, turn, rights, ep
+
+
+        current_fen_key = " ".join(self.state.fen.split()[:4])
         count = 1
         for past_state in self.history:
             past_fen_key = " ".join(past_state.fen.split()[:4])

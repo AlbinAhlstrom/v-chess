@@ -9,11 +9,11 @@ def test_pawn_double_push_blocked_by_friendly_piece():
     fen = "r2qkb1r/pp2pppp/2np1n2/2p5/4P1b1/1PPP1N2/P4PPP/RNBQKB1R w KQkq - 1 1"
     board = Board.from_fen(fen)
     game = Game(board)
-    
-    # f2 is pawn, f3 is knight. Move f2f4 should be blocked.
+
+
     move = Move.from_uci("f2f4")
-    
-    # Check pseudo-legality or legality directly
+
+
     is_legal = game.is_move_legal(move)
     assert not is_legal, "Move f2f4 should be illegal because f3 is blocked by a Knight"
 

@@ -35,7 +35,7 @@ def test_pseudo_legal_wrong_piece_color(board, start, end):
     """Test rejection when moving the opponent's piece."""
     game = Game(board)
 
-    # Place an opponent's piece on start (Black, since White starts)
+
     opponent_piece = Rook(Color.BLACK)
     board.set_piece(opponent_piece, start)
 
@@ -50,13 +50,13 @@ def test_pseudo_legal_move_not_in_moveset(board):
     """Test rejection when the move is geometrically impossible for the piece."""
     game = Game(board)
 
-    # White Rook on A1 (0,0) trying to move like a Knight to B3 (2, 1)
+
     start = Square(0, 0)
-    # A1 is a Rook in standard setup.
-    # Let's ensure it is a rook specifically for the test stability
+
+
     board.set_piece(Rook(Color.WHITE), start)
 
-    # A Knight jump is invalid for a Rook
+
     invalid_end = Square(2, 1)
 
     move = Move(start, invalid_end)
@@ -70,9 +70,9 @@ def test_pseudo_legal_cant_capture_own_piece(board):
     """Test rejection when capturing one's own piece."""
     game = Game(board)
 
-    # White Rook on A1 trying to capture White Pawn on A2
-    start = Square(7, 0) # A1
-    end = Square(6, 0)   # A2
+
+    start = Square(7, 0)
+    end = Square(6, 0)
 
     board.set_piece(Rook(Color.WHITE), start)
     board.set_piece(Pawn(Color.WHITE), end)
@@ -88,7 +88,7 @@ def test_pseudo_legal_pawn_cant_capture_forwards(board):
     """Test rejection when a pawn tries to capture a piece directly in front of it."""
     game = Game(board)
 
-    # White Pawn on E4, Black Pawn on E5
+
     start = Square(4, 4)
     end = Square(3, 4)
 
@@ -106,13 +106,13 @@ def test_pseudo_legal_pawn_diagonal_requires_capture(board):
     """Test rejection when a pawn moves diagonally without a target (and not en passant)."""
     game = Game(board)
 
-    # White Pawn on E4 trying to move to F5 (empty)
+
     start = Square(4, 4)
     end = Square(3, 5)
 
     board.set_piece(Pawn(Color.WHITE), start)
-    board.remove_piece(end) # Ensure target is empty
-    # Note: Game(board) creates default state (EP=None), so this check is valid
+    board.remove_piece(end)
+
 
     move = Move(start, end)
 
@@ -125,14 +125,14 @@ def test_pseudo_legal_path_is_blocked(board):
     """Test rejection when a sliding piece is blocked by another piece."""
     game = Game(board)
 
-    # White Rook on A1 trying to move to A5, but A3 is blocked
-    start = Square(7, 0) # A1
-    end = Square(3, 0)   # A5
-    blocker_sq = Square(5, 0) # A3
+
+    start = Square(7, 0)
+    end = Square(3, 0)
+    blocker_sq = Square(5, 0)
 
     board.set_piece(Rook(Color.WHITE), start)
-    board.set_piece(Pawn(Color.WHITE), blocker_sq) # Block with own piece
-    board.remove_piece(end) # Target is empty
+    board.set_piece(Pawn(Color.WHITE), blocker_sq)
+    board.remove_piece(end)
 
     move = Move(start, end)
 
@@ -140,7 +140,7 @@ def test_pseudo_legal_path_is_blocked(board):
 
     assert not is_legal, f"Expected 'Path is blocked'. got {reason}"
     assert reason == "Path is blocked."
-    # Fixed argument
+
     piece = board.get_piece(start)
     assert end not in board.unblocked_paths(piece, piece.theoretical_move_paths(start))
 
@@ -153,11 +153,11 @@ def test_leaving_king_in_check_is_pseudo_legal():
 
 def test_pseudo_legal_en_passant_is_legal():
     """Test that a valid en passant capture is recognized as pseudo-legal."""
-    # FEN: White pawn on e5, black on d5, en passant on d6
+
     fen = "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1"
     game = Game(fen=fen)
 
-    # White's en passant capture: e5xd6
+
     move = Move.from_uci("e5d6")
 
     is_legal, reason = game.is_move_pseudo_legal(move)
@@ -167,31 +167,31 @@ def test_fen_after_initial_pawn_move():
     """Test that the FEN's en passant field is correctly 'a3' after 1. a4."""
     game = Game()
 
-    # Make the move 1. a4
+
     move = Move.from_uci("a2a4")
     game.take_turn(move)
 
-    # The FEN should have 'a3' for the en passant square
+
     expected_fen = "rnbqkbnr/pppppppp/8/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq a3 0 1"
     assert game.state.fen == expected_fen
 
 def test_en_passant_capture_removes_pawn():
     """Test that an en passant capture correctly removes the captured pawn."""
-    # FEN: White pawn on e5, black on d5, en passant on d6
+
     fen = "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1"
     game = Game(fen=fen)
     captured_pawn_square = Square.from_coord('d5')
 
-    # Ensure the black pawn is on d5 before the move
+
     assert game.board.get_piece(captured_pawn_square) is not None
 
-    # White's en passant capture: e5xd6
+
     move = Move.from_uci("e5d6")
 
-    # The game logic should handle setting is_en_passant and removing the pawn.
+
     game.take_turn(move)
 
-    # After the move, the white pawn should be on d6, and the black pawn on d5 should be gone
+
     assert game.board.get_piece(captured_pawn_square) is None
     assert isinstance(game.board.get_piece(Square.from_coord('d6')), Pawn)
 

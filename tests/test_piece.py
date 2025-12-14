@@ -20,6 +20,7 @@ def test_piece_fen_is_correct_case(piece: Piece):
     Checks that the FEN representation (piece.fen) is uppercase for WHITE
     and lowercase for BLACK, and that it is a single character.
     """
+
     fen_char = piece.fen
 
     assert len(fen_char) == 1
@@ -35,6 +36,7 @@ def test_piece_has_valid_value(piece: Piece):
     """
     Checks that all pieces have a non-negative value.
     """
+
     value = piece.value
 
     assert value >= 0

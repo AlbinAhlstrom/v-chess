@@ -113,6 +113,8 @@ class Direction(Enum):
     Enum values are tuples repersenting row and col from an initial square.
     (x, y) = (col_delta, row_delta)
     """
+
+
     NONE = (0, 0)
 
     UP = (0, -1)
@@ -177,6 +179,7 @@ class Direction(Enum):
         Generator that yields squares in a specified direction from a start square.
         Stops when the board edge is reached or max_squares is hit.
         """
+
         from oop_chess.square import Square
 
         d_col, d_row = self.value

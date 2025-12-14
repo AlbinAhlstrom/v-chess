@@ -13,6 +13,8 @@ class Square:
     Index 0 for column corresponds to the A-file.
     """
 
+
+
     row: int
     col: int
 
@@ -40,6 +42,7 @@ class Square:
         Return the resulting Square if a step in 'direction' is on the board.
         Returns None otherwise.
         """
+
         d_col, d_row = direction.value
         new_col, new_row = self.col + d_col, self.row + d_row
 
@@ -84,6 +87,8 @@ class Square:
         iterating over all possible directions (where validity is checked
         by the Square constructor/post_init).
         """
+
+
         d_col, d_row = direction.value
         if not Square.is_valid(self.row + d_row, self.col + d_col):
             return NoSquare

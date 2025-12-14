@@ -13,6 +13,8 @@ class King(Piece):
     Moves one square in any direction.
     """
 
+
+
     moveset = Direction.straight_and_diagonal()
     MAX_STEPS = 1
 

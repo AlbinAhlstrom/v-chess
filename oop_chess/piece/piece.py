@@ -15,6 +15,9 @@ class Piece(ABC):
     Attributes:
         color: Piece color
     """
+
+
+
     color: Color
     MAX_STEPS = 7
 

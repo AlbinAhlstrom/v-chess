@@ -11,6 +11,8 @@ class Pawn(Piece):
     Moves forward one square.
     Double move and diagonal captures are handled by logic external to the basic moveset.
     """
+
+
     MAX_STEPS = 1
 
     @property

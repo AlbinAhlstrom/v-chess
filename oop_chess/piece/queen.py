@@ -10,6 +10,8 @@ class Queen(Piece):
     Moves any number of squares, straight or diagonally.
     """
 
+
+
     moveset = Direction.straight_and_diagonal()
 
     def __str__(self):

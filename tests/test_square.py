@@ -18,6 +18,7 @@ def test_square_to_str_round_trip(square: Square):
     Checks that converting a Square to its algebraic notation and back
     results in the original row and column.
     """
+
     notation = str(square)
     back_to_square = Square.from_str(notation)
     assert back_to_square == square
@@ -29,6 +30,7 @@ def test_square_from_str_round_trip(notation: str):
     Checks that converting from algebraic notation to a Square and back
     results in the original notation.
     """
+
     square = Square.from_str(notation)
     back_to_notation = str(square)
     assert back_to_notation == notation.lower()
