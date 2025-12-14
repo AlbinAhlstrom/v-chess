@@ -1,0 +1,4 @@
+# file: /home/albin/projects/chess/chess/piece/__init__.py
+# hypothesis_version: 6.148.5
+
+['B', 'K', 'N', 'P', 'Q', 'R', 'b', 'k', 'n', 'p', 'q', 'r']

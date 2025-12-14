@@ -3,7 +3,6 @@ from dataclasses import dataclass
 
 from oop_chess.piece.piece import Piece
 from oop_chess.enums import Color, Direction
-from oop_chess.square import Square
 
 
 @dataclass(frozen=True)
@@ -12,9 +11,6 @@ class King(Piece):
 
     Moves one square in any direction.
     """
-
-
-
     moveset = Direction.straight_and_diagonal()
     MAX_STEPS = 1
 

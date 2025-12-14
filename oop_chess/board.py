@@ -16,11 +16,11 @@ T = TypeVar("T", bound=Piece)
 
 class Board:
     """Represents the spatial configuration of pieces (The Database).
-    
+
     It answers queries about piece locations and paths.
     It does NOT know about game state (turn, castling rights, etc.).
     """
-    
+
 
 
     STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"

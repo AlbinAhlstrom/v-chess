@@ -9,9 +9,6 @@ class Bishop(Piece):
 
     Moves any number of squares diagonally.
     """
-
-
-
     moveset = Direction.diagonal()
 
     def __str__(self):

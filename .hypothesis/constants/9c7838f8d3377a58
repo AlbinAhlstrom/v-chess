@@ -1,0 +1,4 @@
+# file: /home/albin/projects/chess/chess/enums.py
+# hypothesis_version: 6.148.5
+
+['-', 'K', 'Q', 'b', 'black', 'k', 'q', 'w', 'white']

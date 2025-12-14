@@ -8,7 +8,6 @@ from .king import King
 from .pawn import Pawn
 
 
-
 piece_from_char: dict[str, Type[Piece]] = {
     "R": Rook,
     "r": Rook,

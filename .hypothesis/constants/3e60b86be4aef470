@@ -1,0 +1,4 @@
+# file: /home/albin/projects/oop_chess/oop_chess/move.py
+# hypothesis_version: 6.148.5
+
+['#', '+', '=', 'Game', 'Move', 'O-O', 'O-O-O', 'a', 'e1c8', 'e1g1', 'e8c8', 'e8g8', 'x']

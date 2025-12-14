@@ -1,22 +1,20 @@
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import Optional
 
 from oop_chess.board import Board
 from oop_chess.move import Move
 from oop_chess.square import Square
 from oop_chess.enums import Color, CastlingRight, StatusReason, Direction
-from oop_chess.piece import Piece, King, Pawn, Rook, Knight
+from oop_chess.piece import King, Pawn, Rook
 
 
 @dataclass(frozen=True)
 class GameState:
     """The Context (Snapshot).
-    
+
     Represents the state of the game at a specific point in time.
     Immutable.
     """
-    
-
     board: Board
     turn: Color
     castling_rights: tuple[CastlingRight, ...]
@@ -62,7 +60,6 @@ class GameState:
         placement = self.board.fen_part
         active = self.turn.value
 
-
         rights_str = "".join([r.value for r in self.castling_rights]) or "-"
 
         ep = str(self.ep_square) if self.ep_square else "-"
@@ -89,7 +86,6 @@ class GameState:
         is_en_passant = is_pawn_move and move.end == self.ep_square
         is_capture = target is not None or is_en_passant
 
-
         new_halfmove_clock = self.halfmove_clock + 1
         if is_pawn_move or is_capture:
             new_halfmove_clock = 0
@@ -98,15 +94,12 @@ class GameState:
         if self.turn == Color.BLACK:
             new_fullmove_count += 1
 
-
         new_board.move_piece(piece, move.start, move.end)
-
 
         if is_en_passant:
             direction = Direction.DOWN if piece.color == Color.WHITE else Direction.UP
             captured_coordinate = move.end.adjacent(direction)
             new_board.remove_piece(captured_coordinate)
-
 
         if is_castling:
             rook_col = 0 if move.end.col == 2 else 7
@@ -117,13 +110,10 @@ class GameState:
                 end_coord = move.end.adjacent(direction)
                 new_board.move_piece(rook, rook_coord, end_coord)
 
-
         if move.promotion_piece is not None:
             new_board.set_piece(move.promotion_piece, move.end)
 
-
         new_castling_rights = set(self.castling_rights)
-
 
         def revoke_rights(color: Color):
             to_remove = [r for r in new_castling_rights if r.color == color]
@@ -142,20 +132,10 @@ class GameState:
         if isinstance(target, Rook):
             revoke_rook_right(move.end)
 
-
-
-
-
         new_ep_square = None
         direction = Direction.DOWN if piece.color == Color.WHITE else Direction.UP
         if isinstance(piece, Pawn) and abs(move.start.row - move.end.row) > 1:
             new_ep_square = move.end.adjacent(direction)
-
-
-
-
-
-
 
         return GameState(
             board=new_board,
@@ -195,33 +175,22 @@ class GameState:
             return StatusReason.NO_BLACK_KING
         if len(white_kings + black_kings) > 2:
             return StatusReason.TOO_MANY_KINGS
-
         if len(white_pawns) > 8:
             return StatusReason.TOO_MANY_WHITE_PAWNS
         if len(black_pawns) > 8:
             return StatusReason.TOO_MANY_BLACK_PAWNS
         if pawns_on_backrank:
             return StatusReason.PAWNS_ON_BACKRANK
-
         if len(white_non_pawns) > white_piece_max:
             return StatusReason.TOO_MANY_WHITE_PIECES
         if len(black_non_pawns) > black_piece_max:
             return StatusReason.TOO_MANY_BLACK_PIECES
-
         if self.invalid_castling_rights:
             return StatusReason.INVALID_CASTLING_RIGHTS
-
         if not is_ep_square_valid:
             return StatusReason.INVALID_EP_SQUARE
-
-
-
-
-
-
         if self.inactive_player_in_check:
             return StatusReason.OPPOSITE_CHECK
-
         return StatusReason.VALID
 
     @property
