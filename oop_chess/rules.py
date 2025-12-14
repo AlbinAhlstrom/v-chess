@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from oop_chess.board import Board
-from oop_chess.enums import MoveLegalityReason, StatusReason, Color, CastlingRight
+from oop_chess.enums import MoveLegalityReason, StatusReason, Color, CastlingRight, Direction
 from oop_chess.move import Move
 from oop_chess.piece import King, Pawn, Piece, Rook
 from oop_chess.square import Square
@@ -17,6 +17,15 @@ class Rules(ABC):
 
     @abstractmethod
     def is_game_over(self, state: GameState) -> bool: ...
+
+    @abstractmethod
+    def apply_move(self, state: GameState, move: Move) -> GameState: ...
+
+    @abstractmethod
+    def is_board_state_legal(self, state: GameState) -> bool: ...
+
+    @abstractmethod
+    def board_state_legality_reason(self, state: GameState) -> StatusReason: ...
 
 
 class StandardRules(Rules):
@@ -50,8 +59,83 @@ class StandardRules(Rules):
 
     def king_left_in_check(self, state: GameState, move: Move) -> bool:
         """Returns True if king is left in check after a move."""
-        next_state = state.apply_move(move)
-        return next_state.inactive_player_in_check
+        next_state = self.apply_move(state, move)
+        return self.inactive_player_in_check(next_state)
+
+    def apply_move(self, state: GameState, move: Move) -> GameState:
+        """Returns a new GameState with the move applied."""
+        new_board = state.board.copy()
+
+        piece = new_board.get_piece(move.start)
+        if piece is None:
+            raise ValueError(f"No piece found at start coord: {move.start}.")
+
+        target = new_board.get_piece(move.end)
+
+        is_castling = isinstance(piece, King) and abs(move.start.col - move.end.col) == 2
+        is_pawn_move = isinstance(piece, Pawn)
+        is_en_passant = is_pawn_move and move.end == state.ep_square
+        is_capture = target is not None or is_en_passant
+
+        new_halfmove_clock = state.halfmove_clock + 1
+        if is_pawn_move or is_capture:
+            new_halfmove_clock = 0
+
+        new_fullmove_count = state.fullmove_count
+        if state.turn == Color.BLACK:
+            new_fullmove_count += 1
+
+        new_board.move_piece(piece, move.start, move.end)
+
+        if is_en_passant:
+            direction = Direction.DOWN if piece.color == Color.WHITE else Direction.UP
+            captured_coordinate = move.end.adjacent(direction)
+            new_board.remove_piece(captured_coordinate)
+
+        if is_castling:
+            rook_col = 0 if move.end.col == 2 else 7
+            rook_coord = Square(move.end.row, rook_col)
+            rook = new_board.get_piece(rook_coord)
+            if rook:
+                direction = Direction.RIGHT if move.end.col == 2 else Direction.LEFT
+                end_coord = move.end.adjacent(direction)
+                new_board.move_piece(rook, rook_coord, end_coord)
+
+        if move.promotion_piece is not None:
+            new_board.set_piece(move.promotion_piece, move.end)
+
+        new_castling_rights = set(state.castling_rights)
+
+        def revoke_rights(color: Color):
+            to_remove = [r for r in new_castling_rights if r.color == color]
+            for r in to_remove: new_castling_rights.discard(r)
+
+        def revoke_rook_right(square: Square):
+            to_remove = [r for r in new_castling_rights if r.expected_rook_square == square]
+            for r in to_remove: new_castling_rights.discard(r)
+
+        if isinstance(piece, King):
+            revoke_rights(piece.color)
+
+        if isinstance(piece, Rook):
+            revoke_rook_right(move.start)
+
+        if isinstance(target, Rook):
+            revoke_rook_right(move.end)
+
+        new_ep_square = None
+        direction = Direction.DOWN if piece.color == Color.WHITE else Direction.UP
+        if isinstance(piece, Pawn) and abs(move.start.row - move.end.row) > 1:
+            new_ep_square = move.end.adjacent(direction)
+
+        return GameState(
+            board=new_board,
+            turn=state.turn.opposite,
+            castling_rights=tuple(sorted(new_castling_rights, key=lambda x: x.value)),
+            ep_square=new_ep_square,
+            halfmove_clock=new_halfmove_clock,
+            fullmove_count=new_fullmove_count
+        )
 
     def get_theoretical_moves(self, state: GameState) -> list[Move]:
         moves = []
@@ -193,9 +277,9 @@ class StandardRules(Rules):
         return board.is_check(color)
 
     def is_board_state_legal(self, state: GameState) -> bool:
-        return self.status(state) == StatusReason.VALID
+        return self.board_state_legality_reason(state) == StatusReason.VALID
 
-    def status(self, state: GameState) -> StatusReason:
+    def board_state_legality_reason(self, state: GameState) -> StatusReason:
         """Return status of the state."""
         white_kings = state.board.get_pieces(King, Color.WHITE)
         black_kings = state.board.get_pieces(King, Color.BLACK)

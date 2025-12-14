@@ -74,8 +74,8 @@ class Game:
 
     def take_turn(self, move: Move):
         """Make a move by finding the corresponding legal move."""
-        if not self.state.is_legal:
-            raise IllegalBoardException(f"Board state is illegal. Reason: {self.state.status}")
+        if not self.rules.is_board_state_legal(self.state):
+            raise IllegalBoardException(f"Board state is illegal. Reason: {self.rules.status(self.state)}")
 
         reason = self.rules.move_legality_reason(self.state, move)
         if reason != "Move is legal":
@@ -84,7 +84,7 @@ class Game:
         san = move.get_san(self)
 
         self.add_to_history()
-        self.state = self.state.apply_move(move)
+        self.state = self.rules.apply_move(self.state, move)
 
         if self.is_checkmate:
             san += "#"
