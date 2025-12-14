@@ -72,13 +72,17 @@ def diagnose_moves3():
 
                     print("\n--- Simulating king_left_in_check for Kc7 ---")
                     initial_fen = game.state.fen
-                    temp_board = Board.from_fen(initial_fen)
-                    simulated_move = Move(king.square, target_sq)
-                    temp_board.make_move(simulated_move)
+                    temp_game = Game(fen=initial_fen)
+                    
+                    try:
+                        temp_game.state = temp_game.state.apply_move(Move(king.square, target_sq))
+                        temp_board = temp_game.state.board
+                    except Exception as e:
+                        print(f"Could not apply move on temp board: {e}")
 
-                    print(f"Temp board FEN after Kc7: {temp_board.fen}")
+                    print(f"Temp board FEN after Kc7: {temp_game.state.fen}")
 
-                    is_check_on_temp_board = temp_board.inactive_player_in_check
+                    is_check_on_temp_board = temp_game.state.inactive_player_in_check
                     print(f"Temp board: inactive_player_in_check (White in check)? {is_check_on_temp_board}")
 
                     if is_check_on_temp_board:

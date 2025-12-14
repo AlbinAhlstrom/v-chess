@@ -18,8 +18,7 @@ class Board:
     It answers queries about piece locations and paths.
     It does NOT know about game state (turn, castling rights, etc.).
     """
-    STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-    EMPTY_FEN = "8/8/8/8/8/8/8/8 w - - 0 1"
+    STARTING_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
 
     def __init__(self, pieces: dict[Square, Piece] = None):
         self.board: dict[Square, Piece] = pieces if pieces else {}
@@ -30,18 +29,11 @@ class Board:
 
     @classmethod
     def starting_setup(cls) -> "Board":
-        return cls.from_fen(cls.STARTING_FEN)
+        return cls.from_fen(cls.STARTING_POSITION)
 
     @classmethod
-    def from_fen(cls, fen: str) -> "Board":
+    def from_fen(cls, fen_board: str) -> "Board":
         """Parses the piece placement part of a FEN string."""
-
-        fen_part = fen.split()[0]
-        return cls.from_fen_part(fen_part)
-
-    @classmethod
-    def from_fen_part(cls, fen_board: str) -> "Board":
-        """Parses just the piece placement part of a FEN string."""
         board: dict[Square, Piece] = {}
         fen_rows = fen_board.split("/")
         for row, fen_row in enumerate(fen_rows):
@@ -153,14 +145,14 @@ class Board:
         return fen_row_string
 
     @property
-    def fen_part(self) -> str:
+    def fen(self) -> str:
         """Generates the piece placement part of FEN."""
         fen_rows = (self._get_fen_row(row) for row in range(8))
         return "/".join(fen_rows)
 
     def __str__(self):
 
-        return self.fen_part
+        return self.fen
 
     def copy(self) -> "Board":
         return Board(self.board.copy())

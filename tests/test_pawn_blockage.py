@@ -7,8 +7,7 @@ from oop_chess.exceptions import IllegalMoveException
 
 def test_pawn_double_push_blocked_by_friendly_piece():
     fen = "r2qkb1r/pp2pppp/2np1n2/2p5/4P1b1/1PPP1N2/P4PPP/RNBQKB1R w KQkq - 1 1"
-    board = Board.from_fen(fen)
-    game = Game(board)
+    game = Game(fen=fen)
 
 
     move = Move.from_uci("f2f4")
