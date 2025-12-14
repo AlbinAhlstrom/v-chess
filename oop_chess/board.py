@@ -1,49 +1,67 @@
 from typing import TypeVar
 from itertools import chain
 
-from oop_chess.move import Move
 from oop_chess.piece import piece_from_char
-from oop_chess.enums import Color, CastlingRight, Direction, StatusReason
+from oop_chess.enums import Color
 from oop_chess.piece.pawn import Pawn
 from oop_chess.piece.king import King
 from oop_chess.piece.piece import Piece
 from oop_chess.piece.rook import Rook
 from oop_chess.piece.knight import Knight
-from oop_chess.square import Coordinate, NoSquare, Square
+from oop_chess.square import Coordinate, Square
 
 
 T = TypeVar("T", bound=Piece)
 
 
 class Board:
-    """Represents the current state of a chessboard."""
+    """Represents the spatial configuration of pieces (The Database).
+    
+    It answers queries about piece locations and paths.
+    It does NOT know about game state (turn, castling rights, etc.).
+    """
 
     STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
     EMPTY_FEN = "8/8/8/8/8/8/8/8 w - - 0 1"
 
-    def __init__(
-        self,
-        board: dict[Square, Piece | None],
-        player_to_move: Color,
-        castling_rights: list[CastlingRight],
-        ep_square: Square | None,
-        halfmove_clock: int,
-        fullmove_count: int,
-    ):
-        self.board = board
-        self.player_to_move = player_to_move
-        self.castling_rights = castling_rights
-        self.ep_square = ep_square
-        self.halfmove_clock = halfmove_clock
-        self.fullmove_count = fullmove_count
+    def __init__(self, pieces: dict[Square, Piece] = None):
+        self.board: dict[Square, Piece] = pieces if pieces else {}
 
     @classmethod
-    def starting_setup(cls) -> Board:
+    def empty(cls) -> "Board":
+        return cls()
+
+    @classmethod
+    def starting_setup(cls) -> "Board":
         return cls.from_fen(cls.STARTING_FEN)
 
     @classmethod
-    def empty(cls) -> Board:
-        return cls.from_fen(cls.EMPTY_FEN)
+    def from_fen(cls, fen: str) -> "Board":
+        """Parses the piece placement part of a FEN string."""
+        # Handle full FEN or just board part
+        fen_part = fen.split()[0]
+        return cls.from_fen_part(fen_part)
+
+    @classmethod
+    def from_fen_part(cls, fen_board: str) -> "Board":
+        """Parses just the piece placement part of a FEN string."""
+        board: dict[Square, Piece] = {}
+        fen_rows = fen_board.split("/")
+        for row, fen_row in enumerate(fen_rows):
+            empty_squares = 0
+            for col, char in enumerate(fen_row):
+                if char.isdigit():
+                    empty_squares += int(char) - 1
+                else:
+                    is_white = char.isupper()
+                    piece_color = Color.WHITE if is_white else Color.BLACK
+                    piece_type = piece_from_char.get(char)
+                    if piece_type is None:
+                        raise ValueError(f"Invalid piece in FEN: {char}")
+                    piece = piece_type(piece_color)
+                    coord = Square(row, col + empty_squares)
+                    board[coord] = piece
+        return cls(board)
 
     def get_piece(self, coordinate: Coordinate) -> Piece | None:
         return self.board.get(Square.from_coord(coordinate))
@@ -137,28 +155,15 @@ class Board:
             fen_row_string += str(empty_squares)
         return fen_row_string
 
-    def _get_piece_placement_fen(self) -> str:
+    @property
+    def fen_part(self) -> str:
+        """Generates the piece placement part of FEN."""
         fen_rows = (self._get_fen_row(row) for row in range(8))
         return "/".join(fen_rows)
 
-    def print(self):
-        """Print the chess board.
-
-        Draws a unicode based 2d-list representing the board state.
-        printed output example:
-            [♜, ♞, ♝, ♛, ♚, ♝, ♞, ♜]
-            [♟, ♟, ♟, ♟, ♟, ♟, ♟, ♟]
-            [0, 0, 0, 0, 0, 0, 0, 0]
-            [0, 0, 0, 0, 0, 0, 0, 0]
-            [0, 0, 0, 0, 0, 0, 0, 0]
-            [0, 0, 0, 0, 0, 0, 0, 0]
-            [♙, ♙, ♙, ♙, ♙, ♙, ♙, ♙]
-            [♖, ♘, ♗, ♕, ♔, ♗, ♘, ♖]
-        """
-        grid = [[self.get_piece((r, c)) or 0 for c in range(8)] for r in range(8)]
-        for row in grid:
-            print([f"{piece}" for piece in row])
-
     def __str__(self):
-        return self.fen
+        # Simple string representation
+        return self.fen_part
 
+    def copy(self) -> "Board":
+        return Board(self.board.copy())

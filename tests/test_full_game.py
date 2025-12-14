@@ -17,10 +17,10 @@ class PGNGame:
 
 
 def parse_pgn_game(game_string: str) -> PGNGame:
-    date_match = re.search(r'\[Date \"(\d{4}\.\d{2}\.\d{2})\"\]', game_string)
-    white_match = re.search(r'\[White \"(.*?)\"\]', game_string)
-    black_match = re.search(r'\[Black \"(.*?)\"\]', game_string)
-    result_match = re.search(r'\[Result \"(.*?)\"\]', game_string)
+    date_match = re.search(r'\[Date "(\d{4}\.\d{2}\.\d{2})"\]', game_string)
+    white_match = re.search(r'\[White "(.*?)"\]', game_string)
+    black_match = re.search(r'\[Black "(.*?)"\]', game_string)
+    result_match = re.search(r'\[Result "(.*?)"\]', game_string)
 
     date = date_match.group(1) if date_match else "N/A"
     white = white_match.group(1) if white_match else "N/A"
@@ -55,8 +55,7 @@ def test_pgn_game(moves):
     """
     Tests a single full game by parsing moves and executing them.
     """
-    board = Board.starting_setup()
-    game = Game(board)
+    game = Game()
     history = []
     for san_move_str in moves:
         move = Move.from_san(san_move_str, game)

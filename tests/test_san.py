@@ -22,64 +22,68 @@ def run_test(test_func):
         raise
 
 def test_san_simple_pawn_move():
-    board = Board.starting_setup()
-    move = Move.from_san("e4", Game(board))
+    game = Game()
+    move = Move.from_san("e4", game)
     assert move.start == Square.from_str("e2")
     assert move.end == Square.from_str("e4")
     assert move.promotion_piece is None
 
 def test_san_knight_move():
-    board = Board.starting_setup()
-    move = Move.from_san("Nf3", Game(board))
+    game = Game()
+    move = Move.from_san("Nf3", game)
     assert move.start == Square.from_str("g1")
     assert move.end == Square.from_str("f3")
 
 def test_san_castling():
-    board = Board.from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK2R w KQkq - 0 1")
-    move = Move.from_san("O-O", Game(board))
+    fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK2R w KQkq - 0 1"
+    game = Game(fen=fen)
+    move = Move.from_san("O-O", game)
     assert move.start == Square.from_str("e1")
     assert move.end == Square.from_str("g1")
 
 def test_san_disambiguation():
-    board = Board.from_fen("8/8/8/8/8/5N2/8/1N4K1 w - - 0 1")
-    move = Move.from_san("Nbd2", Game(board))
+    fen = "8/8/8/8/8/5N2/8/1N4K1 w - - 0 1"
+    game = Game(fen=fen)
+    move = Move.from_san("Nbd2", game)
     assert move.start == Square.from_str("b1")
     assert move.end == Square.from_str("d2")
 
-    move = Move.from_san("Nfd2", Game(board))
+    move = Move.from_san("Nfd2", game)
     assert move.start == Square.from_str("f3")
     assert move.end == Square.from_str("d2")
 
 def test_san_capture():
-    board = Board.from_fen("rnbqkbnr/pppppppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1")
-    move = Move.from_san("exd5", Game(board))
+    fen = "rnbqkbnr/pppppppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1"
+    game = Game(fen=fen)
+    move = Move.from_san("exd5", game)
     assert move.start == Square.from_str("e4")
     assert move.end == Square.from_str("d5")
 
 def test_san_promotion():
-    board = Board.from_fen("8/P7/8/8/8/8/8/K7 w - - 0 1")
-    move = Move.from_san("a8=Q", Game(board))
+    fen = "8/P7/8/8/8/8/8/K7 w - - 0 1"
+    game = Game(fen=fen)
+    move = Move.from_san("a8=Q", game)
     assert move.start == Square.from_str("a7")
     assert move.end == Square.from_str("a8")
     assert isinstance(move.promotion_piece, Queen)
     assert move.promotion_piece.fen == "Q"
 
 def test_san_check_stripping():
-    board = Board.starting_setup()
-    move = Move.from_san("e4+", Game(board))
+    game = Game()
+    move = Move.from_san("e4+", game)
     assert move.end == Square.from_str("e4")
 
 def test_san_ambiguous_move_raises():
-    board = Board.from_fen("6k1/8/8/8/8/8/8/R3R1K1 w - - 0 1")
+    fen = "6k1/8/8/8/8/8/8/R3R1K1 w - - 0 1"
+    game = Game(fen=fen)
     try:
-        Move.from_san("Rc1", Game(board))
+        Move.from_san("Rc1", game)
         raise AssertionError("Should have raised ValueError for ambiguous move")
     except ValueError as e:
         assert "ambiguous" in str(e)
 
 def test_san_pawn_capture_validation():
-    board = Board.starting_setup()
+    game = Game()
     with pytest.raises(ValueError):
-        Move.from_san("exd3", Game(board))
+        Move.from_san("exd3", game)
         raise AssertionError("Should have raised ValueError for invalid pawn capture")
-

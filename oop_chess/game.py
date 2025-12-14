@@ -23,7 +23,7 @@ class Game:
         if isinstance(fen, Board):
             board = fen
             fen = None
-        
+
         if state:
             self.state = state
         elif fen:
@@ -33,7 +33,7 @@ class Game:
             self.state = replace(GameState.starting_setup(), board=board)
         else:
             self.state = GameState.starting_setup()
-            
+
         self.history: list[GameState] = []
         self.move_history: list[str] = []
 
@@ -86,7 +86,7 @@ class Game:
                 two_step = one_step.get_step(direction) if one_step else None
                 if is_start_rank and move.end == two_step:
                     is_pawn_double_push = True
-            
+
             if not is_pawn_double_push:
                 return False, "Move not in piece moveset."
 
@@ -117,7 +117,7 @@ class Game:
                  if is_start_rank and move.end == two_step:
                      if self.board.get_piece(one_step) is None and self.board.get_piece(two_step) is None:
                          is_pawn_double_push = True
-            
+
             if not is_pawn_double_push:
                 return False, "Path is blocked."
 
@@ -181,7 +181,7 @@ class Game:
             if piece and piece.color == self.state.turn:
                 for end in piece.theoretical_moves(sq):
                     moves.append(Move(sq, end))
-                
+
                 # Add Pawn Double Push
                 if isinstance(piece, Pawn):
                      is_start_rank = (sq.row == 6 if piece.color == Color.WHITE else sq.row == 1)
@@ -230,7 +230,7 @@ class Game:
         """Returns True if king is left in check after a move."""
         # Use GameState application
         next_state = self.state.apply_move(move)
-        # Note: apply_move switches turn. 
+        # Note: apply_move switches turn.
         # So we check if the player who MOVED (now opponent) is in check?
         # No, 'inactive_player_in_check' checks 'state.turn.opposite'.
         # In next_state, turn is Opponent. Opposite is Mover.
@@ -241,7 +241,7 @@ class Game:
         """Make a move by finding the corresponding legal move."""
         if not self.state.is_legal:
             raise IllegalBoardException(f"Board state is illegal. Reason: {self.state.status}")
-        
+
         reason = self.move_legality_reason(move)
         if reason != "Move is legal":
             raise IllegalMoveException(f"Illegal move: {reason}")
@@ -255,7 +255,7 @@ class Game:
             san += "#"
         elif self.is_check:
             san += "+"
-        
+
         self.move_history.append(san)
 
     def undo_move(self) -> str:
