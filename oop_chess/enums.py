@@ -22,6 +22,24 @@ class StatusReason(StrEnum):
     TOO_MANY_CHECKERS = "more than 2 checkers"
 
 
+class MoveLegalityReason(StrEnum):
+    NO_PIECE = "no piece moved."
+    WRONG_COLOR = "wrong piece color"
+    NO_CASTLING_RIGHT = "no right for castling"
+    CASTLING_FROM_CHECK = "cannot castle while in check."
+    CASTLING_THROUGH_CHECK = "cannot castle through or into attacked square."
+    NOT_IN_MOVESET = "move not in piece moveset."
+    OWN_PIECE_CAPTURE = "can't capture own piece."
+    FORWARD_PAWN_CAPTURE = "cant capture forwards with pawn."
+    PAWN_DIAGONAL_NON_CAPTURE = "diagonal pawn move requires a capture."
+    NON_PROMOTION = "pawns must promote when reaching last row."
+    PATH_BLOCKED = "path is blocked."
+    EARLY_PROMOTION = "can only promote on the last row."
+    KING_PROMOTION = "can't promote to king."
+    KING_LEFT_IN_CHECK = "king left in check"
+    LEGAL = "move is legal"
+
+
 class State(Enum):
     """The state of the game."""
     ONGOING = auto()
