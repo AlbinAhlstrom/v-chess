@@ -4,7 +4,7 @@ import LegalMoveDot from '../LegalMoveDot/LegalMoveDot.js';
 import HighlightSquare from '../HighlightSquare/HighlightSquare.js';
 import PromotionDialog from '../PromotionDialog/PromotionDialog.js';
 import { fenToPosition, coordsToAlgebraic, algebraicToCoords } from '../../helpers.js'
-import { createGame, getLegalMoves } from '../../api.js'
+import { createGame, getLegalMoves, getAllLegalMoves } from '../../api.js'
 import { useState, useRef, useEffect } from 'react'
 
 const UNDO_ICON = (
