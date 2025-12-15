@@ -20,7 +20,7 @@ def test_square_to_str_round_trip(square: Square):
     """
 
     notation = str(square)
-    back_to_square = Square.from_str(notation)
+    back_to_square = Square(notation)
     assert back_to_square == square
 
 
@@ -31,6 +31,6 @@ def test_square_from_str_round_trip(notation: str):
     results in the original notation.
     """
 
-    square = Square.from_str(notation)
+    square = Square(notation)
     back_to_notation = str(square)
     assert back_to_notation == notation.lower()

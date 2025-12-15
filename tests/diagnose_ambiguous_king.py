@@ -59,7 +59,7 @@ def diagnose_moves3():
                     king = pieces[0]
                     print(f"King Square: {king.square}")
 
-                    target_sq = Square.from_str("c7")
+                    target_sq = Square("c7")
                     is_attacked_by_black_on_original = game.rules.is_under_attack(game.state.board, target_sq, Color.BLACK)
                     print(f"Original board: Is c7 attacked by Black? {is_attacked_by_black_on_original}")
 
@@ -73,7 +73,7 @@ def diagnose_moves3():
                     print("\n--- Simulating king_left_in_check for Kc7 ---")
                     initial_fen = game.state.fen
                     temp_game = Game(fen=initial_fen)
-                    
+
                     try:
                         temp_game.state = temp_game.rules.apply_move(temp_game.state, Move(king.square, target_sq))
                         temp_board = temp_game.state.board
@@ -117,9 +117,9 @@ def diagnose_moves3():
 
     test_king = King(Color.BLACK)
 
-    a7_square = Square.from_str("a7")
+    a7_square = Square("a7")
 
-    c7_square = Square.from_str("c7")
+    c7_square = Square("c7")
 
     isolated_king_board.set_piece(test_king, a7_square)
 

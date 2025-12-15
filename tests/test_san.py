@@ -24,54 +24,54 @@ def run_test(test_func):
 def test_san_simple_pawn_move():
     game = Game()
     move = Move.from_san("e4", game)
-    assert move.start == Square.from_str("e2")
-    assert move.end == Square.from_str("e4")
+    assert move.start == Square("e2")
+    assert move.end == Square("e4")
     assert move.promotion_piece is None
 
 def test_san_knight_move():
     game = Game()
     move = Move.from_san("Nf3", game)
-    assert move.start == Square.from_str("g1")
-    assert move.end == Square.from_str("f3")
+    assert move.start == Square("g1")
+    assert move.end == Square("f3")
 
 def test_san_castling():
     fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK2R w KQkq - 0 1"
     game = Game(fen=fen)
     move = Move.from_san("O-O", game)
-    assert move.start == Square.from_str("e1")
-    assert move.end == Square.from_str("g1")
+    assert move.start == Square("e1")
+    assert move.end == Square("g1")
 
 def test_san_disambiguation():
     fen = "8/8/8/8/8/5N2/8/1N4K1 w - - 0 1"
     game = Game(fen=fen)
     move = Move.from_san("Nbd2", game)
-    assert move.start == Square.from_str("b1")
-    assert move.end == Square.from_str("d2")
+    assert move.start == Square("b1")
+    assert move.end == Square("d2")
 
     move = Move.from_san("Nfd2", game)
-    assert move.start == Square.from_str("f3")
-    assert move.end == Square.from_str("d2")
+    assert move.start == Square("f3")
+    assert move.end == Square("d2")
 
 def test_san_capture():
     fen = "rnbqkbnr/pppppppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1"
     game = Game(fen=fen)
     move = Move.from_san("exd5", game)
-    assert move.start == Square.from_str("e4")
-    assert move.end == Square.from_str("d5")
+    assert move.start == Square("e4")
+    assert move.end == Square("d5")
 
 def test_san_promotion():
     fen = "8/P7/8/8/8/8/8/K7 w - - 0 1"
     game = Game(fen=fen)
     move = Move.from_san("a8=Q", game)
-    assert move.start == Square.from_str("a7")
-    assert move.end == Square.from_str("a8")
+    assert move.start == Square("a7")
+    assert move.end == Square("a8")
     assert isinstance(move.promotion_piece, Queen)
     assert move.promotion_piece.fen == "Q"
 
 def test_san_check_stripping():
     game = Game()
     move = Move.from_san("e4+", game)
-    assert move.end == Square.from_str("e4")
+    assert move.end == Square("e4")
 
 def test_san_ambiguous_move_raises():
     fen = "6k1/8/8/8/8/8/8/R3R1K1 w - - 0 1"

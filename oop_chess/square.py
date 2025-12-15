@@ -1,29 +1,63 @@
-from dataclasses import dataclass
-
+from dataclasses import dataclass, field
 from oop_chess.enums import Color, Direction
 from typing import TypeAlias
 
 
 @dataclass(frozen=True)
 class Square:
-    """Represents a coordinate on a chessboard.
+    """Represents a square on a chessboard.
 
-    Allows for row and column access as well as algebraic notation.
+    Allows for row and column access
+    Instantiable through and convertible to standard algebraic notation (SAN).
     Index 0 for row corresponds to the 8th rank of the board.
     Index 0 for column corresponds to the A-file.
     """
-    row: int
-    col: int
+    row: int = field(compare=True)
+    col: int = field(compare=True)
+
+    def __init__(self, *args) -> None:
+        """Initialize a square from a variety of types.
+
+        Allowed types are:
+        - row, col: individual args
+        - tuple[int, int]
+        - str: valid SAN string
+        - Square: re-initialization
+        - None: represents the None-square: row,col=(-1, -1)
+        """
+        _row: int
+        _col: int
+
+        if not args or args[0] is None:
+            _row, _col = -1, -1
+        elif len(args) == 2:
+            if not (isinstance(args[0], int) and isinstance(args[1], int)):
+                raise TypeError("Individual arguments must be (row: int, col: int).")
+            _row, _col = args[0], args[1]
+        elif len(args) == 1:
+            arg = args[0]
+            if isinstance(arg, Square):
+                _row, _col = arg.row, arg.col
+            elif isinstance(arg, str):
+                _row, _col = self._parse_from_san(arg)
+            elif isinstance(arg, tuple) and len(arg) == 2:
+                if not isinstance(arg[0], int) or not isinstance(arg[1], int):
+                    raise TypeError("When a tuple is provided, its elements must be integers (row, col).")
+                _row, _col = arg[0], arg[1]
+            else:
+                raise TypeError(f"Invalid single argument type: {type(arg)}")
+        else:
+            raise TypeError(f"Invalid number of arguments: {len(args)}")
+
+        object.__setattr__(self, 'row', _row)
+        object.__setattr__(self, 'col', _col)
+        if self.is_valid(self.row, self.col) or self.is_none_square:
+            return
+        raise ValueError(f"Invalid Square: row={self.row}, col={self.col}")
 
     @property
     def is_none_square(self) -> bool:
         return self.row == -1 and self.col == -1
-
-    def __post_init__(self):
-        """Initial validation check, only be called by the constructor."""
-        if self.is_valid(self.row, self.col) or self.is_none_square:
-            return
-        raise ValueError(f"Invalid Square {self}")
 
     @staticmethod
     def is_valid(row: int, col: int) -> bool:
@@ -34,22 +68,20 @@ class Square:
         """Return True if square is the promotion row for given player."""
         return self.row == 0 if player == Color.WHITE else self.row == 7
 
-    def get_step(self, direction: Direction) -> Square | None:
+    def get_step(self, direction: Direction) -> 'Square' | None:
         """
         Return the resulting Square if a step in 'direction' is on the board.
         Returns None otherwise.
         """
-
         d_col, d_row = direction.value
         new_col, new_row = self.col + d_col, self.row + d_row
 
-        if not Square.is_valid(self.row + d_row, self.col + d_col):
+        if not Square.is_valid(new_row, new_col):
             return None
 
         return Square(new_row, new_col)
 
-    @classmethod
-    def from_str(cls, notation: str) -> Square:
+    def _parse_from_san(self, notation: str) -> tuple[int, int]:
         if len(notation) != 2:
             raise ValueError(f"Invalid length of {notation=}")
 
@@ -63,22 +95,9 @@ class Square:
 
         col = ord(file_char) - ord("a")
         row = 8 - int(rank_char)
-        return cls(row, col)
+        return row, col
 
-    @classmethod
-    def from_coord(cls, coordinate: Coordinate | None) -> "Square":
-        if coordinate is None:
-            return cls.none()
-        if isinstance(coordinate, cls):
-            return coordinate
-        elif isinstance(coordinate, str):
-            return cls.from_str(coordinate)
-        elif isinstance(coordinate, tuple):
-            return cls(*coordinate)
-        else:
-            raise TypeError(f"Invalid coordinate type: {type(coordinate)}")
-
-    def adjacent(self, direction: Direction) -> Square:
+    def adjacent(self, direction: Direction) -> 'Square':
         """Return a new coordinate one step in a direction.
 
         NOTE: This method assumes the result is a valid square and is typically
@@ -87,22 +106,23 @@ class Square:
         by the Square constructor/post_init).
         """
         d_col, d_row = direction.value
-        if not Square.is_valid(self.row + d_row, self.col + d_col):
-            return self.__class__.none()
-        return self.__class__.from_coord((self.row + d_row, self.col + d_col))
+        new_row, new_col = self.row + d_row, self.col + d_col
 
-    def is_adjacent_to(self, square: Square, moveset: set[Direction] = Direction.straight_and_diagonal()):
+        if not Square.is_valid(new_row, new_col):
+            return Square(-1, -1) # Create a none square
+
+        return Square(new_row, new_col)
+
+    def is_adjacent_to(self, square: 'Square', moveset: set[Direction] = Direction.straight_and_diagonal()):
         adjacent_squares = [self.adjacent(direction) for direction in moveset]
         return square in adjacent_squares
 
     def __str__(self):
         """Return algebraic notation."""
+        if self.is_none_square:
+            return "NoneSquare" # For debugging/clarity
         return f"{chr(self.col + ord('a'))}{8 - self.row}"
 
-    @classmethod
-    def none(cls):
-        return Square(-1, -1)
-
-
 Coordinate: TypeAlias = str | tuple | Square
+
 

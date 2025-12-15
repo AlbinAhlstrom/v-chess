@@ -4,7 +4,7 @@ from itertools import chain
 from oop_chess.board import Board
 from oop_chess.enums import GameOverReason, MoveLegalityReason, StatusReason, Color, CastlingRight, Direction
 from oop_chess.move import Move
-from oop_chess.piece import King, Pawn, Piece, Rook
+from oop_chess.piece import King, Pawn, Piece, Rook, Queen, Bishop, Knight
 from oop_chess.piece.knight import Knight
 from oop_chess.square import Square
 from oop_chess.game_state import GameState
@@ -168,21 +168,33 @@ class StandardRules(Rules):
             if piece and piece.color == state.turn:
                 for end in piece.theoretical_moves(sq):
                     moves.append(Move(sq, end))
-
-                if isinstance(piece, Pawn):
-                     is_start_rank = (sq.row == 6 if piece.color == Color.WHITE else sq.row == 1)
-                     if is_start_rank:
-                         direction = piece.direction
-                         one_step = sq.get_step(direction)
-                         two_step = one_step.get_step(direction) if one_step else None
-                         if two_step:
-                             moves.append(Move(sq, two_step))
-
-                if isinstance(piece, King):
-                     row = 7 if piece.color == Color.WHITE else 0
-                     moves.append(Move(sq, Square(row, 6)))
-                     moves.append(Move(sq, Square(row, 2)))
-
+                    if isinstance(piece, Pawn):
+                         is_start_rank = (sq.row == 6 if piece.color == Color.WHITE else sq.row == 1)
+                         if is_start_rank:
+                             direction = piece.direction
+                             one_step = sq.get_step(direction)
+                             two_step = one_step.get_step(direction) if one_step else None
+                             if two_step:
+                                 moves.append(Move(sq, two_step))
+                         target_squares = []
+                         if piece.color == Color.WHITE and sq.row == 1:
+                             target_squares.append(sq.get_step(Direction.UP))
+                         elif piece.color == Color.BLACK and sq.row == 6:
+                             target_squares.append(sq.get_step(Direction.DOWN))
+                         if piece.color == Color.WHITE and sq.row == 1:
+                             target_squares.extend([sq.get_step(Direction.UP_LEFT), sq.get_step(Direction.UP_RIGHT)])
+                         elif piece.color == Color.BLACK and sq.row == 6:
+                             target_squares.extend([sq.get_step(Direction.DOWN_LEFT), sq.get_step(Direction.DOWN_RIGHT)])
+                         for target_sq in target_squares:
+                             if target_sq is None:
+                                 continue
+                             if target_sq.is_promotion_row(piece.color):
+                                 for promo_piece_type in [Queen, Rook, Bishop, Knight]:
+                                     moves.append(Move(sq, target_sq, promo_piece_type(piece.color)))
+                    if isinstance(piece, King):
+                        row = 7 if piece.color == Color.WHITE else 0
+                        moves.append(Move(sq, Square(row, 6)))
+                        moves.append(Move(sq, Square(row, 2)))
         return moves
 
     def is_move_pseudo_legal(self, state: GameState, move: Move) -> bool:
@@ -235,9 +247,7 @@ class StandardRules(Rules):
                  return MoveLegalityReason.PATH_BLOCKED
 
         if move.promotion_piece:
-            print(f"DEBUG: move_pseudo_legality_reason - Promotion piece: {move.promotion_piece}, End square: {move.end}, Player: {state.turn}")
             if not move.end.is_promotion_row(state.turn):
-                print(f"DEBUG: move_pseudo_legality_reason - EARLY_PROMOTION. Expected row for player {state.turn} is {move.end.row} (actual: {move.end.row})")
                 return MoveLegalityReason.EARLY_PROMOTION
 
             if isinstance(move.promotion_piece, King):

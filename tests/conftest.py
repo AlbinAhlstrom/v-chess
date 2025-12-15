@@ -15,7 +15,7 @@ random_piece_cls = st.sampled_from(piece_types)
 
 @st.composite
 def random_square(draw):
-    return draw(st.builds(Square, row=random_row_col, col=random_row_col))
+    return draw(st.builds(Square, random_row_col, random_row_col))
 
 
 @st.composite

@@ -92,26 +92,26 @@ class CastlingRight(StrEnum):
         from oop_chess.square import Square
         match self:
             case CastlingRight.WHITE_SHORT:
-                return Square.from_str("h1")
+                return Square("h1")
             case CastlingRight.WHITE_LONG:
-                return Square.from_str("a1")
+                return Square("a1")
             case CastlingRight.BLACK_SHORT:
-                return Square.from_str("h8")
+                return Square("h8")
             case CastlingRight.BLACK_LONG:
-                return Square.from_str("a8")
+                return Square("a8")
             case CastlingRight.NONE:
-                return Square.none()
+                return Square(None)
 
     @property
     def expected_king_square(self) -> Square:
         from oop_chess.square import Square
         match self:
             case CastlingRight.WHITE_SHORT | CastlingRight.WHITE_LONG:
-                return Square.from_str("e1")
+                return Square("e1")
             case CastlingRight.BLACK_SHORT | CastlingRight.BLACK_LONG:
-                return Square.from_str("e8")
+                return Square("e8")
             case CastlingRight.NONE:
-                return Square.none()
+                return Square(None)
 
     @property
     def color(self) -> Color:

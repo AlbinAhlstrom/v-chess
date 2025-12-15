@@ -145,7 +145,7 @@ def test_en_passant_capture_removes_pawn():
     """Test that an en passant capture correctly removes the captured pawn."""
     fen = "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1"
     game = Game(fen=fen)
-    captured_pawn_square = Square.from_coord('d5')
+    captured_pawn_square = Square('d5')
 
     assert game.state.board.get_piece(captured_pawn_square) is not None
 
@@ -153,7 +153,7 @@ def test_en_passant_capture_removes_pawn():
     game.take_turn(move)
 
     assert game.state.board.get_piece(captured_pawn_square) is None
-    assert isinstance(game.state.board.get_piece(Square.from_coord('d6')), Pawn)
+    assert isinstance(game.state.board.get_piece(Square('d6')), Pawn)
 
 
 def test_en_passant_capture_from_start():
@@ -165,8 +165,8 @@ def test_en_passant_capture_from_start():
         move = Move.from_uci(uci)
         game.take_turn(move)
 
-    captured_pawn_square = Square.from_coord('b5')
+    captured_pawn_square = Square('b5')
     assert game.state.board.get_piece(captured_pawn_square) is None
 
     assert game.state.fen != 'rnbqkbnr/2pppppp/pP6/1p6/8/8/1PPPPPPP/RNBQKBNR b KQkq - 0 3'
-    assert isinstance(game.state.board.get_piece(Square.from_coord('b6')), Pawn)
+    assert isinstance(game.state.board.get_piece(Square('b6')), Pawn)

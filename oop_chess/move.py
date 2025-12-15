@@ -114,8 +114,8 @@ class Move:
         try:
             if not 3 < len(uci_str) < 6:
                 return False
-            Square.from_coord(uci_str[:2])
-            Square.from_coord(uci_str[2:4])
+            Square(uci_str[:2])
+            Square(uci_str[2:4])
             if len(uci_str) == 5:
                 return uci_str[4] in piece_from_char.keys()
             return True
@@ -127,18 +127,16 @@ class Move:
     def from_uci(cls, uci_str: str, player_to_move: Color = Color.WHITE) -> "Move":
         if not cls.is_uci_valid(uci_str):
             raise ValueError(f"Invalid move: {uci_str}")
-        start = Square.from_coord(uci_str[:2])
-        end = Square.from_coord(uci_str[2:4])
+        start = Square(uci_str[:2])
+        end = Square(uci_str[2:4])
 
-                        promotion_char = uci_str[4:]
+        promotion_char = uci_str[4:]
 
-                        piece = (
+        piece = (
+            piece_from_char[promotion_char](player_to_move) if promotion_char else None
+        )
 
-                            piece_from_char[promotion_char](player_to_move) if promotion_char else None
-
-                        )
-
-                        return cls(start, end, piece)
+        return cls(start, end, piece)
 
     @classmethod
     def from_san_castling(cls, san_str: str, game: "Game") -> "Move":
@@ -190,7 +188,7 @@ class Move:
                     game.state.turn
                 )
 
-        end_square = Square.from_str(clean_san[-2:])
+        end_square = Square(clean_san[-2:])
         piece_indicator = clean_san[:-2]
 
         if piece_indicator and piece_indicator[0].isupper():

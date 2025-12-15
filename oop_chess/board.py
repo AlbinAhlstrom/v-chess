@@ -1,7 +1,6 @@
 from typing import TypeVar
 
 from oop_chess.fen_helpers import board_from_fen, get_fen_from_board
-from oop_chess.piece import piece_from_char
 from oop_chess.enums import Color
 from oop_chess.piece.piece import Piece
 from oop_chess.square import Coordinate, Square
@@ -26,14 +25,14 @@ class Board:
             self.board = pieces if pieces else {}
 
     def get_piece(self, coordinate: Coordinate) -> Piece | None:
-        return self.board.get(Square.from_coord(coordinate))
+        return self.board.get(Square(coordinate))
 
     def set_piece(self, piece: Piece, square: str | tuple | Square):
-        square = Square.from_coord(square)
+        square = Square(square)
         self.board[square] = piece
 
     def remove_piece(self, coordinate: Coordinate) -> Piece | None:
-        square = Square.from_coord(coordinate)
+        square = Square(coordinate)
         return self.board.pop(square, None)
 
     def move_piece(self, piece: Piece, start: Square, end: Square):

@@ -65,7 +65,7 @@ def state_from_fen(fen: str) -> "GameState":
     board = Board(fen_parts[0])
     active_color = Color(fen_parts[1])
     castling_rights = CastlingRight.from_fen(fen_parts[2])
-    en_passant = None if fen_parts[3] == "-" else Square.from_coord(fen_parts[3])
+    en_passant = None if fen_parts[3] == "-" else Square(fen_parts[3])
 
     try:
         halfmove_clock = int(fen_parts[4])
