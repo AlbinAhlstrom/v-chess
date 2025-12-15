@@ -40,9 +40,7 @@ class Board:
         self.set_piece(piece, end)
         self.remove_piece(start)
 
-    def get_pieces(
-        self, piece_type: type[T] = Piece, color: Color | None = None
-    ) -> list[T]:
+    def get_pieces(self, piece_type: type[T] = Piece, color: Color | None = None) -> list[T]:
         pieces = [piece for piece in self.board.values() if piece]
         pieces = [piece for piece in pieces if isinstance(piece, piece_type)]
         if color is not None:

@@ -36,14 +36,14 @@ def test_san_knight_move():
 
 def test_san_castling():
     fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK2R w KQkq - 0 1"
-    game = Game(fen=fen)
+    game = Game(fen)
     move = Move.from_san("O-O", game)
     assert move.start == Square("e1")
     assert move.end == Square("g1")
 
 def test_san_disambiguation():
     fen = "8/8/8/8/8/5N2/8/1N4K1 w - - 0 1"
-    game = Game(fen=fen)
+    game = Game(fen)
     move = Move.from_san("Nbd2", game)
     assert move.start == Square("b1")
     assert move.end == Square("d2")
@@ -54,14 +54,14 @@ def test_san_disambiguation():
 
 def test_san_capture():
     fen = "rnbqkbnr/pppppppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1"
-    game = Game(fen=fen)
+    game = Game(fen)
     move = Move.from_san("exd5", game)
     assert move.start == Square("e4")
     assert move.end == Square("d5")
 
 def test_san_promotion():
     fen = "8/P7/8/8/8/8/8/K7 w - - 0 1"
-    game = Game(fen=fen)
+    game = Game(fen)
     move = Move.from_san("a8=Q", game)
     assert move.start == Square("a7")
     assert move.end == Square("a8")
@@ -75,7 +75,7 @@ def test_san_check_stripping():
 
 def test_san_ambiguous_move_raises():
     fen = "6k1/8/8/8/8/8/8/R3R1K1 w - - 0 1"
-    game = Game(fen=fen)
+    game = Game(fen)
     try:
         Move.from_san("Rc1", game)
         raise AssertionError("Should have raised ValueError for ambiguous move")

@@ -8,14 +8,23 @@ from oop_chess.game import Game
 from oop_chess.board import Board
 from oop_chess.move import Move
 from oop_chess.square import Square
-from oop_chess.enums import Color
+from oop_chess.enums import Color, CastlingRight
+from oop_chess.game_state import GameState
 
 def test_capture_own_king_bug():
     print("--- Diagnostic Test: Capture Own King ---")
 
 
     board = Board.starting_setup()
-    game = Game(board)
+    state = GameState(
+        board=board,
+        turn=Color.WHITE,
+        castling_rights=(CastlingRight.WHITE_SHORT, CastlingRight.WHITE_LONG, CastlingRight.BLACK_SHORT, CastlingRight.BLACK_LONG),
+        ep_square=None,
+        halfmove_clock=0,
+        fullmove_count=1
+    )
+    game = Game(state)
     print("Board initialized with starting setup.")
 
 

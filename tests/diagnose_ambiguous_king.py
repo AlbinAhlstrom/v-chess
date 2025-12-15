@@ -7,6 +7,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from oop_chess.move import Move
 from oop_chess.game import Game
 from oop_chess.board import Board
+from oop_chess.game_state import GameState
+from oop_chess.enums import Color, CastlingRight
 
 def parse_moves(game_string):
     moves_section = game_string.split('\n\n')[-1]
@@ -36,7 +38,15 @@ def diagnose_moves3():
     print(f"Game 3 Moves: {moves}")
 
     board = Board.starting_setup()
-    game = Game(board)
+    state = GameState(
+        board=board,
+        turn=Color.WHITE,
+        castling_rights=(CastlingRight.WHITE_SHORT, CastlingRight.WHITE_LONG, CastlingRight.BLACK_SHORT, CastlingRight.BLACK_LONG),
+        ep_square=None,
+        halfmove_clock=0,
+        fullmove_count=1
+    )
+    game = Game(state)
 
     print("\nExecuting moves...")
     for i, san in enumerate(moves):
@@ -72,7 +82,7 @@ def diagnose_moves3():
 
                     print("\n--- Simulating king_left_in_check for Kc7 ---")
                     initial_fen = game.state.fen
-                    temp_game = Game(fen=initial_fen)
+                    temp_game = Game(initial_fen)
 
                     try:
                         temp_game.state = temp_game.rules.apply_move(temp_game.state, Move(king.square, target_sq))

@@ -68,7 +68,7 @@ class Square:
         """Return True if square is the promotion row for given player."""
         return self.row == 0 if player == Color.WHITE else self.row == 7
 
-    def get_step(self, direction: Direction) -> 'Square' | None:
+    def get_step(self, direction: Direction) -> Square:
         """
         Return the resulting Square if a step in 'direction' is on the board.
         Returns None otherwise.
@@ -77,7 +77,7 @@ class Square:
         new_col, new_row = self.col + d_col, self.row + d_row
 
         if not Square.is_valid(new_row, new_col):
-            return None
+            return Square(-1, -1)
 
         return Square(new_row, new_col)
 
@@ -109,7 +109,7 @@ class Square:
         new_row, new_col = self.row + d_row, self.col + d_col
 
         if not Square.is_valid(new_row, new_col):
-            return Square(-1, -1) # Create a none square
+            return Square(-1, -1)
 
         return Square(new_row, new_col)
 
@@ -120,7 +120,7 @@ class Square:
     def __str__(self):
         """Return algebraic notation."""
         if self.is_none_square:
-            return "NoneSquare" # For debugging/clarity
+            return "NoneSquare"
         return f"{chr(self.col + ord('a'))}{8 - self.row}"
 
 Coordinate: TypeAlias = str | tuple | Square

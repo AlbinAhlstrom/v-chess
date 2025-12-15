@@ -7,7 +7,6 @@ from oop_chess.move import Move
 from oop_chess.rules import Rules, StandardRules
 from oop_chess.exceptions import IllegalMoveException, IllegalBoardException
 from oop_chess.enums import MoveLegalityReason
-from oop_chess.fen_helpers import state_from_fen
 
 
 class Game:
@@ -15,23 +14,15 @@ class Game:
 
     Responsible for turn management.
     """
-
-    def __init__(self, fen: str | Board | None = None, board: Optional[Board] = None, state: Optional[GameState] = None, rules: Optional[Rules] = None):
-        if isinstance(fen, Board):
-            board = fen
-            fen = None
-
-        if state:
+    def __init__(self, state: GameState | str | None = None, rules: Rules | None = None):
+        if isinstance(state, GameState):
             self.state = state
-        elif fen:
-            self.state = GameState.from_fen(fen)
-        elif board:
-            self.state = replace(GameState.starting_setup(), board=board)
-        else:
+        elif isinstance(state, str):
+            self.state = GameState.from_fen(state)
+        elif state is None:
             self.state = GameState.starting_setup()
 
         self.rules = rules or StandardRules()
-
         self.history: list[GameState] = []
         self.move_history: list[str] = []
 
@@ -51,12 +42,12 @@ class Game:
     def is_draw(self):
          return self.rules.is_draw(self.state)
 
-    def add_to_history(self):
-        self.history.append(self.state)
-
     @property
     def legal_moves(self) -> list[Move]:
         return self.rules.get_legal_moves(self.state)
+
+    def add_to_history(self):
+        self.history.append(self.state)
 
     def is_move_legal(self, move: Move) -> bool:
         return self.rules.is_move_legal(self.state, move)

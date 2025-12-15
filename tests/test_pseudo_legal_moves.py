@@ -3,9 +3,21 @@ from oop_chess.game import Game
 from oop_chess.board import Board
 from oop_chess.move import Move
 from oop_chess.square import Square
-from oop_chess.enums import Color, MoveLegalityReason
+from oop_chess.enums import Color, MoveLegalityReason, CastlingRight
 from oop_chess.piece.pawn import Pawn
 from oop_chess.piece.rook import Rook
+from oop_chess.game_state import GameState
+
+def make_game(board):
+    state = GameState(
+        board=board,
+        turn=Color.WHITE,
+        castling_rights=(CastlingRight.WHITE_SHORT, CastlingRight.WHITE_LONG, CastlingRight.BLACK_SHORT, CastlingRight.BLACK_LONG),
+        ep_square=None,
+        halfmove_clock=0,
+        fullmove_count=1
+    )
+    return Game(state)
 
 def board():
     """Generates a board in the standard starting position."""
@@ -22,7 +34,7 @@ def test_pseudo_legal_no_piece_moved(board, start, end):
     if board.get_piece(start) is not None:
         board.remove_piece(start)
 
-    game = Game(board)
+    game = make_game(board)
     move = Move(start, end)
 
     is_legal, reason = game.is_move_pseudo_legal(move)
@@ -32,7 +44,7 @@ def test_pseudo_legal_no_piece_moved(board, start, end):
 @given(board=board(), start=squares(), end=squares())
 def test_pseudo_legal_wrong_piece_color(board, start, end):
     """Test rejection when moving the opponent's piece."""
-    game = Game(board)
+    game = make_game(board)
     opponent_piece = Rook(Color.BLACK)
     board.set_piece(opponent_piece, start)
     move = Move(start, end)
@@ -44,7 +56,7 @@ def test_pseudo_legal_wrong_piece_color(board, start, end):
 @given(board=board())
 def test_pseudo_legal_move_not_in_moveset(board):
     """Test rejection when the move is geometrically impossible for the piece."""
-    game = Game(board)
+    game = make_game(board)
     start = Square(0, 0)
     board.set_piece(Rook(Color.WHITE), start)
     invalid_end = Square(2, 1)
@@ -57,7 +69,7 @@ def test_pseudo_legal_move_not_in_moveset(board):
 @given(board=board())
 def test_pseudo_legal_cant_capture_own_piece(board):
     """Test rejection when capturing one's own piece."""
-    game = Game(board)
+    game = make_game(board)
     start = Square(7, 0)
     end = Square(6, 0)
     board.set_piece(Rook(Color.WHITE), start)
@@ -71,7 +83,7 @@ def test_pseudo_legal_cant_capture_own_piece(board):
 @given(board=board())
 def test_pseudo_legal_pawn_cant_capture_forwards(board):
     """Test rejection when a pawn tries to capture a piece directly in front of it."""
-    game = Game(board)
+    game = make_game(board)
     start = Square(4, 4)
     end = Square(3, 4)
     board.set_piece(Pawn(Color.WHITE), start)
@@ -85,7 +97,7 @@ def test_pseudo_legal_pawn_cant_capture_forwards(board):
 @given(board=board())
 def test_pseudo_legal_pawn_diagonal_requires_capture(board):
     """Test rejection when a pawn moves diagonally without a target (and not en passant)."""
-    game = Game(board)
+    game = make_game(board)
     start = Square(4, 4)
     end = Square(3, 5)
     board.set_piece(Pawn(Color.WHITE), start)
@@ -99,7 +111,7 @@ def test_pseudo_legal_pawn_diagonal_requires_capture(board):
 @given(board=board())
 def test_pseudo_legal_path_is_blocked(board):
     """Test rejection when a sliding piece is blocked by another piece."""
-    game = Game(board)
+    game = make_game(board)
     start = Square(7, 0)
     end = Square(3, 0)
     blocker_sq = Square(5, 0)
@@ -118,7 +130,7 @@ def test_pseudo_legal_path_is_blocked(board):
 
 def test_leaving_king_in_check_is_pseudo_legal():
     fen = "k7/r7/8/8/8/8/R7/K7 w - - 0 1"
-    game = Game(fen=fen)
+    game = Game(fen)
     move = Move("a2h2")
 
     assert game.is_move_pseudo_legal(move)[0]
@@ -126,7 +138,7 @@ def test_leaving_king_in_check_is_pseudo_legal():
 def test_pseudo_legal_en_passant_is_legal():
     """Test that a valid en passant capture is recognized as pseudo-legal."""
     fen = "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1"
-    game = Game(fen=fen)
+    game = Game(fen)
     move = Move("e5d6")
 
     is_legal, reason = game.is_move_pseudo_legal(move)
@@ -144,7 +156,7 @@ def test_fen_after_initial_pawn_move():
 def test_en_passant_capture_removes_pawn():
     """Test that an en passant capture correctly removes the captured pawn."""
     fen = "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1"
-    game = Game(fen=fen)
+    game = Game(fen)
     captured_pawn_square = Square('d5')
 
     assert game.state.board.get_piece(captured_pawn_square) is not None
