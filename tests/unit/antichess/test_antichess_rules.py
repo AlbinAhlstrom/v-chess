@@ -77,7 +77,7 @@ def test_castling_illegal():
     
     # Castling e1g1
     assert not rules.is_move_legal(state, Move("e1g1"))
-    assert rules.move_legality_reason(state, Move("e1g1")) == MoveLegalityReason.NO_CASTLING_RIGHT
+    assert rules.move_legality_reason(state, Move("e1g1")) == MoveLegalityReason.CASTLING_DISABLED
 
 def test_termination_zero_pieces():
     rules = AntichessRules()
