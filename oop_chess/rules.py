@@ -62,8 +62,10 @@ class StandardRules(Rules):
         return not bool(self.get_legal_moves(state))
 
     def game_over_reason(self, state: GameState) -> GameOverReason:
-        if self.is_game_over(state) and self.is_check(state):
-            return GameOverReason.CHECKMATE
+        if self.is_game_over(state):
+            if self.is_check(state):
+                return GameOverReason.CHECKMATE
+            return GameOverReason.STALEMATE
         return GameOverReason.ONGOING
 
     def is_draw(self, state: GameState) -> bool:
@@ -478,8 +480,15 @@ class AntichessRules(StandardRules):
     def king_left_in_check(self, state: GameState, move: Move) -> bool:
         return False
 
+    def game_over_reason(self, state: GameState) -> GameOverReason:
+        if not state.board.get_pieces(color=state.turn):
+            return GameOverReason.ALL_PIECES_CAPTURED
+        if self.is_game_over(state):
+             return GameOverReason.STALEMATE
+        return GameOverReason.ONGOING
+
     def castling_legality_reason(self, state: GameState, move: Move, piece: King) -> MoveLegalityReason:
-        return MoveLegalityReason.NO_CASTLING_RIGHT
+        return MoveLegalityReason.CASTLING_DISABLED
 
     def board_state_legality_reason(self, state: GameState) -> StatusReason:
         white_pawns = state.board.get_pieces(Pawn, Color.WHITE)

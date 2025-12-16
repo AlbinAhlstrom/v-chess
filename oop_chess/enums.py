@@ -40,6 +40,7 @@ class MoveLegalityReason(StrEnum):
     KING_LEFT_IN_CHECK = "king left in check"
     LEGAL = "move is legal"
     MANDATORY_CAPTURE = "mandatory capture available."
+    CASTLING_DISABLED = "castling disabled in this variant"
 
 
 class GameOverReason(StrEnum):
@@ -50,6 +51,7 @@ class GameOverReason(StrEnum):
     MUTUAL_AGREEMENT = "mutual agreement"
     TIMEOUT = "timeout"
     ONGOING = "ongoing"
+    ALL_PIECES_CAPTURED = "all pieces captured"
 
 
 class State(Enum):
