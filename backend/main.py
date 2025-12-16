@@ -81,6 +81,7 @@ class SquareSelection(BaseModel):
 
 class NewGameRequest(BaseModel):
     variant: str = "standard"
+    fen: Optional[str] = None
 
 
 @app.post("/api/game/new")
@@ -91,7 +92,11 @@ def new_game(req: NewGameRequest):
     if req.variant == "antichess":
         rules = AntichessRules()
 
-    game = Game(rules=rules)
+    try:
+        game = Game(state=req.fen, rules=rules)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid FEN: {e}")
+
     games[game_id] = game
     return {"game_id": game_id, "fen": game.state.fen, "turn": game.state.turn}
 
@@ -107,6 +112,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
             "turn": game.state.turn.value,
             "is_over": game.is_over,
             "in_check": game.is_check,
+            "winner": game.winner.value if game.winner else None,
             "move_history": game.move_history,
             "status": "connected"
         }))
@@ -135,6 +141,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                     "turn": game.state.turn.value,
                     "is_over": game.is_over,
                     "in_check": game.is_check,
+                    "winner": game.winner.value if game.winner else None,
                     "move_history": game.move_history,
                     "status": status
                 }))
@@ -157,6 +164,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                     "turn": game.state.turn.value,
                     "is_over": game.is_over,
                     "in_check": game.is_check,
+                    "winner": game.winner.value if game.winner else None,
                     "move_history": game.move_history,
                     "status": status
                 }))

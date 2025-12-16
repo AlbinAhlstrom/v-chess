@@ -3,6 +3,7 @@ import Piece from './Piece'
 import LegalMoveDot from '../LegalMoveDot/LegalMoveDot.js';
 import HighlightSquare from '../HighlightSquare/HighlightSquare.js';
 import PromotionDialog from '../PromotionDialog/PromotionDialog.js';
+import ImportDialog from '../ImportDialog/ImportDialog.js';
 import { fenToPosition, coordsToAlgebraic, algebraicToCoords } from '../../helpers.js'
 import { createGame, getLegalMoves, getAllLegalMoves } from '../../api.js'
 import { useState, useRef, useEffect } from 'react'
@@ -25,6 +26,12 @@ const RESET_ICON = (
     </svg>
 );
 
+const IMPORT_ICON = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
+        <path d="M128 64c0-35.3 28.7-64 64-64H352V128c0 17.7 14.3 32 32 32H512V448c0 35.3-28.7 64-64 64H192c-35.3 0-64-28.7-64-64V336H302.1l-39 39c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l80-80c9.4-9.4 9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l39 39H128V64zm0 224v48H24c-13.3 0-24-10.7-24-24s10.7-24 24-24H128zM512 128H384c-17.7 0-32-14.3-32-32V0L512 128z"/>
+    </svg>
+);
+
 export function Pieces({ onFenChange, variant = "standard" }) {
     const ref = useRef()
     const highlightRef = useRef(null);
@@ -35,8 +42,11 @@ export function Pieces({ onFenChange, variant = "standard" }) {
     const [inCheck, setInCheck] = useState(false);
     const [flashKingSquare, setFlashKingSquare] = useState(null);
     const [moveHistory, setMoveHistory] = useState([]);
+    const [winner, setWinner] = useState(null);
+    const [isGameOver, setIsGameOver] = useState(false);
     const ws = useRef(null);
     const [isPromotionDialogOpen, setPromotionDialogOpen] = useState(false);
+    const [isImportDialogOpen, setImportDialogOpen] = useState(false);
     const [promotionMove, setPromotionMove] = useState(null);
     const lastNotifiedFen = useRef(null);
     const dragStartSelectionState = useRef(false);
@@ -52,12 +62,12 @@ export function Pieces({ onFenChange, variant = "standard" }) {
     const promotionSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/promote.mp3"));
     const illegalSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/illegal.mp3"));
 
-    const initializeGame = async () => {
+    const initializeGame = async (fenToLoad = null, variantToLoad = null) => {
         if (ws.current) {
             ws.current.close();
         }
 
-        const { game_id: newGameId, fen: initialFen } = await createGame(variant);
+        const { game_id: newGameId, fen: initialFen } = await createGame(variantToLoad || variant, fenToLoad);
         setFen(initialFen);
         setGameId(newGameId);
         setMoveHistory([]);
@@ -77,6 +87,8 @@ export function Pieces({ onFenChange, variant = "standard" }) {
                 setFen(message.fen);
                 setInCheck(message.in_check);
                 setMoveHistory(message.move_history || []);
+                setWinner(message.winner);
+                setIsGameOver(message.is_over);
                 setSelectedSquare(null);
                 setLegalMoves([]);
                 if (highlightRef.current) highlightRef.current.style.display = 'none';
@@ -309,6 +321,7 @@ export function Pieces({ onFenChange, variant = "standard" }) {
 
 
         const isPiece = (f, r) => {
+            if (r < 0 || r > 7 || f < 0 || f > 7) return false;
             const piece = position[r][f];
             return !!piece;
         };
@@ -375,6 +388,22 @@ export function Pieces({ onFenChange, variant = "standard" }) {
         if (ws.current && ws.current.readyState === WebSocket.OPEN) {
             ws.current.send(JSON.stringify({ type: "undo" }));
         }
+    };
+
+    const handleImportClick = (e) => {
+        e.stopPropagation();
+        setImportDialogOpen(true);
+    };
+
+    const handleImport = (fenString, selectedVariant) => {
+        setImportDialogOpen(false);
+        if (fenString) {
+            initializeGame(fenString, selectedVariant);
+        }
+    };
+
+    const handleCancelImport = () => {
+        setImportDialogOpen(false);
     };
 
     const isCaptureMove = (file, rank) => {
@@ -503,6 +532,28 @@ export function Pieces({ onFenChange, variant = "standard" }) {
                         {EXPORT_ICON}
                     </button>
                     <button 
+                        onClick={handleImportClick}
+                        title="Import Game"
+                        style={{
+                            padding: '0',
+                            fontSize: '16px',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            fontFamily: 'inherit',
+                            backgroundColor: 'var(--button-bg-color)',
+                            color: 'var(--button-text-color)',
+                            border: 'none',
+                            borderRadius: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 'var(--button-size)',
+                            height: 'var(--button-height)'
+                        }}
+                    >
+                        {IMPORT_ICON}
+                    </button>
+                    <button 
                         onClick={handleReset}
                         title="Reset Game"
                         style={{
@@ -528,29 +579,7 @@ export function Pieces({ onFenChange, variant = "standard" }) {
             </div>
 
             {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
-
-            {flashKingSquare && (
-                <div 
-                    className="king-flash"
-                    style={{
-                        left: `calc(${flashKingSquare.file} * var(--square-size))`,
-                        top: `calc(${flashKingSquare.rank} * var(--square-size))`
-                    }}
-                />
-            )}
-
-            <div 
-                ref={highlightRef}
-                style={{
-                    position: 'absolute',
-                    width: 'var(--square-size)',
-                    height: 'var(--square-size)',
-                    boxSizing: 'border-box',
-                    zIndex: 6, 
-                    pointerEvents: 'none',
-                    display: 'none'
-                }}
-            />
+            {isImportDialogOpen && <ImportDialog onImport={handleImport} onCancel={handleCancelImport} />}
 
             {selectedSquare && (() => {
                 const { file, rank } = algebraicToCoords(selectedSquare);
@@ -561,12 +590,6 @@ export function Pieces({ onFenChange, variant = "standard" }) {
                     isDark={isDark}
                 />;
             })()}
-
-            {legalMoves.map((moveUci, index) => {
-                const targetSquare = moveUci.slice(2, 4);
-                const { file, rank } = algebraicToCoords(targetSquare);
-                return <LegalMoveDot key={index} file={file} rank={rank} />;
-            })}
 
             {position.map((rankArray, rankIndex) =>
                 rankArray.map((pieceType, fileIndex) =>
@@ -585,6 +608,64 @@ export function Pieces({ onFenChange, variant = "standard" }) {
                         : null
                 )
             )}
+
+            {legalMoves.map((moveUci, index) => {
+                const targetSquare = moveUci.slice(2, 4);
+                const { file, rank } = algebraicToCoords(targetSquare);
+                return <LegalMoveDot key={index} file={file} rank={rank} />;
+            })}
+
+            {isGameOver && (() => {
+                const getKingSquare = (color) => {
+                    const kingChar = color === 'w' ? 'K' : 'k';
+                    for (let r = 0; r < 8; r++) {
+                        for (let f = 0; f < 8; f++) {
+                            if (position[r] && position[r][f] === kingChar) {
+                                return { file: f, rank: r };
+                            }
+                        }
+                    }
+                    return color === 'w' ? { file: 4, rank: 7 } : { file: 4, rank: 0 };
+                };
+
+                const whiteKingSq = getKingSquare('w');
+                const blackKingSq = getKingSquare('b');
+
+                const getStatusColor = (color) => {
+                    if (!winner) return 'grey'; // Draw
+                    return winner === color ? '#4CAF50' : '#F44336';
+                };
+
+                const renderIndicator = (sq, color) => (
+                    <div style={{
+                        position: 'absolute',
+                        left: `calc(${sq.file} * var(--square-size) + var(--square-size) / 2 - 15px)`,
+                        top: `calc(${sq.rank} * var(--square-size) + var(--square-size) / 2 - 15px)`,
+                        width: '30px',
+                        height: '30px',
+                        borderRadius: '50%',
+                        backgroundColor: getStatusColor(color),
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1000,
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.5)'
+                    }}>
+                        <img 
+                            src={`/images/pieces/${color === 'w' ? 'K' : 'k'}.png`} 
+                            style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} 
+                            alt="" 
+                        />
+                    </div>
+                );
+
+                return (
+                    <>
+                        {renderIndicator(whiteKingSq, 'w')}
+                        {renderIndicator(blackKingSq, 'b')}
+                    </>
+                );
+            })()}
         </div>
     );
 }

@@ -47,10 +47,18 @@ class Rules(ABC):
     @abstractmethod
     def is_move_legal(self, state: GameState, move: Move) -> bool: ...
 
+    @abstractmethod
+    def get_winner(self, state: GameState) -> Color | None: ...
+
 
 class StandardRules(Rules):
     def get_legal_moves(self, state: GameState) -> list[Move]:
         return [move for move in self.get_theoretical_moves(state) if self.is_move_legal(state, move)]
+
+    def get_winner(self, state: GameState) -> Color | None:
+        if self.is_checkmate(state):
+            return state.turn.opposite
+        return None
 
     def is_check(self, state: GameState) -> bool:
         return self._is_color_in_check(state.board, state.turn)
@@ -511,4 +519,10 @@ class AntichessRules(StandardRules):
             return StatusReason.INVALID_EP_SQUARE
 
         return StatusReason.VALID
+
+    def get_winner(self, state: GameState) -> Color | None:
+        if self.is_game_over(state):
+            # Win if 0 pieces OR Stalemate (no legal moves but pieces remain)
+            return state.turn
+        return None
 

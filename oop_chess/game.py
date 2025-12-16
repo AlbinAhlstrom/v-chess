@@ -6,7 +6,7 @@ from oop_chess.game_state import GameState
 from oop_chess.move import Move
 from oop_chess.rules import Rules, StandardRules
 from oop_chess.exceptions import IllegalMoveException, IllegalBoardException
-from oop_chess.enums import MoveLegalityReason
+from oop_chess.enums import MoveLegalityReason, Color
 
 
 class Game:
@@ -28,7 +28,13 @@ class Game:
 
     @property
     def is_over(self):
-        return self.rules.is_game_over(self.state)
+        return self.rules.is_game_over(self.state) or self.is_draw
+
+    @property
+    def winner(self) -> Color | None:
+        if self.repetitions_of_position >= 3:
+            return None
+        return self.rules.get_winner(self.state)
 
     @property
     def is_checkmate(self):
