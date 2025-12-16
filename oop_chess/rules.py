@@ -481,7 +481,7 @@ class AntichessRules(StandardRules):
     def castling_legality_reason(self, state: GameState, move: Move, piece: King) -> MoveLegalityReason:
         return MoveLegalityReason.NO_CASTLING_RIGHT
 
-    def status(self, state: GameState) -> StatusReason:
+    def board_state_legality_reason(self, state: GameState) -> StatusReason:
         white_pawns = state.board.get_pieces(Pawn, Color.WHITE)
         black_pawns = state.board.get_pieces(Pawn, Color.BLACK)
         pawns_on_backrank = []
