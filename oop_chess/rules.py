@@ -178,7 +178,7 @@ class StandardRules(Rules):
             if piece and piece.color == state.turn:
                 for end in piece.theoretical_moves(sq):
                     moves.append(Move(sq, end))
-                
+
                 if isinstance(piece, Pawn):
                     is_start_rank = (sq.row == 6 if piece.color == Color.WHITE else sq.row == 1)
                     if is_start_rank:
@@ -202,7 +202,7 @@ class StandardRules(Rules):
                         if target_sq.is_promotion_row(piece.color):
                             for promo_piece_type in [Queen, Rook, Bishop, Knight]:
                                 moves.append(Move(sq, target_sq, promo_piece_type(piece.color)))
-                
+
                 if isinstance(piece, King):
                     row = 7 if piece.color == Color.WHITE else 0
                     moves.append(Move(sq, Square(row, 6)))
