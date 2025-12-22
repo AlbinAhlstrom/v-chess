@@ -1,13 +1,48 @@
 from __future__ import annotations
-from enum import Enum, StrEnum, auto
-from typing import TYPE_CHECKING
+from enum import Enum, StrEnum
+from typing import TYPE_CHECKING, Optional
 
 
 if TYPE_CHECKING:
     from oop_chess.square import Square
 
 
-class BoardLegalityReason(StrEnum):
+def _v(name: str, members: dict[str, str]) -> StrEnum:
+    return StrEnum(name, members)
+
+
+class BaseLegalityReason(StrEnum):
+    @classmethod
+    def load(cls, variant: str) -> type[StrEnum]:
+        if "Board" in cls.__name__:
+            key, config_dict = "board", BOARD_DISCREPANCIES
+        elif "Move" in cls.__name__:
+            key, config_dict = "move", MOVE_DISCREPANCIES
+        else:
+            key, config_dict = "game_over", GAMEOVER_DISCREPANCIES
+
+        members = {m.name: m.value for m in cls}
+        [members.pop(r, None) for r in STANDARD_REMOVALS.get(key, [])]
+
+        if variant == "Standard":
+            return _v(f"Standard{cls.__name__}", members)
+
+        changes = config_dict.get(variant, {})
+
+        if "add" in changes:
+            for add_key in changes["add"]:
+                if add_key in cls.__members__:
+                    members[add_key] = cls[add_key].value
+                elif isinstance(changes["add"], dict):
+                    members[add_key] = changes["add"][add_key]
+
+        if "remove" in changes:
+            [members.pop(r, None) for r in changes["remove"]]
+
+        return _v(f"{variant}{cls.__name__}", members)
+
+
+class BoardLegalityReason(BaseLegalityReason):
     VALID = "valid"
     NO_WHITE_KING = "no white king"
     NO_BLACK_KING = "no black king"
@@ -21,9 +56,11 @@ class BoardLegalityReason(StrEnum):
     INVALID_EP_SQUARE = "invalid en passant square"
     OPPOSITE_CHECK = "inactive player left in check"
     TOO_MANY_CHECKERS = "more than 2 checkers"
+    KINGS_ADJACENT = "kings cannot be adjacent"
+    KING_IN_CHECK = "king in check"
 
 
-class MoveLegalityReason(StrEnum):
+class MoveLegalityReason(BaseLegalityReason):
     NO_PIECE = "no piece moved."
     WRONG_COLOR = "wrong piece color"
     NO_CASTLING_RIGHT = "no right for castling"
@@ -41,9 +78,11 @@ class MoveLegalityReason(StrEnum):
     LEGAL = "move is legal"
     MANDATORY_CAPTURE = "mandatory capture available."
     CASTLING_DISABLED = "castling disabled in this variant"
+    KING_EXPLODED = "king exploded"
+    GIVES_CHECK = "move gives check"
 
 
-class GameOverReason(StrEnum):
+class GameOverReason(BaseLegalityReason):
     CHECKMATE = "checkmate"
     STALEMATE = "stalemate"
     REPETITION = "repetition"
@@ -53,6 +92,48 @@ class GameOverReason(StrEnum):
     ONGOING = "ongoing"
     ALL_PIECES_CAPTURED = "all pieces captured"
     INSUFFICIENT_MATERIAL = "insufficient material"
+    KING_ON_HILL = "king on hill"
+    THREE_CHECKS = "three checks"
+    KING_EXPLODED = "king exploded"
+    KING_TO_EIGHTH_RANK = "king to eighth rank"
+
+
+STANDARD_REMOVALS = {
+    "board": ["KINGS_ADJACENT", "KING_IN_CHECK"],
+    "move": ["MANDATORY_CAPTURE", "CASTLING_DISABLED", "KING_EXPLODED", "GIVES_CHECK"],
+    "game_over": ["ALL_PIECES_CAPTURED", "KING_ON_HILL", "THREE_CHECKS", "KING_EXPLODED", "KING_TO_EIGHTH_RANK"]
+}
+
+
+BOARD_DISCREPANCIES = {
+    "Antichess": {"remove": ["NO_WHITE_KING", "NO_BLACK_KING", "INVALID_CASTLING_RIGHTS", "OPPOSITE_CHECK", "TOO_MANY_CHECKERS"]},
+    "Atomic": {"add": ["KINGS_ADJACENT"]},
+    "Horde": {"remove": ["NO_WHITE_KING", "PAWNS_ON_BACKRANK"]},
+    "RacingKings": {"add": ["KING_IN_CHECK"], "remove": ["INVALID_CASTLING_RIGHTS", "OPPOSITE_CHECK", "TOO_MANY_CHECKERS"]},
+}
+
+
+MOVE_DISCREPANCIES = {
+    "Antichess": {
+        "add": ["MANDATORY_CAPTURE", "CASTLING_DISABLED"],
+        "remove": ["KING_LEFT_IN_CHECK", "NO_CASTLING_RIGHT", "CASTLING_FROM_CHECK", "CASTLING_THROUGH_CHECK"]
+    },
+    "Atomic": {"add": ["KING_EXPLODED"]},
+    "RacingKings": {
+        "add": ["GIVES_CHECK", "CASTLING_DISABLED"],
+        "remove": ["KING_LEFT_IN_CHECK", "NO_CASTLING_RIGHT", "CASTLING_FROM_CHECK", "CASTLING_THROUGH_CHECK"]
+    },
+}
+
+
+GAMEOVER_DISCREPANCIES = {
+    "KingOfTheHill": {"add": ["KING_ON_HILL"]},
+    "ThreeCheck": {"add": ["THREE_CHECKS"]},
+    "Antichess": {"add": ["ALL_PIECES_CAPTURED"], "remove": ["CHECKMATE"]},
+    "Atomic": {"add": ["KING_EXPLODED"]},
+    "Horde": {"add": ["ALL_PIECES_CAPTURED"]},
+    "RacingKings": {"add": ["KING_TO_EIGHTH_RANK"], "remove": ["CHECKMATE", "STALEMATE"]},
+}
 
 
 class Color(StrEnum):
@@ -218,4 +299,3 @@ class Direction(Enum):
                 yield Square(new_r, new_c)
             else:
                 break
-
