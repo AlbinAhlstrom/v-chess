@@ -59,6 +59,11 @@ class Square:
     def is_none_square(self) -> bool:
         return self.row == -1 and self.col == -1
 
+    @property
+    def index(self) -> int:
+        """Returns the bitboard index (0-63)."""
+        return self.row * 8 + self.col
+
     @staticmethod
     def is_valid(row: int, col: int) -> bool:
         """Check if row and col are within the 0-7 range."""

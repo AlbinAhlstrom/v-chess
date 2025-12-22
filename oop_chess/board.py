@@ -4,6 +4,7 @@ from oop_chess.fen_helpers import board_from_fen, get_fen_from_board
 from oop_chess.enums import Color
 from oop_chess.piece.piece import Piece
 from oop_chess.square import Coordinate, Square
+from oop_chess.bitboard import BitboardState
 
 
 T = TypeVar("T", bound=Piece)
@@ -18,27 +19,45 @@ class Board:
     STARTING_POSITION_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
     EMPTY_BOARD_FEN = "8/8/8/8/8/8/8/8"
 
-    def __init__(self, pieces: dict[Square, Piece] | str = {}):
+    def __init__(self, pieces: dict[Square, Piece] | str = {}, _sync_bitboard=True):
+        self.bitboard = BitboardState()
+        
         if isinstance(pieces, str):
             self.board = board_from_fen(pieces)
         elif isinstance(pieces, dict):
             self.board = pieces if pieces else {}
+            
+        if _sync_bitboard:
+            for sq, piece in self.board.items():
+                self.bitboard.set_piece(sq.index, piece)
 
     def get_piece(self, coordinate: Coordinate) -> Piece | None:
         return self.board.get(Square(coordinate))
 
     def set_piece(self, piece: Piece, square: str | tuple | Square):
         square = Square(square)
+        old_piece = self.board.get(square)
+        if old_piece:
+             self.bitboard.remove_piece(square.index, old_piece)
+             
         self.board[square] = piece
+        self.bitboard.set_piece(square.index, piece)
 
     def remove_piece(self, coordinate: Coordinate) -> Piece | None:
         square = Square(coordinate)
-        return self.board.pop(square, None)
+        piece = self.board.pop(square, None)
+        if piece:
+            self.bitboard.remove_piece(square.index, piece)
+        return piece
 
     def move_piece(self, piece: Piece, start: Square, end: Square):
         """Moves a piece on the board. Does not handle capture logic or rules."""
-        self.set_piece(piece, end)
+        # We manually remove and set to ensure bitboard updates correct
+        # remove_piece handles removing from bitboard
+        # set_piece handles adding (and removing potential capture)
+        
         self.remove_piece(start)
+        self.set_piece(piece, end)
 
     def get_pieces(self, piece_type: type[T] = Piece, color: Color | None = None) -> list[T]:
         pieces = [piece for piece in self.board.values() if piece]
@@ -64,7 +83,11 @@ class Board:
         return self.fen
 
     def copy(self) -> "Board":
-        return Board(self.board.copy())
+        # Create new board with dictionary copy, skipping expensive initial sync
+        new_board = Board(self.board.copy(), _sync_bitboard=False)
+        # Fast copy of bitboard
+        new_board.bitboard = self.bitboard.copy()
+        return new_board
 
     def print(self):
         """Print the chess board.

@@ -341,11 +341,7 @@ class StandardRules(Rules):
 
     def is_under_attack(self, board: Board, square: Square, by_color: Color) -> bool:
         """Check if square is attacked by the given color."""
-        for piece_square, piece in board.board.items():
-            if piece and piece.color == by_color:
-                if self.is_attacking(board, piece, square, piece_square):
-                    return True
-        return False
+        return board.bitboard.is_attacked(square.index, by_color)
 
     def inactive_player_in_check(self) -> bool:
         return self._is_color_in_check(self.state.board, self.state.turn.opposite)

@@ -293,3 +293,60 @@ class Direction(Enum):
                 yield Square(new_r, new_c)
             else:
                 break
+
+    def shift(self, bb: int) -> int:
+        """Shifts a bitboard in this direction, handling board boundaries."""
+        d_col, d_row = self.value
+        shift_amt = d_row * 8 + d_col
+        
+        # Masks to prevent wraparound
+        # FILE_A: col 0. 0x0101010101010101 if LSB is a8?
+        # Mapping: Index = row*8 + col.
+        # Row 0 (top): 0..7
+        # Row 7 (bottom): 56..63
+        # FILE_A: 0, 8, 16... => 0x0101010101010101
+        # FILE_H: 7, 15, 23... => 0x8080808080808080
+        
+        FILE_A = 0x0101010101010101
+        FILE_H = 0x8080808080808080
+        
+        if d_col == 1: # Right
+            return (bb & ~FILE_H) << 1
+        elif d_col == -1: # Left
+            return (bb & ~FILE_A) >> 1
+        elif d_col == 2: # Two Right
+            return (bb & ~FILE_H & ~(FILE_H >> 1)) << 2
+        elif d_col == -2: # Two Left
+            return (bb & ~FILE_A & ~(FILE_A << 1)) >> 2
+            
+        # Vertical moves (no wraparound issues with simple shifts usually, except off board)
+        # Down: row + 1 => index + 8. Left shift 8.
+        # Up: row - 1 => index - 8. Right shift 8.
+        
+        if shift_amt > 0:
+            return (bb << shift_amt) & 0xFFFFFFFFFFFFFFFF
+        elif shift_amt < 0:
+            return (bb >> -shift_amt) & 0xFFFFFFFFFFFFFFFF
+        return bb
+
+    def get_ray_mask(self, square_index: int) -> int:
+        """Returns a bitmask of the ray in this direction from the given square."""
+        if not hasattr(self.__class__, "_RAY_MASKS"):
+            self.__class__._RAY_MASKS = {}
+            
+        cache_key = (self, square_index)
+        if cache_key in self.__class__._RAY_MASKS:
+            return self.__class__._RAY_MASKS[cache_key]
+            
+        d_col, d_row = self.value
+        row, col = divmod(square_index, 8)
+        mask = 0
+        
+        r, c = row + d_row, col + d_col
+        while 0 <= r < 8 and 0 <= c < 8:
+            mask |= (1 << (r * 8 + c))
+            r += d_row
+            c += d_col
+            
+        self.__class__._RAY_MASKS[cache_key] = mask
+        return mask
