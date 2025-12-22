@@ -13,7 +13,10 @@ class Game:
     Responsible for turn management and history.
     """
     def __init__(self, state: GameState | str | None = None, rules: Rules | None = None):
-        if isinstance(state, GameState):
+        if rules and state is None:
+            # If rules are provided but no state, use the variant's starting setup
+            self.state = GameState.from_fen(rules.starting_fen)
+        elif isinstance(state, GameState):
             self.state = state
         elif isinstance(state, str):
             self.state = GameState.from_fen(state)
@@ -21,6 +24,7 @@ class Game:
             self.state = GameState.starting_setup()
 
         if rules:
+            # Sync rules with state
             rules.state = self.state
             self.state = replace(self.state, rules=rules)
             self.rules = rules

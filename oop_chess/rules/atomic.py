@@ -153,7 +153,14 @@ class AtomicRules(StandardRules):
         if not wk or not bk:
             return self.GameOverReason.KING_EXPLODED
             
-        return super().get_game_over_reason()
+        res = super().get_game_over_reason()
+        if res == GameOverReason.ONGOING:
+            return self.GameOverReason.ONGOING
+            
+        try:
+            return self.GameOverReason(res.value)
+        except ValueError:
+            return self.GameOverReason.ONGOING
 
     def get_winner(self) -> Color | None:
         reason = self.get_game_over_reason()

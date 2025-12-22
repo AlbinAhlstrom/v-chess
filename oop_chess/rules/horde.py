@@ -15,6 +15,10 @@ class HordeRules(StandardRules):
     def name(self) -> str:
         return "Horde"
 
+    @property
+    def starting_fen(self) -> str:
+        return "rnbqkbnr/pppppppp/8/1PP2PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP w kq - 0 1"
+
     def validate_board_state(self) -> BoardLegalityReason:
         # Standard logic but without White King requirement
         black_kings = self.state.board.get_pieces(King, Color.BLACK)
@@ -73,7 +77,14 @@ class HordeRules(StandardRules):
             if not self.get_legal_moves():
                 return self.GameOverReason.STALEMATE
 
-        return super().get_game_over_reason()
+        res = super().get_game_over_reason()
+        if res == GameOverReason.ONGOING:
+            return self.GameOverReason.ONGOING
+            
+        try:
+            return self.GameOverReason(res.value)
+        except ValueError:
+            return self.GameOverReason.ONGOING
 
     def get_winner(self) -> Color | None:
         reason = self.get_game_over_reason()

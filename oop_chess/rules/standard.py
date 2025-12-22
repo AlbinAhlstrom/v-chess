@@ -35,15 +35,18 @@ class StandardRules(Rules):
         return self._is_color_in_check(self.state.board, self.state.turn)
 
     def get_game_over_reason(self) -> GameOverReason:
+        # Use variant-specific GameOverReason class if available
+        cls = getattr(self, "GameOverReason", GameOverReason)
+        
         if self.state.repetition_count >= 3:
-            return GameOverReason.REPETITION
+            return cls.REPETITION
         if self.is_fifty_moves:
-            return GameOverReason.FIFTY_MOVE_RULE
+            return cls.FIFTY_MOVE_RULE
         if not self.get_legal_moves():
             if self.is_check():
-                return GameOverReason.CHECKMATE
-            return GameOverReason.STALEMATE
-        return GameOverReason.ONGOING
+                return cls.CHECKMATE
+            return cls.STALEMATE
+        return cls.ONGOING
 
     def validate_move(self, move: Move) -> MoveLegalityReason:
         pseudo_reason = self.move_pseudo_legality_reason(move)

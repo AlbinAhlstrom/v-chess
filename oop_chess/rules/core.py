@@ -32,6 +32,12 @@ class Rules(ABC):
         """Indicates if this variant has the concept of 'check'."""
         ...
 
+    @property
+    def starting_fen(self) -> str:
+        """The default starting position for this variant."""
+        from oop_chess.game_state import GameState
+        return GameState.STARTING_FEN
+
     @abstractmethod
     def get_legal_moves(self) -> list[Move]:
         """Returns all legal moves in the current state."""
@@ -92,7 +98,8 @@ class Rules(ABC):
 
     def is_game_over(self) -> bool:
         """Returns True if the game is over."""
-        return self.get_game_over_reason() != GameOverReason.ONGOING
+        cls = getattr(self, "GameOverReason", GameOverReason)
+        return self.get_game_over_reason() != cls.ONGOING
 
     @property
     def is_fifty_moves(self) -> bool:
@@ -102,22 +109,25 @@ class Rules(ABC):
     @property
     def is_checkmate(self) -> bool:
         """Returns True if the game is in checkmate."""
-        return self.get_game_over_reason() == GameOverReason.CHECKMATE
+        cls = getattr(self, "GameOverReason", GameOverReason)
+        return self.get_game_over_reason() == cls.CHECKMATE
 
     @property
     def is_stalemate(self) -> bool:
         """Returns True if the game is in stalemate."""
-        return self.get_game_over_reason() == GameOverReason.STALEMATE
+        cls = getattr(self, "GameOverReason", GameOverReason)
+        return self.get_game_over_reason() == cls.STALEMATE
 
     @property
     def is_draw(self) -> bool:
         """Returns True if the game is a draw."""
+        cls = getattr(self, "GameOverReason", GameOverReason)
         return self.get_game_over_reason() in (
-            GameOverReason.STALEMATE,
-            GameOverReason.REPETITION,
-            GameOverReason.FIFTY_MOVE_RULE,
-            GameOverReason.MUTUAL_AGREEMENT,
-            GameOverReason.INSUFFICIENT_MATERIAL
+            cls.STALEMATE,
+            cls.REPETITION,
+            cls.FIFTY_MOVE_RULE,
+            cls.MUTUAL_AGREEMENT,
+            cls.INSUFFICIENT_MATERIAL
         )
 
     def is_legal(self, move: Move | None = None) -> bool:
