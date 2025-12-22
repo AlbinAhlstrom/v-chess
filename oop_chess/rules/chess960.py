@@ -20,6 +20,53 @@ class Chess960Rules(StandardRules):
     def fen_type(self) -> str:
         return "chess960"
 
+    @property
+    def starting_fen(self) -> str:
+        import random
+        # 1. Place Bishops on opposite colors
+        # Light squares: 1, 3, 5, 7. Dark: 0, 2, 4, 6.
+        b1 = random.choice([1, 3, 5, 7])
+        b2 = random.choice([0, 2, 4, 6])
+        
+        # 2. Place remaining pieces in empty squares
+        remaining_indices = [i for i in range(8) if i not in (b1, b2)]
+        
+        # 3. Place Queen
+        q_idx = random.choice(remaining_indices)
+        remaining_indices.remove(q_idx)
+        
+        # 4. Place Knights
+        n1_idx = random.choice(remaining_indices)
+        remaining_indices.remove(n1_idx)
+        n2_idx = random.choice(remaining_indices)
+        remaining_indices.remove(n2_idx)
+        
+        # 5. Place Rooks and King (King must be between Rooks)
+        # remaining_indices has 3 elements left. 
+        # Sort them: [r1, k, r2]
+        remaining_indices.sort()
+        r1_idx, k_idx, r2_idx = remaining_indices
+        
+        # 6. Build the backrank string
+        backrank = [''] * 8
+        backrank[b1] = 'B'; backrank[b2] = 'B'
+        backrank[q_idx] = 'Q'
+        backrank[n1_idx] = 'N'; backrank[n2_idx] = 'N'
+        backrank[r1_idx] = 'R'; backrank[r2_idx] = 'R'
+        backrank[k_idx] = 'K'
+        
+        row_str = "".join(backrank)
+        
+        # 7. Build full FEN
+        # white backrank row_str.lower() for black
+        # Castling rights in 960 use the column letters of the rooks
+        # e.g. HAha if rooks are on h and a.
+        w_rook_cols = f"{chr(ord('A') + r2_idx)}{chr(ord('A') + r1_idx)}"
+        b_rook_cols = f"{chr(ord('a') + r2_idx)}{chr(ord('a') + r1_idx)}"
+        
+        fen = f"{row_str.lower()}/pppppppp/8/8/8/8/PPPPPPPP/{row_str} w {w_rook_cols}{b_rook_cols} - 0 1"
+        return fen
+
     def apply_move(self, move: Move) -> GameState:
         piece = self.state.board.get_piece(move.start)
         
