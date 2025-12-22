@@ -5,3 +5,5 @@ python-multipart
 websockets
 pytest
 hypothesis
+sqlalchemy
+aiosqlite

@@ -72,8 +72,8 @@ class Game:
 
         san = move.get_san(self)
 
-        # Update Clocks (Precise Monotonic)
-        now = time.perf_counter()
+        # Update Clocks (Absolute time for persistence)
+        now = time.time()
         if self.clocks:
             if self.last_move_at is None:
                 # First move of the game: just start the clock for the next player
@@ -116,7 +116,7 @@ class Game:
             
         current_clocks = self.clocks.copy()
         # Deduct time passed from the player currently on move
-        elapsed = time.perf_counter() - self.last_move_at
+        elapsed = time.time() - self.last_move_at
         current_clocks[self.state.turn] = max(0.0, current_clocks[self.state.turn] - elapsed)
         return current_clocks
 

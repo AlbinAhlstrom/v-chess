@@ -31,4 +31,9 @@ export const getLegalMoves = async (gameId, square) => {
     return res.json();
 };
 
+export const getGame = async (gameId) => {
+    const res = await fetch(`${API_BASE}/game/${gameId}`);
+    return res.json();
+};
+
 

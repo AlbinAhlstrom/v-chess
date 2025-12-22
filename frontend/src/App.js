@@ -32,6 +32,7 @@ function App() {
         <Route path="/kingofthehill" element={<GameBoard variant="kingofthehill" />} />
         <Route path="/racingkings" element={<GameBoard variant="racingkings" />} />
         <Route path="/threecheck" element={<GameBoard variant="threecheck" />} />
+        <Route path="/game/:gameId" element={<GameBoard />} />
       </Routes>
     </BrowserRouter>
   );

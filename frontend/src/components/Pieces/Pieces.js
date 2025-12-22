@@ -5,9 +5,9 @@ import HighlightSquare from '../HighlightSquare/HighlightSquare.js';
 import PromotionDialog from '../PromotionDialog/PromotionDialog.js';
 import ImportDialog from '../ImportDialog/ImportDialog.js';
 import { fenToPosition, coordsToAlgebraic, algebraicToCoords } from '../../helpers.js'
-import { createGame, getLegalMoves, getAllLegalMoves } from '../../api.js'
+import { createGame, getLegalMoves, getAllLegalMoves, getGame } from '../../api.js'
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const UNDO_ICON = (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
@@ -68,6 +68,7 @@ const INCREMENT_VALUES = [
 ];
 
 export function Pieces({ onFenChange, variant = "standard" }) {
+    const { gameId: urlGameId } = useParams();
     const ref = useRef()
     const highlightRef = useRef(null);
     const [fen, setFen] = useState();
@@ -137,30 +138,15 @@ export function Pieces({ onFenChange, variant = "standard" }) {
         }, 100);
 
         return () => clearInterval(interval);
-    }, [timers, turn, isGameOver]);
+    }, [timers, turn, isGameOver, moveHistory.length]);
 
-    const initializeGame = async (fenToLoad = null, variantToLoad = null, tc = null) => {
+    const connectWebSocket = (id) => {
         if (ws.current) {
             ws.current.close();
         }
 
-        const timeControl = tc || (isTimeControlEnabled ? { starting_time: startingTime, increment: increment } : null);
-        const { game_id: newGameId, fen: initialFen } = await createGame(variantToLoad || variant, fenToLoad, timeControl);
-        setFen(initialFen);
-        setGameId(newGameId);
-        setMoveHistory([]);
-        setLegalMoves([]);
-        setSelectedSquare(null);
-        setInCheck(false);
-        setFlashKingSquare(null);
-        setTimers(null);
-        setTurn('w');
-        if (highlightRef.current) highlightRef.current.style.display = 'none';
-        
-        gameStartSound.current.play().catch(e => console.error("Error playing game start sound:", e));
-
         const wsBase = process.env.REACT_APP_WS_URL || "ws://127.0.0.1:8000/ws";
-        ws.current = new WebSocket(`${wsBase}/${newGameId}`);
+        ws.current = new WebSocket(`${wsBase}/${id}`);
 
         ws.current.onmessage = (event) => {
             const message = JSON.parse(event.data);
@@ -221,14 +207,61 @@ export function Pieces({ onFenChange, variant = "standard" }) {
         ws.current.onerror = (error) => console.error("WebSocket error:", error);
     };
 
+    const initializeGame = async (fenToLoad = null, variantToLoad = null, tc = null) => {
+        const timeControl = tc || (isTimeControlEnabled ? { starting_time: startingTime, increment: increment } : null);
+        const { game_id: newGameId, fen: initialFen } = await createGame(variantToLoad || variant, fenToLoad, timeControl);
+        setFen(initialFen);
+        setGameId(newGameId);
+        setMoveHistory([]);
+        setLegalMoves([]);
+        setSelectedSquare(null);
+        setInCheck(false);
+        setFlashKingSquare(null);
+        setTimers(null);
+        setTurn('w');
+        if (highlightRef.current) highlightRef.current.style.display = 'none';
+        
+        gameStartSound.current.play().catch(e => console.error("Error playing game start sound:", e));
+
+        navigate(`/game/${newGameId}`, { replace: true });
+        connectWebSocket(newGameId);
+    };
+
+    const loadExistingGame = async (id) => {
+        try {
+            const data = await getGame(id);
+            if (data.game_id) {
+                setFen(data.fen);
+                setGameId(data.game_id);
+                setMoveHistory(data.move_history || []);
+                setInCheck(data.in_check);
+                setWinner(data.winner);
+                setIsGameOver(data.is_over);
+                setTurn(data.turn);
+                // WebSocket will push the full state including clocks on connect
+                connectWebSocket(id);
+            }
+        } catch (error) {
+            console.error("Failed to load game:", error);
+            // Fallback to new game if loading fails
+            navigate('/', { replace: true });
+        }
+    };
+
     useEffect(() => {
-        initializeGame();
+        if (urlGameId) {
+            if (gameId !== urlGameId) {
+                loadExistingGame(urlGameId);
+            }
+        } else {
+            initializeGame();
+        }
         return () => {
             if (ws.current) {
                 ws.current.close();
             }
         };
-    }, [variant]);
+    }, [variant, urlGameId]);
 
     useEffect(() => {
         if (fen && fen !== lastNotifiedFen.current) {
