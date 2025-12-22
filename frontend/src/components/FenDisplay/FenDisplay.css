@@ -7,14 +7,11 @@
 }
 
 .fen-string {
-    font-family: 'monospace';
-    background-color: #eee;
-    padding: 8px 12px;
+    padding: 10px;
     border-radius: 4px;
-    border: 1px solid #ccc;
-    white-space: nowrap;
-    overflow-x: auto;
-    max-width: 400px; /* Adjust as needed */
+    font-family: var(--main-font-family);
+    word-break: break-all;
+    font-size: 14px;
 }
 
 .copy-fen-button {

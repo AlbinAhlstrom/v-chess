@@ -19,7 +19,7 @@
     width: 400px;
     max-width: 90vw; /* Added max-width */
     color: var(--button-text-color, #fff);
-    font-family: var(--main-font-family, 'Segoe UI', sans-serif);
+    font-family: var(--main-font-family);
 }
 
 .import-dialog h3 {
