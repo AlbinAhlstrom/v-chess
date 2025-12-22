@@ -23,7 +23,15 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<GameBoard variant="standard" />} />
+        <Route path="/standard" element={<GameBoard variant="standard" />} />
         <Route path="/antichess" element={<GameBoard variant="antichess" />} />
+        <Route path="/atomic" element={<GameBoard variant="atomic" />} />
+        <Route path="/chess960" element={<GameBoard variant="chess960" />} />
+        <Route path="/crazyhouse" element={<GameBoard variant="crazyhouse" />} />
+        <Route path="/horde" element={<GameBoard variant="horde" />} />
+        <Route path="/kingofthehill" element={<GameBoard variant="kingofthehill" />} />
+        <Route path="/racingkings" element={<GameBoard variant="racingkings" />} />
+        <Route path="/threecheck" element={<GameBoard variant="threecheck" />} />
       </Routes>
     </BrowserRouter>
   );
