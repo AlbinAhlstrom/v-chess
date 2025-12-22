@@ -94,8 +94,8 @@ class HordeRules(StandardRules):
             return Color.BLACK
         return super().get_winner()
 
-    def get_theoretical_moves(self) -> list[Move]:
-        moves = super().get_theoretical_moves()
+    def get_theoretical_moves(self):
+        yield from super().get_theoretical_moves()
 
         # Horde specific: White pawns on rank 1 can also move 2 steps
         if self.state.turn == Color.WHITE:
@@ -106,8 +106,7 @@ class HordeRules(StandardRules):
                         one_step = sq.get_step(direction)
                         two_step = one_step.get_step(direction) if one_step else None
                         if two_step:
-                            moves.append(Move(sq, two_step))
-        return moves
+                            yield Move(sq, two_step)
 
     def move_pseudo_legality_reason(self, move: Move) -> MoveLegalityReason:
         piece = self.state.board.get_piece(move.start)
