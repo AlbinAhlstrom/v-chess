@@ -94,6 +94,10 @@ export function Pieces({ onFenChange, variant = "standard" }) {
     const [isTimeControlEnabled, setIsTimeControlEnabled] = useState(false);
     const [startingTime, setStartingTime] = useState(10);
     const [increment, setIncrement] = useState(5);
+
+    // Player Names State
+    const [playerName, setPlayerName] = useState("Anonymous");
+    const [opponentName, setOpponentName] = useState("Anonymous Opponent");
     
     // Sounds
     const moveSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3"));
@@ -505,6 +509,10 @@ export function Pieces({ onFenChange, variant = "standard" }) {
                 if (isMenuOpen) setIsMenuOpen(false);
             }}
             >
+            
+            <div className="player-name-display opponent-name">
+                {opponentName}
+            </div>
 
             <div className="game-sidebar" onClick={e => e.stopPropagation()}>
                 <div className="move-history">
@@ -571,6 +579,28 @@ export function Pieces({ onFenChange, variant = "standard" }) {
                 <div className="new-game-dialog-overlay" onClick={() => setNewGameDialogOpen(false)}>
                     <div className="new-game-dialog" onClick={e => e.stopPropagation()}>
                         <h2>New Game</h2>
+                        
+                        <div className="player-names-input">
+                            <div className="setting-row">
+                                <label>Your Name</label>
+                                <input 
+                                    type="text" 
+                                    value={playerName} 
+                                    onChange={(e) => setPlayerName(e.target.value)}
+                                    placeholder="Anonymous"
+                                />
+                            </div>
+                            <div className="setting-row">
+                                <label>Opponent Name</label>
+                                <input 
+                                    type="text" 
+                                    value={opponentName} 
+                                    onChange={(e) => setOpponentName(e.target.value)}
+                                    placeholder="Anonymous Opponent"
+                                />
+                            </div>
+                        </div>
+
                         <div className="variants-grid">
                             {VARIANTS.map(v => (
                                 <button
@@ -728,6 +758,10 @@ export function Pieces({ onFenChange, variant = "standard" }) {
                     </>
                 );
             })()}
+
+            <div className="player-name-display player-name">
+                {playerName}
+            </div>
         </div>
     );
 }

@@ -2,6 +2,13 @@
     position: relative;
 }
 
+@media (max-width: 650px) {
+    .board {
+        margin-top: 40px;
+        margin-bottom: 40px;
+    }
+}
+
 .squares {
     display: grid;
     grid-template-columns: repeat(8, var(--square-size));

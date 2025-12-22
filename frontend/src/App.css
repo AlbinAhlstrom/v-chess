@@ -1,18 +1,21 @@
 @import './constants.css';
 
-html,body {
+html,body, #root {
     margin: 0;
     padding: 0;
     background: var(--bg-color); /* Extend background to full page */
     color: white; /* Ensure text is visible if it leaks */
+    width: 100%;
+    height: 100%;
 }
  
 .App {
-    display: grid;
-    place-content: center;
-    min-height: 100vh; /* Changed from height to min-height to allow scrolling on mobile */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
     background: var(--bg-color);
-    padding: 20px; /* Add padding for mobile spacing */
+    padding: 20px;
     box-sizing: border-box;
 }
 
@@ -30,7 +33,6 @@ html,body {
     .App {
         padding: 0;
         display: block;
-        padding-top: 20px;
         overflow-x: hidden;
     }
 
@@ -46,6 +48,6 @@ html,body {
 
 @media (max-width: 450px) {
     .App {
-        padding-top: 10px;
+        padding-top: 0;
     }
 }
