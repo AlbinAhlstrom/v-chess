@@ -1,9 +1,10 @@
 from dataclasses import replace
+from typing import Optional
 from oop_chess.game_state import GameState
 from oop_chess.move import Move
 from oop_chess.rules import Rules
 from oop_chess.exceptions import IllegalMoveException, IllegalBoardException
-from oop_chess.enums import MoveLegalityReason, BoardLegalityReason
+from oop_chess.enums import MoveLegalityReason, BoardLegalityReason, GameOverReason, Color
 
 
 class Game:
@@ -109,6 +110,15 @@ class Game:
     @property
     def legal_moves(self) -> list[Move]:
         return self.rules.get_legal_moves()
+
+    @property
+    def game_over_reason(self) -> GameOverReason:
+        return self.rules.get_game_over_reason()
+
+    @property
+    def winner(self) -> Optional[str]:
+        color = self.rules.get_winner()
+        return color.value if color else None
 
     def is_move_legal(self, move: Move) -> bool:
         return self.rules.validate_move(move) == MoveLegalityReason.LEGAL

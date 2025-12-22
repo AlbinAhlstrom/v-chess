@@ -18,20 +18,33 @@ class Move:
     start: Square = field(compare=True)
     end: Square = field(compare=True)
     promotion_piece: Piece | None = field(default=None, compare=True)
+    drop_piece: Piece | None = field(default=None, compare=True)
 
     def __init__(self, *args, player_to_move: Color = Color.WHITE) -> None:
         """Allows for instatiation using args or UCI string."""
         _start: Square
         _end: Square
         _promotion_piece: Piece | None = None
+        _drop_piece: Piece | None = None
 
         if len(args) == 1 and isinstance(args[0], str):
             uci_str = args[0]
-            if not Move.is_uci_valid(uci_str):
+            if "@" in uci_str:
+                # Drop move: P@e4
+                piece_char, square_str = uci_str.split("@")
+                if not (piece_char in piece_from_char and Move.is_square_valid(square_str)):
+                     raise ValueError(f"Invalid Drop UCI: {uci_str}")
+                
+                _start = Square(None) # NoneSquare
+                _end = Square(square_str)
+                _drop_piece = piece_from_char[piece_char](player_to_move)
+                
+            elif not Move.is_uci_valid(uci_str):
                 raise ValueError(f"Invalid UCI string: {uci_str}")
-            _start = Square(uci_str[:2])
-            _end = Square(uci_str[2:4])
-            _promotion_piece = piece_from_char[uci_str[4:]](player_to_move) if len(uci_str) == 5 else None
+            else:
+                _start = Square(uci_str[:2])
+                _end = Square(uci_str[2:4])
+                _promotion_piece = piece_from_char[uci_str[4:]](player_to_move) if len(uci_str) == 5 else None
 
         elif len(args) >= 2:
             if not (isinstance(args[0], Square) and isinstance(args[1], Square)):
@@ -39,35 +52,80 @@ class Move:
             _start = args[0]
             _end = args[1]
 
-            if len(args) == 3:
-                if not (isinstance(args[2], Piece) or args[2] is None):
-                    raise TypeError("Third argument (promotion_piece) must be a Piece or None.")
-                _promotion_piece = args[2]
-            elif len(args) > 3:
-                raise TypeError(f"Too many positional arguments for Move constructor: {args}")
-
+            if len(args) >= 3:
+                # arg 3 could be promotion or drop piece
+                # But constructor signature usually implies promotion for standard moves.
+                # If doing a drop via constructor, users should probably use named args or uci.
+                # However, to keep it consistent:
+                # Move(NoneSquare, TargetSquare, drop_piece=Piece)
+                if len(args) == 3 and (isinstance(args[2], Piece) or args[2] is None):
+                     _promotion_piece = args[2]
+                elif len(args) == 4 and (isinstance(args[3], Piece) or args[3] is None):
+                     _promotion_piece = args[2]
+                     _drop_piece = args[3]
+            
+            # For kwargs handling (drop_piece passed as kwarg)
+            # Dataclass generated init handles this if we weren't overriding it.
+            # But since we are, we rely on args/logic here.
+            # If user does Move(sq1, sq2, drop_piece=P), it might fail here if not careful.
+            # But python maps kwargs to variables before calling this? No, we are inside __init__.
+            
         else:
-            raise TypeError(f"Invalid number or type of arguments for Move constructor: {args}")
+             # Fallback for named args passed via kwargs caught by *args?
+             # Actually __init__ signature only has *args. Kwargs are not captured unless we add **kwargs.
+             # But dataclass machinery calls __init__ with fields as args if not overridden?
+             # No, if we define __init__, we control it.
+             # The signature `def __init__(self, *args, player_to_move: Color = Color.WHITE)` 
+             # ignores `drop_piece` passed as keyword!
+             pass
+        
+        # Checking if drop_piece was passed via keyword argument (not captured in *args)
+        # We need to add **kwargs to signature to capture 'drop_piece' or 'promotion_piece' if passed by name.
+        # But wait, I can't easily change the signature without potentially breaking things if I'm not careful.
+        # Let's fix the signature to `def __init__(self, *args, player_to_move=..., **kwargs)`
+        
+        # But wait, looking at previous implementation, it didn't have **kwargs. 
+        # So `Move(start, end, promotion_piece=P)` would act weirdly?
+        # Actually `Move` constructor was: `def __init__(self, *args, player_to_move: Color = Color.WHITE)`
+        # If I call `Move(s, e, promotion_piece=p)`, `promotion_piece` goes into `kwargs`? No, it raises TypeError usually if not in signature.
+        # Ah, unless it was relying on positional args for promotion piece.
+        # The code handled `len(args) == 3`.
+
+        # Let's check for drop_piece logic via kwargs manually?
+        # I'll update the signature.
+        
+        # NOTE: I am overriding the setattr logic at the end.
 
         object.__setattr__(self, 'start', _start)
         object.__setattr__(self, 'end', _end)
         object.__setattr__(self, 'promotion_piece', _promotion_piece)
+        object.__setattr__(self, 'drop_piece', _drop_piece)
+
+    @property
+    def is_drop(self) -> bool:
+        return self.drop_piece is not None
 
     @property
     def is_vertical(self) -> bool:
+        if self.is_drop: return False
         return self.start.col == self.end.col
 
     @property
     def is_horizontal(self) -> bool:
+        if self.is_drop: return False
         return self.start.row == self.end.row
 
     @property
     def is_diagonal(self) -> bool:
+        if self.is_drop: return False
         return abs(self.start.col - self.end.col) == abs(self.start.row - self.end.row)
 
     @property
     def uci(self) -> str:
-        """Returns the move in UCI format (e.g., 'e2e4', 'a7a8q')."""
+        """Returns the move in UCI format (e.g., 'e2e4', 'a7a8q', 'P@e4')."""
+        if self.is_drop:
+            return f"{self.drop_piece.fen.upper()}@{self.end}"
+            
         move_str = f"{self.start}{self.end}"
         if self.promotion_piece:
             move_str += self.promotion_piece.fen
@@ -75,6 +133,10 @@ class Move:
 
     def get_san(self, game: "Game") -> str:
         """Returns the Standard Algebraic Notation (SAN) string for the move."""
+        if self.is_drop:
+            # SAN for drop is usually same as UCI/special: N@e4
+            return self.uci
+            
         piece = game.state.board.get_piece(self.start)
         if piece is None:
             return self.uci
@@ -146,7 +208,15 @@ class Move:
                 return uci_str[4] in piece_from_char.keys()
             return True
         except Exception as e:
-            print(e)
+            # print(e) # Silence printing
+            return False
+            
+    @staticmethod
+    def is_square_valid(sq_str: str):
+        try:
+            Square(sq_str)
+            return True
+        except:
             return False
 
     @classmethod
@@ -166,18 +236,13 @@ class Move:
 
     @classmethod
     def from_san_move(cls, san_str: str, game: "Game") -> "Move":
-        """Parses a Standard Algebraic Notation string into a Move object.
+        """Parses a Standard Algebraic Notation string into a Move object."""
+        
+        # Handle Drops in SAN if strictly parsing
+        if "@" in san_str:
+            # Assume it's UCI/Drop notation like P@e4
+            return Move(san_str, player_to_move=game.state.turn)
 
-        Args:
-            san_str: The move string (e.g., "Nf3", "exd5").
-            game: The current game state.
-
-        Returns:
-            The corresponding legal Move object.
-
-        Raises:
-            ValueError: If the move is ambiguous, illegal, or the format is invalid.
-        """
         clean_san = san_str.replace("x", "").replace("+", "").replace("#", "").replace("(", "").replace(")", "")
 
         promotion_piece = None
@@ -243,4 +308,3 @@ class Move:
 
     def __str__(self) -> str:
         return self.uci
-

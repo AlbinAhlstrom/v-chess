@@ -1,8 +1,9 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple, List
 from oop_chess.enums import CastlingRight, Color
 from oop_chess.piece.piece import Piece
 from oop_chess.square import Square
 from oop_chess.piece import piece_from_char
+
 if TYPE_CHECKING:
     from oop_chess.game_state import GameState
     from oop_chess.board import Board
@@ -10,6 +11,10 @@ if TYPE_CHECKING:
 
 def board_from_fen(fen_board: str) -> dict[Square, Piece]:
     """Gets a piece dict from the board part of a fen string."""
+    # Strip pocket info if present for board parsing
+    if "[" in fen_board:
+        fen_board = fen_board.split("[")[0]
+
     board: dict[Square, Piece] = {}
     fen_rows = fen_board.split("/")
     for row, fen_row in enumerate(fen_rows):
@@ -54,14 +59,56 @@ def get_fen_from_board(board: "Board") -> str:
 
     return "/".join(fen_rows)
 
+def _parse_pocket(pocket_str: str) -> Tuple[Tuple[Piece, ...], Tuple[Piece, ...]]:
+    """Parses [QNp] string into pockets."""
+    # content inside []
+    white_pocket: List[Piece] = []
+    black_pocket: List[Piece] = []
+    
+    for char in pocket_str:
+        piece_cls = piece_from_char.get(char)
+        if piece_cls:
+            # Uppercase = White, Lowercase = Black
+            if char.isupper():
+                white_pocket.append(piece_cls(Color.WHITE))
+            else:
+                black_pocket.append(piece_cls(Color.BLACK))
+                
+    return (tuple(white_pocket), tuple(black_pocket))
+
+def _serialize_pocket(white_pocket: Tuple[Piece, ...], black_pocket: Tuple[Piece, ...]) -> str:
+    """Serializes pockets to [QNp] format."""
+    s = ""
+    for p in white_pocket:
+        s += p.fen
+    for p in black_pocket:
+        s += p.fen
+    return f"[{s}]" if s else ""
+
 def state_from_fen(fen: str) -> "GameState":
-    from oop_chess.game_state import GameState
+    from oop_chess.game_state import GameState, ThreeCheckGameState, CrazyhouseGameState
     from oop_chess.board import Board
     from oop_chess.rules import StandardRules
 
+    # Pre-processing for Variants
+    # Check for Three-Check: ends with +N+M
+    # We split by space. Standard has 6 fields.
     fen_parts = fen.split()
-    if len(fen_parts) != 6:
-        raise ValueError("Invalid FEN format: Must contain 6 fields.")
+    
+    three_check_suffix = None
+    if len(fen_parts) == 7 and "+" in fen_parts[6]:
+        three_check_suffix = fen_parts[6]
+        
+    # Check for Crazyhouse: 1st field has []
+    crazyhouse_pocket = None
+    if "[" in fen_parts[0] and "]" in fen_parts[0]:
+        board_part, pocket_part = fen_parts[0].split("[")
+        pocket_part = pocket_part.rstrip("]")
+        crazyhouse_pocket = _parse_pocket(pocket_part)
+        fen_parts[0] = board_part # Clean board part for standard parsing
+
+    if len(fen_parts) < 6:
+        raise ValueError("Invalid FEN format: Must contain at least 6 fields.")
 
     board = Board(fen_parts[0])
     active_color = Color(fen_parts[1])
@@ -75,22 +122,45 @@ def state_from_fen(fen: str) -> "GameState":
         raise ValueError("FEN halfmove and fullmove must be int.")
 
     rules = StandardRules()
-    state = GameState(
-        board,
-        active_color,
-        castling_rights,
-        en_passant,
-        halfmove_clock,
-        fullmove_count,
-        rules,
-        repetition_count=1
-    )
+    
+    # Instantiate specific GameState
+    if three_check_suffix:
+        # format +w+b e.g. +2+0
+        parts = three_check_suffix.split("+")
+        # parts[0] is empty string, parts[1] is white, parts[2] is black
+        w_checks = int(parts[1])
+        b_checks = int(parts[2])
+        state = ThreeCheckGameState(
+            board, active_color, castling_rights, en_passant,
+            halfmove_clock, fullmove_count, rules, 1,
+            checks=(w_checks, b_checks)
+        )
+    elif crazyhouse_pocket:
+        state = CrazyhouseGameState(
+            board, active_color, castling_rights, en_passant,
+            halfmove_clock, fullmove_count, rules, 1,
+            pockets=crazyhouse_pocket
+        )
+    else:
+        state = GameState(
+            board, active_color, castling_rights, en_passant,
+            halfmove_clock, fullmove_count, rules, 1
+        )
+        
     rules.state = state
     return state
 
-def state_to_fen(state: GameState) -> str:
+def state_to_fen(state: "GameState") -> str:
+    from oop_chess.game_state import ThreeCheckGameState, CrazyhouseGameState
+    
     """Serializes the state to FEN."""
     placement = state.board.fen
+    
+    # Variant handling for placement (Crazyhouse)
+    if isinstance(state, CrazyhouseGameState):
+        pocket_str = _serialize_pocket(state.pockets[0], state.pockets[1])
+        placement += pocket_str
+
     active = state.turn.value
 
     rights_str = "".join([r.value for r in state.castling_rights]) or "-"
@@ -99,5 +169,10 @@ def state_to_fen(state: GameState) -> str:
     hm = str(state.halfmove_clock)
     fm = str(state.fullmove_count)
 
-    return f"{placement} {active} {rights_str} {ep} {hm} {fm}"
-
+    base_fen = f"{placement} {active} {rights_str} {ep} {hm} {fm}"
+    
+    # Variant handling for suffix (Three-Check)
+    if isinstance(state, ThreeCheckGameState):
+        base_fen += f" +{state.checks[0]}+{state.checks[1]}"
+        
+    return base_fen

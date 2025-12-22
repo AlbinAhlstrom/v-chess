@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Optional, TYPE_CHECKING
+from dataclasses import dataclass, field
+from typing import Optional, TYPE_CHECKING, Tuple
 
 from oop_chess.board import Board
 from oop_chess.square import Square
@@ -8,6 +8,7 @@ from oop_chess.fen_helpers import state_from_fen, state_to_fen
 
 if TYPE_CHECKING:
     from oop_chess.rules.core import Rules
+    from oop_chess.piece import Piece
 
 
 @dataclass(frozen=True)
@@ -48,3 +49,24 @@ class GameState:
     def __hash__(self):
         return hash(self.fen)
 
+
+@dataclass(frozen=True)
+class ThreeCheckGameState(GameState):
+    """GameState for Three-Check Chess.
+    
+    Tracks the number of times each side has given check.
+    checks[0] = checks by White (against Black King)
+    checks[1] = checks by Black (against White King)
+    """
+    checks: Tuple[int, int] = (0, 0)
+
+
+@dataclass(frozen=True)
+class CrazyhouseGameState(GameState):
+    """GameState for Crazyhouse Chess.
+    
+    Tracks captured pieces available for dropping.
+    pockets[0] = White's pocket (captured Black pieces, converted to White)
+    pockets[1] = Black's pocket (captured White pieces, converted to Black)
+    """
+    pockets: Tuple[Tuple["Piece", ...], Tuple["Piece", ...]] = ((), ())
