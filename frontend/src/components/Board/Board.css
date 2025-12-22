@@ -11,6 +11,12 @@
     overflow: hidden;
 }
 
+@media (max-width: 650px) {
+    .squares {
+        border-radius: 0;
+    }
+}
+
 .square {
 
 }

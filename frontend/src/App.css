@@ -24,21 +24,28 @@ html,body {
 
 @media (max-width: 650px) {
     :root {
-        --square-size: 55px;
+        --square-size: 12.5vw;
+    }
+
+    .App {
+        padding: 0;
+        display: block;
+        padding-top: 20px;
+        overflow-x: hidden;
+    }
+
+    .board {
+        width: 100vw;
+        max-width: 100%;
+    }
+
+    .squares {
+        border-radius: 0;
     }
 }
 
 @media (max-width: 450px) {
-    :root {
-        --square-size: 11vw; /* Fluid size for very small screens */
-    }
-    
     .App {
-        display: block; /* Remove grid centering to allow natural flow */
-        padding-top: 50px;
-    }
-    
-    .board {
-        margin: 0 auto; /* Center board */
+        padding-top: 10px;
     }
 }
