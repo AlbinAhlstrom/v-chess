@@ -57,6 +57,16 @@ const VARIANTS = [
     { id: 'threecheck', title: 'Three Check', icon: '3️⃣' },
 ];
 
+const STARTING_TIME_VALUES = [
+    0.5, 1, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 
+    25, 30, 35, 40, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180
+];
+
+const INCREMENT_VALUES = [
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+    25, 30, 35, 40, 45, 60, 90, 120, 150, 180
+];
+
 export function Pieces({ onFenChange, variant = "standard" }) {
     const ref = useRef()
     const highlightRef = useRef(null);
@@ -79,6 +89,11 @@ export function Pieces({ onFenChange, variant = "standard" }) {
     const dragStartSelectionState = useRef(false);
     const isPromoting = useRef(false);
     const navigate = useNavigate();
+
+    // Time Control State
+    const [isTimeControlEnabled, setIsTimeControlEnabled] = useState(false);
+    const [startingTime, setStartingTime] = useState(10);
+    const [increment, setIncrement] = useState(5);
     
     // Sounds
     const moveSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3"));
@@ -90,12 +105,13 @@ export function Pieces({ onFenChange, variant = "standard" }) {
     const promotionSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/promote.mp3"));
     const illegalSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/illegal.mp3"));
 
-    const initializeGame = async (fenToLoad = null, variantToLoad = null) => {
+    const initializeGame = async (fenToLoad = null, variantToLoad = null, tc = null) => {
         if (ws.current) {
             ws.current.close();
         }
 
-        const { game_id: newGameId, fen: initialFen } = await createGame(variantToLoad || variant, fenToLoad);
+        const timeControl = tc || (isTimeControlEnabled ? { starting_time: startingTime, increment: increment } : null);
+        const { game_id: newGameId, fen: initialFen } = await createGame(variantToLoad || variant, fenToLoad, timeControl);
         setFen(initialFen);
         setGameId(newGameId);
         setMoveHistory([]);
@@ -414,7 +430,11 @@ export function Pieces({ onFenChange, variant = "standard" }) {
 
     const handleVariantSelect = (variantId) => {
         setNewGameDialogOpen(false);
-        navigate(variantId === 'standard' ? '/' : `/${variantId}`);
+        if (variantId === variant) {
+            initializeGame();
+        } else {
+            navigate(variantId === 'standard' ? '/' : `/${variantId}`);
+        }
     };
 
     const handleReset = (e) => {
@@ -559,6 +579,56 @@ export function Pieces({ onFenChange, variant = "standard" }) {
                                 </button>
                             ))}
                         </div>
+
+                        <div className="time-control-settings">
+                            <div className="setting-row">
+                                <label className="switch-container">
+                                    <span>Time Control</span>
+                                    <input 
+                                        type="checkbox" 
+                                        checked={isTimeControlEnabled} 
+                                        onChange={(e) => setIsTimeControlEnabled(e.target.checked)} 
+                                    />
+                                    <span className="slider round"></span>
+                                </label>
+                            </div>
+                            
+                            {isTimeControlEnabled && (
+                                <>
+                                    <div className="setting-row slider-setting">
+                                        <div className="slider-label">
+                                            <span>Starting Time</span>
+                                            <span>
+                                                {startingTime === 0.5 ? '1/2' : 
+                                                 startingTime === 1.5 ? '1 1/2' : 
+                                                 startingTime} min
+                                            </span>
+                                        </div>
+                                        <input 
+                                            type="range" 
+                                            min="0" 
+                                            max={STARTING_TIME_VALUES.length - 1} 
+                                            value={STARTING_TIME_VALUES.indexOf(startingTime)} 
+                                            onChange={(e) => setStartingTime(STARTING_TIME_VALUES[parseInt(e.target.value)])} 
+                                        />
+                                    </div>
+                                    <div className="setting-row slider-setting">
+                                        <div className="slider-label">
+                                            <span>Increment</span>
+                                            <span>{increment} sec</span>
+                                        </div>
+                                        <input 
+                                            type="range" 
+                                            min="0" 
+                                            max={INCREMENT_VALUES.length - 1} 
+                                            value={INCREMENT_VALUES.indexOf(increment)} 
+                                            onChange={(e) => setIncrement(INCREMENT_VALUES[parseInt(e.target.value)])} 
+                                        />
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
                         <div className="dialog-actions">
                             <button className="cancel-btn" onClick={() => setNewGameDialogOpen(false)}>Cancel</button>
                         </div>

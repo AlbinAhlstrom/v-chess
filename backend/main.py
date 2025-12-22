@@ -87,6 +87,7 @@ class SquareSelection(BaseModel):
 class NewGameRequest(BaseModel):
     variant: str = "standard"
     fen: Optional[str] = None
+    time_control: Optional[dict] = None
 
 
 @app.post("/api/game/new")
