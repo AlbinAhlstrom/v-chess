@@ -22,12 +22,12 @@ class Board:
 
     def __init__(self, pieces: dict[Square, Piece] | str = {}, _sync_bitboard=True):
         self.bitboard = BitboardState()
-        
+
         if isinstance(pieces, str):
             self.board = board_from_fen(pieces)
         elif isinstance(pieces, dict):
             self.board = pieces if pieces else {}
-            
+
         if _sync_bitboard:
             for sq, piece in self.board.items():
                 self.bitboard.set_piece(sq.index, piece)
@@ -40,18 +40,18 @@ class Board:
     def set_piece(self, piece: Piece, square: str | tuple | Square):
         if not isinstance(square, Square):
             square = Square(square)
-        
+
         old_piece = self.board.get(square)
         if old_piece:
              self.bitboard.remove_piece(square.index, old_piece)
-             
+
         self.board[square] = piece
         self.bitboard.set_piece(square.index, piece)
 
     def remove_piece(self, coordinate: Coordinate) -> Piece | None:
         if not isinstance(coordinate, Square):
             coordinate = Square(coordinate)
-        
+
         piece = self.board.pop(coordinate, None)
         if piece:
             self.bitboard.remove_piece(coordinate.index, piece)
@@ -62,14 +62,14 @@ class Board:
         # We manually remove and set to ensure bitboard updates correct
         # remove_piece handles removing from bitboard
         # set_piece handles adding (and removing potential capture)
-        
+
         self.remove_piece(start)
         self.set_piece(piece, end)
 
     def get_pieces(self, piece_type: type[T] = Piece, color: Color | None = None) -> list[T]:
         if piece_type == Piece and color is None:
              return list(self.board.values())
-             
+
         if piece_type != Piece:
              mask = 0
              if color is not None:
@@ -77,7 +77,7 @@ class Board:
              else:
                   mask = self.bitboard.pieces[Color.WHITE].get(piece_type, 0) | \
                          self.bitboard.pieces[Color.BLACK].get(piece_type, 0)
-             
+
              pieces = []
              temp_mask = mask
              while temp_mask:
