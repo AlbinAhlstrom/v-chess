@@ -108,7 +108,7 @@ def new_game(req: NewGameRequest):
     rules = rules_cls()
 
     try:
-        game = Game(state=req.fen, rules=rules)
+        game = Game(state=req.fen, rules=rules, time_control=req.time_control)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid FEN: {e}")
 
@@ -133,6 +133,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
             "in_check": game.rules.is_check(),
             "winner": winner_color.value if winner_color else None,
             "move_history": game.move_history,
+            "clocks": {c.value: t for c, t in game.clocks.items()} if game.clocks else None,
             "status": "connected"
         }))
 
@@ -166,15 +167,23 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                 status = "draw"
             elif is_over:
                 status = "game_over"
+            
+            # Check for timeout
+            if game.clocks:
+                for color, time_left in game.clocks.items():
+                    if time_left <= 0:
+                        status = "timeout"
+                        game.clocks[color] = 0 # Clamp to zero
 
             await manager.broadcast(game_id, json.dumps({
                 "type": "game_state",
                 "fen": game.state.fen,
                 "turn": game.state.turn.value,
-                "is_over": is_over,
+                "is_over": is_over or status == "timeout",
                 "in_check": game.rules.is_check(),
-                "winner": winner_color.value if winner_color else None,
+                "winner": winner_color.value if winner_color else (game.state.turn.opposite.value if status == "timeout" else None),
                 "move_history": game.move_history,
+                "clocks": {c.value: t for c, t in game.clocks.items()} if game.clocks else None,
                 "status": status
             }))
 

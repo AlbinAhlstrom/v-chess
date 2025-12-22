@@ -240,12 +240,29 @@
     height: 30px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 0 10px;
     font-family: var(--main-font-family);
     font-size: 14px;
     font-weight: 600;
     color: #aaa;
     box-sizing: border-box;
+}
+
+.clock-display {
+    background-color: #312e2b;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 16px;
+    min-width: 60px;
+    text-align: center;
+}
+
+.clock-display.active {
+    background-color: #fff;
+    color: #000;
 }
 
 .opponent-name {

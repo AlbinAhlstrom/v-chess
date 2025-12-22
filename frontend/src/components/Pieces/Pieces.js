@@ -98,6 +98,10 @@ export function Pieces({ onFenChange, variant = "standard" }) {
     // Player Names State
     const [playerName, setPlayerName] = useState("Anonymous");
     const [opponentName, setOpponentName] = useState("Anonymous Opponent");
+
+    // Game Clocks State
+    const [timers, setTimers] = useState(null); // {w: seconds, b: seconds}
+    const [turn, setTurn] = useState('w');
     
     // Sounds
     const moveSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3"));
@@ -108,6 +112,32 @@ export function Pieces({ onFenChange, variant = "standard" }) {
     const gameStartSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/game-start.mp3"));
     const promotionSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/promote.mp3"));
     const illegalSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/illegal.mp3"));
+    
+    // Timer formatting helper
+    const formatTime = (seconds) => {
+        if (seconds === null || seconds === undefined) return "";
+        const s = Math.max(0, Math.floor(seconds));
+        const mins = Math.floor(s / 60);
+        const secs = s % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    // Live countdown effect
+    useEffect(() => {
+        if (!timers || isGameOver || moveHistory.length === 0) return;
+
+        const interval = setInterval(() => {
+            setTimers(prev => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    [turn]: Math.max(0, prev[turn] - 0.1)
+                };
+            });
+        }, 100);
+
+        return () => clearInterval(interval);
+    }, [timers, turn, isGameOver]);
 
     const initializeGame = async (fenToLoad = null, variantToLoad = null, tc = null) => {
         if (ws.current) {
@@ -123,6 +153,8 @@ export function Pieces({ onFenChange, variant = "standard" }) {
         setSelectedSquare(null);
         setInCheck(false);
         setFlashKingSquare(null);
+        setTimers(null);
+        setTurn('w');
         if (highlightRef.current) highlightRef.current.style.display = 'none';
         
         gameStartSound.current.play().catch(e => console.error("Error playing game start sound:", e));
@@ -138,6 +170,8 @@ export function Pieces({ onFenChange, variant = "standard" }) {
                 setMoveHistory(message.move_history || []);
                 setWinner(message.winner);
                 setIsGameOver(message.is_over);
+                setTurn(message.turn);
+                if (message.clocks) setTimers(message.clocks);
                 setSelectedSquare(null);
                 setLegalMoves([]);
                 if (highlightRef.current) highlightRef.current.style.display = 'none';
@@ -150,6 +184,9 @@ export function Pieces({ onFenChange, variant = "standard" }) {
                     gameEndSound.current.play().catch(e => console.error("Error playing game end sound:", e));
                 } else if (message.status === "game_over") {
                     console.log("Game over detected!");
+                    gameEndSound.current.play().catch(e => console.error("Error playing game end sound:", e));
+                } else if (message.status === "timeout") {
+                    console.log("Timeout detected!");
                     gameEndSound.current.play().catch(e => console.error("Error playing game end sound:", e));
                 }
             } else if (message.type === "error") {
@@ -511,7 +548,8 @@ export function Pieces({ onFenChange, variant = "standard" }) {
             >
             
             <div className="player-name-display opponent-name">
-                {opponentName}
+                <span className="name-text">{opponentName}</span>
+                {timers && <span className={`clock-display ${turn === 'b' ? 'active' : ''}`}>{formatTime(timers.b)}</span>}
             </div>
 
             <div className="game-sidebar" onClick={e => e.stopPropagation()}>
@@ -760,7 +798,8 @@ export function Pieces({ onFenChange, variant = "standard" }) {
             })()}
 
             <div className="player-name-display player-name">
-                {playerName}
+                <span className="name-text">{playerName}</span>
+                {timers && <span className={`clock-display ${turn === 'w' ? 'active' : ''}`}>{formatTime(timers.w)}</span>}
             </div>
         </div>
     );

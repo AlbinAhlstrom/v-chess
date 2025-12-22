@@ -1,6 +1,7 @@
 from __future__ import annotations
+import time
 from dataclasses import replace
-from typing import Optional
+from typing import Optional, Dict
 from oop_chess.game_state import GameState
 from oop_chess.move import Move
 from oop_chess.rules import Rules
@@ -13,7 +14,7 @@ class Game:
 
     Responsible for turn management and history.
     """
-    def __init__(self, state: GameState | str | None = None, rules: Rules | None = None):
+    def __init__(self, state: GameState | str | None = None, rules: Rules | None = None, time_control: Dict = None):
         if rules and state is None:
             # If rules are provided but no state, use the variant's starting setup
             self.state = GameState.from_fen(rules.starting_fen)
@@ -36,6 +37,18 @@ class Game:
         self.history: list[GameState] = []
         self.move_history: list[str] = []
 
+        # Timing
+        self.time_control = time_control # {starting_time: min, increment: sec}
+        self.clocks = None
+        self.last_move_at = None
+        
+        if self.time_control:
+            start_sec = float(self.time_control['starting_time'] * 60)
+            self.clocks = {
+                Color.WHITE: start_sec,
+                Color.BLACK: start_sec
+            }
+
     def add_to_history(self):
         self.history.append(self.state)
 
@@ -54,6 +67,18 @@ class Game:
             raise IllegalMoveException(f"Illegal move: {move_status.value}")
 
         san = move.get_san(self)
+
+        # Update Clocks (Precise Monotonic)
+        now = time.perf_counter()
+        if self.clocks:
+            if self.last_move_at is None:
+                # First move of the game: just start the clock for the next player
+                self.last_move_at = now
+            else:
+                elapsed = now - self.last_move_at
+                self.clocks[self.state.turn] -= elapsed
+                self.clocks[self.state.turn] += self.time_control.get('increment', 0)
+                self.last_move_at = now
 
         self.add_to_history()
         new_state = self.rules.apply_move(move)
