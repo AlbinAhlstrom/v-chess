@@ -1,9 +1,9 @@
 from dataclasses import replace
 from oop_chess.game_state import GameState
 from oop_chess.move import Move
-from oop_chess.rules import Rules, StandardRules
+from oop_chess.rules import Rules
 from oop_chess.exceptions import IllegalMoveException, IllegalBoardException
-from oop_chess.enums import MoveLegalityReason, StatusReason, GameOverReason
+from oop_chess.enums import MoveLegalityReason, BoardLegalityReason
 
 
 class Game:
@@ -20,14 +20,11 @@ class Game:
             self.state = GameState.starting_setup()
 
         if rules:
-            # If specific rules are requested, override the state's rules
             rules.state = self.state
             self.state = replace(self.state, rules=rules)
             self.rules = rules
         else:
-            # Use the rules embedded in the state
             self.rules = self.state.rules
-            # Ensure the rules object points to the current state (in case it was stale)
             self.rules.state = self.state
 
         self.history: list[GameState] = []
@@ -43,7 +40,7 @@ class Game:
     def take_turn(self, move: Move):
         """Make a move by finding the corresponding legal move."""
         board_status = self.rules.validate_board_state()
-        if board_status != StatusReason.VALID:
+        if board_status != BoardLegalityReason.VALID:
              raise IllegalBoardException(f"Board state is illegal. Reason: {board_status}")
 
         move_status = self.rules.validate_move(move)

@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from oop_chess.square import Square
 
 
-class StatusReason(StrEnum):
+class BoardLegalityReason(StrEnum):
     VALID = "valid"
     NO_WHITE_KING = "no white king"
     NO_BLACK_KING = "no black king"

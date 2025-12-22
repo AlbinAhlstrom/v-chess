@@ -1,7 +1,7 @@
 from itertools import chain
 
 from oop_chess.board import Board
-from oop_chess.enums import Color, CastlingRight, Direction, MoveLegalityReason, StatusReason, GameOverReason
+from oop_chess.enums import Color, CastlingRight, Direction, MoveLegalityReason, BoardLegalityReason, GameOverReason
 from oop_chess.move import Move
 from oop_chess.piece import King, Pawn, Piece, Rook, Queen, Bishop, Knight
 from oop_chess.square import Square
@@ -37,6 +37,8 @@ class StandardRules(Rules):
     def get_game_over_reason(self) -> GameOverReason:
         if self.state.repetition_count >= 3:
             return GameOverReason.REPETITION
+        if self.is_fifty_moves:
+            return GameOverReason.FIFTY_MOVE_RULE
         if not self.get_legal_moves():
             if self.is_check():
                 return GameOverReason.CHECKMATE
@@ -53,7 +55,7 @@ class StandardRules(Rules):
 
         return MoveLegalityReason.LEGAL
 
-    def validate_board_state(self) -> StatusReason:
+    def validate_board_state(self) -> BoardLegalityReason:
         white_kings = self.state.board.get_pieces(King, Color.WHITE)
         black_kings = self.state.board.get_pieces(King, Color.BLACK)
         white_pawns = self.state.board.get_pieces(Pawn, Color.WHITE)
@@ -71,34 +73,34 @@ class StandardRules(Rules):
         is_ep_square_valid = self.state.ep_square is None or self.state.ep_square.row in (2, 5)
 
         if len(white_kings) < 1:
-            return StatusReason.NO_WHITE_KING
+            return BoardLegalityReason.NO_WHITE_KING
         if len(black_kings) < 1:
-            return StatusReason.NO_BLACK_KING
+            return BoardLegalityReason.NO_BLACK_KING
         if len(white_kings + black_kings) > 2:
-            return StatusReason.TOO_MANY_KINGS
+            return BoardLegalityReason.TOO_MANY_KINGS
 
         if len(white_pawns) > 8:
-            return StatusReason.TOO_MANY_WHITE_PAWNS
+            return BoardLegalityReason.TOO_MANY_WHITE_PAWNS
         if len(black_pawns) > 8:
-            return StatusReason.TOO_MANY_BLACK_PAWNS
+            return BoardLegalityReason.TOO_MANY_BLACK_PAWNS
         if pawns_on_backrank:
-            return StatusReason.PAWNS_ON_BACKRANK
+            return BoardLegalityReason.PAWNS_ON_BACKRANK
 
         if len(white_non_pawns) > white_piece_max:
-            return StatusReason.TOO_MANY_WHITE_PIECES
+            return BoardLegalityReason.TOO_MANY_WHITE_PIECES
         if len(black_non_pawns) > black_piece_max:
-            return StatusReason.TOO_MANY_BLACK_PIECES
+            return BoardLegalityReason.TOO_MANY_BLACK_PIECES
 
         if self.invalid_castling_rights():
-            return StatusReason.INVALID_CASTLING_RIGHTS
+            return BoardLegalityReason.INVALID_CASTLING_RIGHTS
 
         if not is_ep_square_valid:
-            return StatusReason.INVALID_EP_SQUARE
+            return BoardLegalityReason.INVALID_EP_SQUARE
 
         if self.inactive_player_in_check():
-            return StatusReason.OPPOSITE_CHECK
+            return BoardLegalityReason.OPPOSITE_CHECK
 
-        return StatusReason.VALID
+        return BoardLegalityReason.VALID
 
     def king_left_in_check(self, move: Move) -> bool:
         """Returns True if king is left in check after a move."""

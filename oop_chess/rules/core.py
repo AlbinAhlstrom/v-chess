@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from oop_chess.enums import Color, MoveLegalityReason, StatusReason, GameOverReason
+from oop_chess.enums import Color, MoveLegalityReason, BoardLegalityReason, GameOverReason
 from oop_chess.move import Move
 
 if TYPE_CHECKING:
@@ -53,7 +53,7 @@ class Rules(ABC):
         ...
 
     @abstractmethod
-    def validate_board_state(self) -> StatusReason:
+    def validate_board_state(self) -> BoardLegalityReason:
         """Returns the validity of the board state."""
         ...
 
@@ -95,6 +95,11 @@ class Rules(ABC):
         return self.get_game_over_reason() != GameOverReason.ONGOING
 
     @property
+    def is_fifty_moves(self) -> bool:
+        """Returns True if the 50-move rule applies (100 halfmoves)."""
+        return self.state.halfmove_clock >= 100
+
+    @property
     def is_checkmate(self) -> bool:
         """Returns True if the game is in checkmate."""
         return self.get_game_over_reason() == GameOverReason.CHECKMATE
@@ -125,4 +130,4 @@ class Rules(ABC):
         if isinstance(move, Move):
             return self.validate_move(move) == MoveLegalityReason.LEGAL
         else:
-            return self.validate_board_state() == StatusReason.VALID
+            return self.validate_board_state() == BoardLegalityReason.VALID

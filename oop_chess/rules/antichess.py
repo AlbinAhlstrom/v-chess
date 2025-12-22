@@ -1,4 +1,4 @@
-from oop_chess.enums import Color, MoveLegalityReason, StatusReason, GameOverReason
+from oop_chess.enums import Color, MoveLegalityReason, BoardLegalityReason, GameOverReason
 from oop_chess.move import Move
 from oop_chess.piece import King, Pawn
 from oop_chess.game_state import GameState
@@ -45,13 +45,15 @@ class AntichessRules(StandardRules):
     def get_game_over_reason(self) -> GameOverReason:
         if self.state.repetition_count >= 3:
              return GameOverReason.REPETITION
+        if self.is_fifty_moves:
+             return GameOverReason.FIFTY_MOVE_RULE
         if not self.state.board.get_pieces(color=self.state.turn):
             return GameOverReason.ALL_PIECES_CAPTURED
         if not self.get_legal_moves():
              return GameOverReason.STALEMATE
         return GameOverReason.ONGOING
 
-    def validate_board_state(self) -> StatusReason:
+    def validate_board_state(self) -> BoardLegalityReason:
         white_pawns = self.state.board.get_pieces(Pawn, Color.WHITE)
         black_pawns = self.state.board.get_pieces(Pawn, Color.BLACK)
         pawns_on_backrank = []
@@ -62,16 +64,16 @@ class AntichessRules(StandardRules):
         is_ep_square_valid = self.state.ep_square is None or self.state.ep_square.row in (2, 5)
 
         if len(white_pawns) > 8:
-            return StatusReason.TOO_MANY_WHITE_PAWNS
+            return BoardLegalityReason.TOO_MANY_WHITE_PAWNS
         if len(black_pawns) > 8:
-            return StatusReason.TOO_MANY_BLACK_PAWNS
+            return BoardLegalityReason.TOO_MANY_BLACK_PAWNS
         if pawns_on_backrank:
-            return StatusReason.PAWNS_ON_BACKRANK
+            return BoardLegalityReason.PAWNS_ON_BACKRANK
 
         if not is_ep_square_valid:
-            return StatusReason.INVALID_EP_SQUARE
+            return BoardLegalityReason.INVALID_EP_SQUARE
 
-        return StatusReason.VALID
+        return BoardLegalityReason.VALID
 
     def get_winner(self) -> Color | None:
         reason = self.get_game_over_reason()
