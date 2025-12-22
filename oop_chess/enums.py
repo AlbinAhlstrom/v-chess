@@ -52,6 +52,7 @@ class GameOverReason(StrEnum):
     TIMEOUT = "timeout"
     ONGOING = "ongoing"
     ALL_PIECES_CAPTURED = "all pieces captured"
+    INSUFFICIENT_MATERIAL = "insufficient material"
 
 
 class State(Enum):

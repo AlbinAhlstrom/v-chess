@@ -115,7 +115,7 @@ class Game:
             GameOverReason.STALEMATE,
             GameOverReason.REPETITION,
             GameOverReason.FIFTY_MOVE_RULE,
-        )
+        ) or self.repetitions_of_position >= 3
 
     @property
     def legal_moves(self) -> list[Move]:
