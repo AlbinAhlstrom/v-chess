@@ -9,7 +9,11 @@ from oop_chess.game import Game, IllegalMoveException
 from oop_chess.board import Board
 from oop_chess.move import Move
 from oop_chess.square import Square
-from oop_chess.rules import AntichessRules, StandardRules
+from oop_chess.rules import (
+    AntichessRules, StandardRules, AtomicRules, Chess960Rules,
+    CrazyhouseRules, HordeRules, KingOfTheHillRules, RacingKingsRules,
+    ThreeCheckRules
+)
 from oop_chess.enums import GameOverReason
 
 
@@ -89,9 +93,20 @@ class NewGameRequest(BaseModel):
 def new_game(req: NewGameRequest):
     game_id = str(uuid4())
 
-    rules = StandardRules()
-    if req.variant == "antichess":
-        rules = AntichessRules()
+    rules_map = {
+        "standard": StandardRules,
+        "antichess": AntichessRules,
+        "atomic": AtomicRules,
+        "chess960": Chess960Rules,
+        "crazyhouse": CrazyhouseRules,
+        "horde": HordeRules,
+        "kingofthehill": KingOfTheHillRules,
+        "racingkings": RacingKingsRules,
+        "threecheck": ThreeCheckRules,
+    }
+
+    rules_cls = rules_map.get(req.variant.lower(), StandardRules)
+    rules = rules_cls()
 
     try:
         game = Game(state=req.fen, rules=rules)
