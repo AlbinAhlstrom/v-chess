@@ -2,10 +2,11 @@
 const getApiBase = () => {
     if (process.env.REACT_APP_API_URL) return process.env.REACT_APP_API_URL;
     
-    // In production, use the current origin. In dev, fallback to localhost.
+    // In production, default to the known API subdomain.
     const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
     if (isProd) {
-        return `${window.location.origin}/api`;
+        // You can change this to your actual production API URL
+        return `https://api.v-chess.com/api`;
     }
     return `http://localhost:8000/api`;
 };
@@ -16,8 +17,7 @@ export const getWsBase = () => {
     
     const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
     if (isProd) {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        return `${protocol}//${window.location.host}/ws`;
+        return `wss://api.v-chess.com/ws`;
     }
     return `ws://localhost:8000/ws`;
 };
