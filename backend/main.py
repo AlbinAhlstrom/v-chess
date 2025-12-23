@@ -37,14 +37,16 @@ app = FastAPI()
 if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
     print("WARNING: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set. Google Login will not work.")
 
+# Configure session middleware
+# In production, we need SameSite=None and Secure=True for cross-domain cookies
+is_prod = os.environ.get("ENV") == "prod"
 app.add_middleware(
-    SessionMiddleware,
+    SessionMiddleware, 
     secret_key=SECRET_KEY,
     session_cookie="v_chess_session",
-    same_site="lax",
-    https_only=False
+    same_site="none" if is_prod else "lax",
+    https_only=is_prod
 )
-
 oauth = OAuth()
 oauth.register(
     name='google',
