@@ -38,7 +38,7 @@ if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
     print("WARNING: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set. Google Login will not work.")
 
 app.add_middleware(
-    SessionMiddleware, 
+    SessionMiddleware,
     secret_key=SECRET_KEY,
     session_cookie="v_chess_session",
     same_site="lax",
@@ -92,7 +92,7 @@ async def save_game_to_db(game_id: str):
             stmt = select(GameModel).where(GameModel.id == game_id)
             result = await session.execute(stmt)
             model = result.scalar_one_or_none()
-            
+
             clocks_data = None
             if game.clocks:
                 clocks_data = json.dumps({k.value: v for k, v in game.clocks.items()})
@@ -133,7 +133,7 @@ async def timeout_monitor():
                             print(f"Timeout detected for game {game_id}, color {color}")
                             game.is_over_by_timeout = True
                             winner = Color.WHITE if color == Color.BLACK else Color.BLACK
-                            
+
                             await save_game_to_db(game_id)
 
                             await manager.broadcast(game_id, json.dumps({
@@ -147,7 +147,7 @@ async def timeout_monitor():
                                 "clocks": {c.value: 0 if c == color else t for c, t in current_clocks.items()},
                                 "status": "timeout"
                             }))
-            
+
             await asyncio.sleep(0.1)
         except Exception as e:
             print(f"Error in timeout monitor: {e}")
@@ -170,30 +170,30 @@ RULES_MAP = {
 @app.on_event("startup")
 async def startup_event():
     await init_db()
-    
+
     # Load active games from DB
     async with async_session() as session:
         stmt = select(GameModel).where(GameModel.is_over == False)
         result = await session.execute(stmt)
         models = result.scalars().all()
-        
+
         for model in models:
             rules_cls = RULES_MAP.get(model.variant.lower(), StandardRules)
             rules = rules_cls()
-            
+
             time_control = json.loads(model.time_control) if model.time_control else None
             game = Game(state=model.fen, rules=rules, time_control=time_control)
             game.move_history = json.loads(model.move_history)
-            
+
             if model.clocks:
                 clocks_dict = json.loads(model.clocks)
                 game.clocks = {Color(k): v for k, v in clocks_dict.items()}
-            
+
             game.last_move_at = model.last_move_at
-            
+
             games[model.id] = game
             game_variants[model.id] = model.variant
-            
+
     asyncio.create_task(timeout_monitor())
 
 
@@ -226,21 +226,21 @@ async def get_game(game_id: str) -> Game:
             stmt = select(GameModel).where(GameModel.id == game_id)
             result = await session.execute(stmt)
             model = result.scalar_one_or_none()
-            
+
             if model:
                 rules_cls = RULES_MAP.get(model.variant.lower(), StandardRules)
                 rules = rules_cls()
-                
+
                 time_control = json.loads(model.time_control) if model.time_control else None
                 game = Game(state=model.fen, rules=rules, time_control=time_control)
                 game.move_history = json.loads(model.move_history)
-                
+
                 if model.clocks:
                     clocks_dict = json.loads(model.clocks)
                     game.clocks = {Color(k): v for k, v in clocks_dict.items()}
-                
+
                 game.last_move_at = model.last_move_at
-                
+
                 games[game_id] = game
                 game_variants[game_id] = model.variant
             else:
@@ -277,7 +277,10 @@ async def login(request: Request):
     redirect_uri = REDIRECT_URI
     if not redirect_uri:
         redirect_uri = request.url_for('auth')
-    
+        # If in production, force https
+        if os.environ.get("ENV") == "prod":
+            redirect_uri = str(redirect_uri).replace("http://", "https://")
+
     print(f"DEBUG: Using redirect_uri: {redirect_uri}")
     return await oauth.google.authorize_redirect(request, str(redirect_uri))
 
@@ -288,7 +291,7 @@ async def auth(request: Request):
         token = await oauth.google.authorize_access_token(request)
     except OAuthError as error:
         return {"error": error.error}
-    
+
     user_info = token.get('userinfo')
     if user_info:
         async with async_session() as session:
@@ -296,7 +299,7 @@ async def auth(request: Request):
                 stmt = select(User).where(User.google_id == user_info['sub'])
                 result = await session.execute(stmt)
                 user = result.scalar_one_or_none()
-                
+
                 if not user:
                     user = User(
                         google_id=user_info['sub'],
@@ -309,7 +312,7 @@ async def auth(request: Request):
                 else:
                     user.name = user_info['name']
                     user.picture = user_info.get('picture')
-                
+
                 request.session['user'] = {
                     "id": user.id,
                     "name": user.name,
@@ -349,9 +352,9 @@ async def new_game(req: NewGameRequest):
 
     games[game_id] = game
     game_variants[game_id] = req.variant
-    
+
     await save_game_to_db(game_id)
-    
+
     return {"game_id": game_id, "fen": game.state.fen, "turn": game.state.turn}
 
 
@@ -422,7 +425,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                 status = "draw"
             elif is_over:
                 status = "game_over"
-            
+
             # Check for timeout using live clock method
             current_clocks = game.get_current_clocks()
             if current_clocks:

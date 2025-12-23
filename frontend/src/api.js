@@ -1,8 +1,12 @@
-// Force localhost for development to ensure session cookies work correctly
+// Helper to get consistent API base
 const getApiBase = () => {
     if (process.env.REACT_APP_API_URL) return process.env.REACT_APP_API_URL;
     
-    // In development, always use localhost to match Google OAuth settings
+    // In production, use the current origin. In dev, fallback to localhost.
+    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    if (isProd) {
+        return `${window.location.origin}/api`;
+    }
     return `http://localhost:8000/api`;
 };
 
@@ -10,6 +14,11 @@ const getApiBase = () => {
 export const getWsBase = () => {
     if (process.env.REACT_APP_WS_URL) return process.env.REACT_APP_WS_URL;
     
+    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    if (isProd) {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        return `${protocol}//${window.location.host}/ws`;
+    }
     return `ws://localhost:8000/ws`;
 };
 
