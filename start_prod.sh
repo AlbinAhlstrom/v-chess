@@ -18,7 +18,11 @@ pkill uvicorn || echo "No uvicorn process was running."
 echo "Updating dependencies..."
 venv/bin/pip install -r requirements.txt
 
-# 5. Run Database Migrations
+# 5. Clear old databases (Fixes corrupted float IDs)
+echo "Clearing old databases for a clean start..."
+rm -f chess.db backend/chess.db
+
+# 6. Run Database Migrations
 echo "Running database migrations..."
 venv/bin/python3 migrate_db.py
 
