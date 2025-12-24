@@ -482,6 +482,23 @@
 
 /* Mobile Responsiveness */
 @media (max-width: 850px) {
+    .time-control-row {
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: center; /* Center items on mobile */
+    }
+
+    .control-item {
+        flex: 1 1 auto; /* Allow items to shrink/grow */
+        min-width: min-content;
+        align-items: center; /* Center text */
+    }
+
+    .time-select.compact {
+        width: 100%; /* Full width on very small screens if needed */
+        min-width: 80px; /* Allow smaller width */
+    }
+
     .game-sidebar {
         position: absolute;
         top: 100%;
