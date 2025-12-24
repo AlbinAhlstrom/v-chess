@@ -249,6 +249,7 @@ async def lobby_websocket(websocket: WebSocket):
     await manager.connect_lobby(websocket)
     user_session = websocket.session.get("user")
     current_user_id = user_session.get("id") if user_session else None
+    print(f"DEBUG: Lobby WS Connected. Session User ID: {current_user_id}, Name: {user_session.get('name') if user_session else 'None'}", flush=True)
 
     try:
         # Send initial seek list

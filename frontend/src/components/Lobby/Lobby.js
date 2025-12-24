@@ -113,23 +113,13 @@ function Lobby() {
                             </tr>
                         </thead>
                         <tbody>
-                            {seeks.map(seek => {
-                                // Explicit type checking and logging
-                                const myId = user?.id;
-                                const seekId = seek.user_id;
-                                const isMySeek = user && (String(myId) === String(seekId));
-                                
-                                if (user) {
-                                    console.log(`Seek Check: MyID(${myId})[${typeof myId}] vs SeekOwner(${seekId})[${typeof seekId}] -> Match? ${isMySeek}`);
-                                }
-
-                                return (
+                            {seeks.map(seek => (
                                 <tr key={seek.id}>
                                     <td>{seek.user_name}</td>
                                     <td>{seek.variant}</td>
                                     <td>{seek.time_control.limit / 60}+{seek.time_control.increment}</td>
                                     <td>
-                                        {isMySeek ? (
+                                        {user && String(seek.user_id) === String(user.id) ? (
                                             <button 
                                                 onClick={() => cancelSeek(seek.id)}
                                                 className="cancel-seek-btn"
@@ -146,7 +136,7 @@ function Lobby() {
                                         )}
                                     </td>
                                 </tr>
-                            )})}
+                            ))}
                         </tbody>
                     </table>
                 )}
