@@ -10,12 +10,7 @@ const getApiBase = () => {
     
     // If we are on a LAN IP or anything else that isn't localhost,
     // assume backend is on the same host, port 8000
-    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-        return `http://${hostname}:8000/api`;
-    }
-
-    // Default local
-    return `http://localhost:8000/api`;
+    return `http://${hostname}:8000/api`;
 };
 
 // Helper to get consistent WS base
@@ -27,11 +22,7 @@ export const getWsBase = () => {
         return `wss://api.v-chess.com/ws`;
     }
 
-    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-        return `ws://${hostname}:8000/ws`;
-    }
-
-    return `ws://localhost:8000/ws`;
+    return `ws://${hostname}:8000/ws`;
 };
 
 const API_BASE = getApiBase();
@@ -85,11 +76,21 @@ export const getMe = async () => {
 };
 
 export const getAuthLinks = () => {
-    // Explicitly use the API subdomain for auth routes
-    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-    const base = isProd ? "https://api.v-chess.com/auth" : "http://localhost:8000/auth";
+
+    const hostname = window.location.hostname;
+
+    const isProd = hostname === 'v-chess.com' || hostname === 'www.v-chess.com' || hostname.endsWith('.vercel.app');
+
+    
+
+    const base = isProd ? "https://api.v-chess.com/auth" : `http://${hostname}:8000/auth`;
+
     return {
+
         loginLink: `${base}/login`,
+
         logoutLink: `${base}/logout`
+
     };
+
 };

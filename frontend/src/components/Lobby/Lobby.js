@@ -50,6 +50,11 @@ function Lobby() {
         const socket = new WebSocket(wsUrl);
         socketRef.current = socket;
 
+        socket.onerror = (err) => {
+            // Silently handle connection errors to avoid noisy console logs
+            // especially when testing locally without a backend
+        };
+
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.type === "seeks") {
