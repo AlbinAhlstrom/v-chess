@@ -841,6 +841,18 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                     <div className="new-game-dialog" onClick={e => e.stopPropagation()}>
                         <h2>New Game</h2>
                         
+                        <div className="player-names-input">
+                            <div className="setting-row">
+                                <label>Opponent Name</label>
+                                <input 
+                                    type="text" 
+                                    value={opponentName} 
+                                    onChange={(e) => setOpponentName(e.target.value)}
+                                    placeholder="Anonymous Opponent"
+                                />
+                            </div>
+                        </div>
+
                         <div className="variants-grid">
                             {VARIANTS.map(v => (
                                 <button
