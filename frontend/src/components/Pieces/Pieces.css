@@ -483,20 +483,30 @@
 /* Mobile Responsiveness */
 @media (max-width: 850px) {
     .time-control-row {
-        flex-wrap: wrap;
-        gap: 15px;
-        justify-content: center; /* Center items on mobile */
+        flex-wrap: nowrap;
+        gap: 10px;
+        justify-content: flex-start;
+        padding: 0; /* Maximize space */
     }
 
-    .control-item {
-        flex: 1 1 auto; /* Allow items to shrink/grow */
-        min-width: min-content;
-        align-items: center; /* Center text */
+    /* The Toggle Container */
+    .control-item:first-child {
+        flex: 0 0 auto;
+        align-items: flex-start;
+    }
+
+    /* The Dropdown Containers */
+    .control-item:not(:first-child) {
+        flex: 1 1 auto;
+        min-width: 0; /* Allow shrinking */
+        align-items: stretch; /* Stretch dropdown to fill container */
     }
 
     .time-select.compact {
-        width: 100%; /* Full width on very small screens if needed */
-        min-width: 80px; /* Allow smaller width */
+        width: 100%;
+        min-width: 0;
+        padding: 6px 20px 6px 8px; /* Reduce padding, keep space for arrow */
+        background-position: right 2px center;
     }
 
     .game-sidebar {
