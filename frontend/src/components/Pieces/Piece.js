@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import './Pieces.css';
 
-function Piece({ piece, file, rank, actualFile, actualRank, onDragStartCallback, onDragEndCallback, onDropCallback, onDragHoverCallback, isCapture }) {
+function Piece({ piece, file, rank, actualFile, actualRank, onDragStartCallback, onDragEndCallback, onDropCallback, onDragHoverCallback }) {
     const ghostRef = useRef(null);
     
     // Fallback to display coords if actual coords not provided
@@ -15,52 +15,63 @@ function Piece({ piece, file, rank, actualFile, actualRank, onDragStartCallback,
     };
 
     const startDrag = (e) => {
-        // Prevent default to avoid native drag, text selection, or scrolling on touch
-        if (e.cancelable) e.preventDefault();
-
-        // 1. Notify start
-        if (onDragStartCallback) {
-            onDragStartCallback({ file: realFile, rank: realRank, piece, isCapture });
-        }
-
-        if (isCapture) {
-            return;
-        }
-
         // Get initial coordinates (handle both mouse and touch)
         const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
         const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+        const startX = clientX;
+        const startY = clientY;
 
-        // 2. Create custom ghost (fully opaque)
+        // 2. Capture layout data
         const rect = e.target.getBoundingClientRect();
         const offsetX = rect.width / 2;
         const offsetY = rect.height / 2;
 
-        const ghost = document.createElement("div");
-        ghost.classList.add("piece");
-        ghost.style.position = "fixed";
-        ghost.style.pointerEvents = "none";
-        ghost.style.zIndex = "9999";
-        ghost.style.width = `${rect.width}px`;
-        ghost.style.height = `${rect.height}px`;
-        ghost.style.backgroundImage = pieceStyle['--piece-image'];
-        ghost.style.left = `${clientX - offsetX}px`;
-        ghost.style.top = `${clientY - offsetY}px`;
-        
-        document.body.appendChild(ghost);
-        ghostRef.current = ghost;
-
-        // 3. Hide original
-        e.target.style.opacity = "0";
-
-        // 4. Set global cursor
-        document.body.style.cursor = "grabbing";
+        let dragStarted = false;
 
         // 5. Define handlers
         const handleMove = (moveEvent) => {
             const mClientX = moveEvent.type.startsWith('touch') ? moveEvent.touches[0].clientX : moveEvent.clientX;
             const mClientY = moveEvent.type.startsWith('touch') ? moveEvent.touches[0].clientY : moveEvent.clientY;
 
+            if (!dragStarted) {
+                const dist = Math.sqrt(Math.pow(mClientX - startX, 2) + Math.pow(mClientY - startY, 2));
+                if (dist > 8) { // 8px threshold to distinguish tap from drag
+                    dragStarted = true;
+                    
+                    // Prevent default to avoid native drag, text selection, or scrolling on touch
+                    if (moveEvent.cancelable) moveEvent.preventDefault();
+
+                    // 1. Notify start
+                    if (onDragStartCallback) {
+                        onDragStartCallback({ file: realFile, rank: realRank, piece });
+                    }
+
+                    const ghost = document.createElement("div");
+                    ghost.classList.add("piece");
+                    ghost.style.position = "fixed";
+                    ghost.style.pointerEvents = "none";
+                    ghost.style.zIndex = "9999";
+                    ghost.style.width = `${rect.width}px`;
+                    ghost.style.height = `${rect.height}px`;
+                    ghost.style.backgroundImage = pieceStyle['--piece-image'];
+                    ghost.style.backgroundSize = '100%';
+                    ghost.style.left = `${mClientX - offsetX}px`;
+                    ghost.style.top = `${mClientY - offsetY}px`;
+                    
+                    document.body.appendChild(ghost);
+                    ghostRef.current = ghost;
+
+                    // 3. Hide original
+                    e.target.style.opacity = "0";
+
+                    // 4. Set global cursor
+                    document.body.style.cursor = "grabbing";
+                } else {
+                    return;
+                }
+            }
+
+            if (moveEvent.cancelable) moveEvent.preventDefault();
             if (ghostRef.current) {
                 ghostRef.current.style.left = `${mClientX - offsetX}px`;
                 ghostRef.current.style.top = `${mClientY - offsetY}px`;
@@ -72,8 +83,8 @@ function Piece({ piece, file, rank, actualFile, actualRank, onDragStartCallback,
 
         const handleEnd = (endEvent) => {
             // Get last known coordinates from touch/mouse
-            const endX = endEvent.type.startsWith('touch') ? endEvent.changedTouches[0].clientX : endEvent.clientX;
-            const endY = endEvent.type.startsWith('touch') ? endEvent.changedTouches[0].clientY : endEvent.clientY;
+            const endX = endEvent.type.startsWith('touch') ? (endEvent.changedTouches ? endEvent.changedTouches[0].clientX : clientX) : endEvent.clientX;
+            const endY = endEvent.type.startsWith('touch') ? (endEvent.changedTouches ? endEvent.changedTouches[0].clientY : clientY) : endEvent.clientY;
 
             // Cleanup listeners
             document.removeEventListener('mousemove', handleMove);
@@ -81,37 +92,42 @@ function Piece({ piece, file, rank, actualFile, actualRank, onDragStartCallback,
             document.removeEventListener('touchmove', handleMove);
             document.removeEventListener('touchend', handleEnd);
 
-            // Cleanup ghost
-            if (ghostRef.current) {
-                ghostRef.current.remove();
-                ghostRef.current = null;
-            }
+            if (dragStarted) {
+                // Prevent the following click event if we actually dragged
+                if (endEvent.cancelable) endEvent.preventDefault();
 
-            // Restore original visibility
-            e.target.style.opacity = "1";
+                // Cleanup ghost
+                if (ghostRef.current) {
+                    ghostRef.current.remove();
+                    ghostRef.current = null;
+                }
 
-            // Restore cursor
-            document.body.style.cursor = "default";
+                // Restore original visibility
+                e.target.style.opacity = "1";
 
-            // Notify drop
-            if (onDropCallback) {
-                onDropCallback({
-                    clientX: endX,
-                    clientY: endY,
-                    piece,
-                    file: realFile,
-                    rank: realRank
-                });
-            }
+                // Restore cursor
+                document.body.style.cursor = "default";
 
-            // Clear hover
-            if (onDragHoverCallback) {
-                onDragHoverCallback(null);
-            }
+                // Notify drop
+                if (onDropCallback) {
+                    onDropCallback({
+                        clientX: endX,
+                        clientY: endY,
+                        piece,
+                        file: realFile,
+                        rank: realRank
+                    });
+                }
 
-            // Notify end
-            if (onDragEndCallback) {
-                onDragEndCallback();
+                // Clear hover
+                if (onDragHoverCallback) {
+                    onDragHoverCallback(null);
+                }
+
+                // Notify end
+                if (onDragEndCallback) {
+                    onDragEndCallback();
+                }
             }
         };
 
@@ -128,11 +144,6 @@ function Piece({ piece, file, rank, actualFile, actualRank, onDragStartCallback,
             style={{...pieceStyle, touchAction: 'none'}}
             onMouseDown={startDrag}
             onTouchStart={startDrag}
-            onClick={(e) => {
-                if (!isCapture) {
-                    e.stopPropagation();
-                }
-            }}
         />
     );
 }

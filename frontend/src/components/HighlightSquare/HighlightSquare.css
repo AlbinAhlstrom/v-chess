@@ -3,7 +3,7 @@
     width: var(--square-size);
     height: var(--square-size);
     pointer-events: none; /* Let clicks pass through */
-    z-index: 5; /* Below pieces (z-index implicit? Pieces are usually higher) but above board */
+    z-index: 8; /* Increase to be safely above board/coords (z=5) but below pieces (z=10) */
     background-color: var(--highlight-light-square); /* Default to light square highlight */
 }
 

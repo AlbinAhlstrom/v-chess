@@ -375,7 +375,6 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                 onDragEndCallback={handlePieceDragEnd}
                 onDropCallback={handleManualDrop}
                 onDragHoverCallback={handlePieceDragHover}
-                isCapture={isCaptureMove(fileIndex, rankIndex)}
               />
         );
     };
@@ -429,6 +428,20 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                 setPromotionDialogOpen(true);
                 return;
             }
+        } else {
+            // Auto-promote check for drag-drop
+            const actualPiece = position[rank][file];
+            const isPawn = actualPiece?.toLowerCase() === 'p';
+            const isWhite = actualPiece === 'P';
+            const isPromotionRow = isWhite ? toRank === 0 : toRank === 7;
+            
+            if (isPawn && isPromotionRow) {
+                const moveUci = `${fromSquare}${toSquare}q`;
+                if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+                    ws.current.send(JSON.stringify({ type: "move", uci: moveUci }));
+                }
+                return;
+            }
         }
 
         try {
@@ -469,23 +482,13 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         setPromotionMove(null);
     };
 
-    const handlePieceDragStart = useCallback(async ({ file, rank, piece, isCapture }) => {
+    const handlePieceDragStart = useCallback(async ({ file, rank, piece }) => {
         if (!gameId || isGameOver) return;
         
         const pieceColor = piece === piece.toUpperCase() ? 'w' : 'b';
         if (!canMovePiece(pieceColor)) return;
 
         const square = coordsToAlgebraic(file, rank);
-
-        if (isCapture && selectedSquare) {
-             const moveUci = `${selectedSquare}${square}`;
-             if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-                 ws.current.send(JSON.stringify({ type: "move", uci: moveUci }));
-             }
-             setSelectedSquare(null);
-             setLegalMoves([]);
-             return;
-        }
         
         dragStartSelectionState.current = (selectedSquare === square);
         setSelectedSquare(square);
@@ -517,10 +520,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         };
 
         if (selectedSquare) {
-            const movesToTarget = legalMoves.filter(m => {
-                const targetSquareFromUci = m.length === 5 ? m.slice(2, 4) : m.slice(2, 4);
-                return targetSquareFromUci === clickedSquare;
-            });
+            const movesToTarget = legalMoves.filter(m => m.slice(2, 4) === clickedSquare);
 
             if (movesToTarget.length > 0) {
                 // Check if we should show promotion dialog
@@ -539,7 +539,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                     setPromotionMove({ from: selectedSquare, to: clickedSquare });
                     setPromotionDialogOpen(true);
                 } else {
-                    const moveUci = movesToTarget[0].slice(0, 4);
+                    const moveUci = movesToTarget[0];
                     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
                         ws.current.send(JSON.stringify({ type: "move", uci: moveUci }));
                     }
@@ -660,12 +660,6 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         e.stopPropagation();
         setIsMenuOpen(!isMenuOpen);
     }
-
-    const isCaptureMove = (file, rank) => {
-        if (!selectedSquare) return false;
-        const targetSquare = coordsToAlgebraic(file, rank);
-        return legalMoves.some(m => m.slice(2, 4) === targetSquare);
-    };
 
     const copyFenToClipboard = async (e) => {
         if (e) e.stopPropagation();
