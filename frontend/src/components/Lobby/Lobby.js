@@ -198,7 +198,7 @@ function Lobby() {
                             <tr>
                                 <th>Player</th>
                                 <th>Variant</th>
-                                <th>Time Control</th>
+                                <th>Time</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
