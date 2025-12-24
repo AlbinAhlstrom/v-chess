@@ -454,6 +454,7 @@ async def auth(request: Request):
 
     user_info = token.get('userinfo')
     if user_info:
+        print(f"AUTH DEBUG: Processing login for {user_info.get('email')} (sub: {user_info.get('sub')})", flush=True)
         async with async_session() as session:
             async with session.begin():
                 stmt = select(User).where(User.google_id == user_info['sub'])
@@ -461,6 +462,7 @@ async def auth(request: Request):
                 user = result.scalar_one_or_none()
 
                 if not user:
+                    print(f"AUTH DEBUG: Creating new user for {user_info.get('email')}", flush=True)
                     user = User(
                         google_id=user_info['sub'],
                         email=user_info['email'],
@@ -470,6 +472,7 @@ async def auth(request: Request):
                     session.add(user)
                     await session.flush() # Get user.id
                 else:
+                    print(f"AUTH DEBUG: Existing user found. ID: {user.id}", flush=True)
                     user.name = user_info['name']
                     user.picture = user_info.get('picture')
                     await session.flush()
