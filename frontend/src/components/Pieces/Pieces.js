@@ -97,6 +97,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
     const [isPromotionDialogOpen, setPromotionDialogOpen] = useState(false);
     const [isImportDialogOpen, setImportDialogOpen] = useState(false);
     const [isNewGameDialogOpen, setNewGameDialogOpen] = useState(false);
+    const [newGameSelectedVariant, setNewGameSelectedVariant] = useState(variant);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [promotionMove, setPromotionMove] = useState(null);
     const lastNotifiedFen = useRef(null);
@@ -592,16 +593,25 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
 
     const handleNewGameClick = (e) => {
         e.stopPropagation();
+        setNewGameSelectedVariant(variant); // Default to current variant
         setNewGameDialogOpen(true);
         setIsMenuOpen(false);
     };
 
     const handleVariantSelect = (variantId) => {
+        setNewGameSelectedVariant(variantId);
+    };
+
+    const handleStartNewGame = () => {
         setNewGameDialogOpen(false);
-        if (variantId === variant) {
+        if (newGameSelectedVariant === variant) {
             initializeGame();
         } else {
-            navigate(variantId === 'standard' ? '/' : `/${variantId}`);
+            // Need to pass time control if changing variant
+            // Actually, initializeGame uses state startingTime/increment.
+            // But navigate to /variant will trigger initializeGame in useEffect.
+            // We should ensure the state is preserved across navigation or passed.
+            navigate(newGameSelectedVariant === 'standard' ? '/' : `/${newGameSelectedVariant}`);
         }
     };
 
@@ -831,32 +841,11 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                     <div className="new-game-dialog" onClick={e => e.stopPropagation()}>
                         <h2>New Game</h2>
                         
-                        <div className="player-names-input">
-                            <div className="setting-row">
-                                <label>Your Name</label>
-                                <input 
-                                    type="text" 
-                                    value={playerName} 
-                                    onChange={(e) => setPlayerName(e.target.value)}
-                                    placeholder="Anonymous"
-                                />
-                            </div>
-                            <div className="setting-row">
-                                <label>Opponent Name</label>
-                                <input 
-                                    type="text" 
-                                    value={opponentName} 
-                                    onChange={(e) => setOpponentName(e.target.value)}
-                                    placeholder="Anonymous Opponent"
-                                />
-                            </div>
-                        </div>
-
                         <div className="variants-grid">
                             {VARIANTS.map(v => (
                                 <button
                                     key={v.id}
-                                    className={`variant-select-btn ${variant === v.id ? 'active' : ''}`}
+                                    className={`variant-select-btn ${newGameSelectedVariant === v.id ? 'active' : ''}`}
                                     onClick={() => handleVariantSelect(v.id)}
                                 >
                                     <span className="variant-icon">{v.icon}</span>
@@ -917,6 +906,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
 
                         <div className="dialog-actions">
                             <button className="cancel-btn" onClick={() => setNewGameDialogOpen(false)}>Cancel</button>
+                            <button className="start-btn" onClick={handleStartNewGame}>Start game</button>
                         </div>
                     </div>
                 </div>

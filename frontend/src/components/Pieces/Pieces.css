@@ -89,6 +89,24 @@
     position: relative; /* For dropdown positioning */
 }
 
+.takeback-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.accept-btn {
+    background-color: #4CAF50 !important;
+}
+
+.decline-btn {
+    background-color: #f44336 !important;
+}
+
+.control-button.waiting {
+    opacity: 0.5;
+    cursor: wait;
+}
+
 .control-button {
     padding: 0;
     font-size: 16px;
@@ -216,10 +234,11 @@
 .dialog-actions {
     display: flex;
     justify-content: flex-end;
+    gap: 15px;
 }
 
 .cancel-btn {
-    padding: 8px 16px;
+    padding: 10px 20px;
     background-color: transparent;
     border: 1px solid #666;
     color: #ccc;
@@ -230,6 +249,21 @@
 
 .cancel-btn:hover {
     background-color: rgba(255, 255, 255, 0.1);
+}
+
+.start-btn {
+    padding: 10px 25px;
+    background-color: #95bb4a;
+    border: none;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.start-btn:hover {
+    background-color: #a9cc5d;
 }
 
 /* Player Name Display */
@@ -268,6 +302,19 @@
 .opponent-name {
     bottom: 100%;
     margin-bottom: 5px;
+}
+
+.takeback-prompt {
+    color: #ffd700;
+    font-weight: 700;
+    font-size: 13px;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
 }
 
 .player-name {
