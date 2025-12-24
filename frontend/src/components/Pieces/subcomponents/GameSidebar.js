@@ -90,7 +90,7 @@ function GameSidebar({
                 {matchmaking ? (
                     <>
                         {takebackOffer && user && takebackOffer.by_user_id !== user.id ? (
-                            <div className="takeback-prompt-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', position: 'absolute', bottom: '100%', left: '0', right: '0', background: 'var(--history-bg-color)', padding: '5px', borderRadius: '4px', zIndex: 10 }}>
+                            <div className="takeback-prompt-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
                                 <span className="takeback-prompt" style={{ fontSize: '12px', color: '#ffd700', fontWeight: 'bold' }}>Accept takeback?</span>
                                 <div className="takeback-actions">
                                     <button 
