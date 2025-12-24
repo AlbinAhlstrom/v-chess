@@ -58,7 +58,6 @@ function Lobby() {
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.type === "seeks") {
-                console.log("Initial seeks received:", data.seeks);
                 setSeeks(data.seeks);
             } else if (data.type === "seek_created") {
                 setSeeks(prev => [...prev, data.seek]);
@@ -156,13 +155,18 @@ function Lobby() {
                             </tr>
                         </thead>
                         <tbody>
-                            {seeks.map(seek => (
+                            {seeks.map(seek => {
+                                const isMySeek = user && String(seek.user_id) === String(user.id);
+                                if (user) {
+                                    console.log(`Lobby Check: MyID=${user.id} (${typeof user.id}) vs SeekOwnerID=${seek.user_id} (${typeof seek.user_id}) -> Match? ${isMySeek}`);
+                                }
+                                return (
                                 <tr key={seek.id}>
                                     <td>{seek.user_name}</td>
                                     <td>{seek.variant}</td>
                                     <td>{seek.time_control ? `${seek.time_control.limit / 60}+${seek.time_control.increment}` : 'Unlimited'}</td>
                                     <td>
-                                        {user && String(seek.user_id) === String(user.id) ? (
+                                        {isMySeek ? (
                                             <button 
                                                 onClick={() => cancelSeek(seek.id)}
                                                 className="cancel-seek-btn"
@@ -182,7 +186,7 @@ function Lobby() {
                                         )}
                                     </td>
                                 </tr>
-                            ))}
+                            )})}
                         </tbody>
                     </table>
                 )}
