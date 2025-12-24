@@ -61,53 +61,56 @@ function GameConfig({
             )}
 
             <div className="time-control-settings">
-                <div className="setting-row">
-                    <label className="switch-container">
-                        <span>Time Control</span>
-                        <input 
-                            type="checkbox" 
-                            checked={isTimeControlEnabled} 
-                            onChange={(e) => setIsTimeControlEnabled(e.target.checked)} 
-                        />
-                        <span className="slider round"></span>
-                    </label>
-                </div>
+                <div className="time-control-row">
+                    <div className="control-item">
+                        <label className="small-label">Time Control</label>
+                        <label className="switch-container compact">
+                            <input 
+                                type="checkbox" 
+                                checked={isTimeControlEnabled} 
+                                onChange={(e) => setIsTimeControlEnabled(e.target.checked)} 
+                            />
+                            <span className="slider round"></span>
+                        </label>
+                    </div>
                 
-                {isTimeControlEnabled && (
-                    <>
-                        <div className="setting-row slider-setting">
-                            <div className="slider-label">
-                                <span>Starting Time</span>
-                                <span>
-                                    {startingTime === 0.25 ? '1/4' : 
-                                     startingTime === 0.5 ? '1/2' : 
-                                     startingTime === 1.5 ? '1 1/2' : 
-                                     startingTime} min
-                                </span>
+                    {isTimeControlEnabled && (
+                        <>
+                            <div className="control-item">
+                                <label className="small-label">Starting Time</label>
+                                <select 
+                                    value={startingTime} 
+                                    onChange={(e) => setStartingTime(parseFloat(e.target.value))}
+                                    className="time-select compact"
+                                >
+                                    <option value={0.5}>💥 1/2 min</option>
+                                    <option value={1}>💥 1 min</option>
+                                    <option value={3}>⚡ 3 min</option>
+                                    <option value={5}>⚡ 5 min</option>
+                                    <option value={10}>⚡ 10 min</option>
+                                    <option value={15}>⏱️ 15 min</option>
+                                    <option value={30}>⏱️ 30 min</option>
+                                </select>
                             </div>
-                            <input 
-                                type="range" 
-                                min="0" 
-                                max={STARTING_TIME_VALUES.length - 1} 
-                                value={STARTING_TIME_VALUES.indexOf(startingTime)} 
-                                onChange={(e) => setStartingTime(STARTING_TIME_VALUES[parseInt(e.target.value)])} 
-                            />
-                        </div>
-                        <div className="setting-row slider-setting">
-                            <div className="slider-label">
-                                <span>Increment</span>
-                                <span>{increment} sec</span>
+                            <div className="control-item">
+                                <label className="small-label">Increment</label>
+                                <select 
+                                    value={increment} 
+                                    onChange={(e) => setIncrement(parseInt(e.target.value))}
+                                    className="time-select compact"
+                                >
+                                    <option value={0}>0 sec</option>
+                                    <option value={1}>1 sec</option>
+                                    <option value={2}>2 sec</option>
+                                    <option value={3}>3 sec</option>
+                                                                    <option value={5}>5 sec</option>
+                                                                    <option value={10}>10 sec</option>
+                                                                    <option value={20}>20 sec</option>
+                                                                    <option value={30}>30 sec</option>                                </select>
                             </div>
-                            <input 
-                                type="range" 
-                                min="0" 
-                                max={INCREMENT_VALUES.length - 1} 
-                                value={INCREMENT_VALUES.indexOf(increment)} 
-                                onChange={(e) => setIncrement(INCREMENT_VALUES[parseInt(e.target.value)])} 
-                            />
-                        </div>
-                    </>
-                )}
+                        </>
+                    )}
+                </div>
             </div>
         </>
     );
