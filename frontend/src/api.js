@@ -2,10 +2,19 @@
 const getApiBase = () => {
     if (process.env.REACT_APP_API_URL) return process.env.REACT_APP_API_URL;
     
-    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-    if (isProd) {
+    const hostname = window.location.hostname;
+    // Production domains
+    if (hostname === 'v-chess.com' || hostname === 'www.v-chess.com' || hostname.endsWith('.vercel.app')) {
         return `https://api.v-chess.com/api`;
     }
+    
+    // If we are on a LAN IP or anything else that isn't localhost,
+    // assume backend is on the same host, port 8000
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+        return `http://${hostname}:8000/api`;
+    }
+
+    // Default local
     return `http://localhost:8000/api`;
 };
 
@@ -13,10 +22,15 @@ const getApiBase = () => {
 export const getWsBase = () => {
     if (process.env.REACT_APP_WS_URL) return process.env.REACT_APP_WS_URL;
     
-    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-    if (isProd) {
+    const hostname = window.location.hostname;
+    if (hostname === 'v-chess.com' || hostname === 'www.v-chess.com' || hostname.endsWith('.vercel.app')) {
         return `wss://api.v-chess.com/ws`;
     }
+
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+        return `ws://${hostname}:8000/ws`;
+    }
+
     return `ws://localhost:8000/ws`;
 };
 
