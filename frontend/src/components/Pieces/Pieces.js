@@ -107,6 +107,8 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
     // Player Names State
     const [playerName, setPlayerName] = useState("Anonymous");
     const [opponentName, setOpponentName] = useState("Anonymous Opponent");
+    const [whitePlayerId, setWhitePlayerId] = useState(null);
+    const [blackPlayerId, setBlackPlayerId] = useState(null);
 
     // Game Clocks State
     const [timers, setTimers] = useState(null); // {w: seconds, b: seconds}
@@ -159,9 +161,6 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         ws.current.onmessage = (event) => {
             const message = JSON.parse(event.data);
             if (message.type === "game_state") {
-                if (message.debug_players) {
-                    console.log("DEBUG PLAYERS:", message.debug_players);
-                }
                 setFen(message.fen);
                 setInCheck(message.in_check);
                 setMoveHistory(message.move_history || []);
@@ -240,6 +239,9 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                 setWinner(data.winner);
                 setIsGameOver(data.is_over);
                 setTurn(data.turn);
+                
+                if (data.white_player_id) setWhitePlayerId(data.white_player_id);
+                if (data.black_player_id) setBlackPlayerId(data.black_player_id);
 
                 // Handle matchmaking player assignment and board flipping
                 if (matchmaking && user) {
@@ -420,6 +422,17 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         }
     }
 
+    const canMovePiece = (pieceColor) => {
+        if (!matchmaking) return true; // Over the board: anyone can move
+        if (!user) return false; // Matchmaking requires login
+        
+        if (pieceColor === 'w') {
+            return user.id === whitePlayerId;
+        } else {
+            return user.id === blackPlayerId;
+        }
+    };
+
     const handlePromotion = (promotionPiece) => {
         if (promotionMove) {
             isPromoting.current = true;
@@ -439,6 +452,10 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
 
     const handlePieceDragStart = async ({ file, rank, piece, isCapture }) => {
         if (!gameId) return;
+        
+        const pieceColor = piece === piece.toUpperCase() ? 'w' : 'b';
+        if (!canMovePiece(pieceColor)) return;
+
         const square = coordsToAlgebraic(file, rank);
 
         if (isCapture && selectedSquare) {
@@ -503,6 +520,31 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                     setSelectedSquare(null);
                     setLegalMoves([]);
                 } else if (isPiece(file, rank)) {
+                    const piece = position[rank][file];
+                    const pieceColor = piece === piece.toUpperCase() ? 'w' : 'b';
+                    
+                    if (canMovePiece(pieceColor)) {
+                        setSelectedSquare(clickedSquare);
+                        try {
+                            const response = await getLegalMoves(gameId, clickedSquare);
+                            if (response.status === "success") {
+                                setLegalMoves(response.moves);
+                            }
+                        } catch (error) {
+                            console.error("Failed to fetch legal moves:", error);
+                        }
+                    }
+                } else {
+                    setSelectedSquare(null);
+                    setLegalMoves([]);
+                }
+            }
+        } else {
+            if (isPiece(file, rank)) {
+                const piece = position[rank][file];
+                const pieceColor = piece === piece.toUpperCase() ? 'w' : 'b';
+
+                if (canMovePiece(pieceColor)) {
                     setSelectedSquare(clickedSquare);
                     try {
                         const response = await getLegalMoves(gameId, clickedSquare);
@@ -512,21 +554,6 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                     } catch (error) {
                         console.error("Failed to fetch legal moves:", error);
                     }
-                } else {
-                    setSelectedSquare(null);
-                    setLegalMoves([]);
-                }
-            }
-        } else {
-            if (isPiece(file, rank)) {
-                setSelectedSquare(clickedSquare);
-                try {
-                    const response = await getLegalMoves(gameId, clickedSquare);
-                    if (response.status === "success") {
-                        setLegalMoves(response.moves);
-                    }
-                } catch (error) {
-                    console.error("Failed to fetch legal moves:", error);
                 }
             }
         }

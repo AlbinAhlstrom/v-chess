@@ -285,12 +285,10 @@ async def lobby_websocket(websocket: WebSocket):
                     }))
 
             elif message["type"] == "join_seek":
-                print(f"DEBUG: Received join_seek for {message.get('seek_id')} from {message.get('user')}", flush=True)
                 try:
                     seek_id = message.get("seek_id")
                     joining_user = message.get("user")
                     if seek_id in seeks:
-                        print(f"DEBUG: Found seek {seek_id}, creating game...", flush=True)
                         seek = seeks.pop(seek_id)
                         
                         # Create a new game
@@ -319,7 +317,6 @@ async def lobby_websocket(websocket: WebSocket):
                                 )
                                 session.add(model)
 
-                        print(f"DEBUG: Game {game_id} created in DB. Broadcasting...", flush=True)
                         await manager.broadcast_lobby(json.dumps({
                             "type": "seek_accepted",
                             "seek_id": seek_id,
@@ -522,9 +519,6 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
         winner_color = game.rules.get_winner()
         is_over = game.rules.is_game_over()
 
-        # DEBUG: Broadcast player IDs
-        print(f"DEBUG: WS Connected. Game: {game_id}, WhiteID: {white_player_id}, BlackID: {black_player_id}, UserID: {user_id}", flush=True)
-
         await manager.broadcast(game_id, json.dumps({
             "type": "game_state",
             "fen": game.state.fen,
@@ -534,8 +528,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
             "winner": winner_color.value if winner_color else None,
             "move_history": game.move_history,
             "clocks": {c.value: t for c, t in game.clocks.items()} if game.clocks else None,
-            "status": "connected",
-            "debug_players": {"white": white_player_id, "black": black_player_id, "you": user_id}
+            "status": "connected"
         }))
 
         while True:
@@ -544,16 +537,12 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
 
             if message["type"] == "move":
                 # Validate turn ownership
-                print(f"DEBUG: Move request. Turn: {game.state.turn}, UserID: {user_id}, White: {white_player_id}, Black: {black_player_id}", flush=True)
-                
                 if game.state.turn == Color.WHITE and white_player_id is not None:
                     if user_id != white_player_id:
-                        print(f"DEBUG: Blocked White move. {user_id} != {white_player_id}", flush=True)
                         await websocket.send_text(json.dumps({"type": "error", "message": "Not your turn!"}))
                         continue
                 elif game.state.turn == Color.BLACK and black_player_id is not None:
                     if user_id != black_player_id:
-                        print(f"DEBUG: Blocked Black move. {user_id} != {black_player_id}", flush=True)
                         await websocket.send_text(json.dumps({"type": "error", "message": "Not your turn!"}))
                         continue
 

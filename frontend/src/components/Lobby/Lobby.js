@@ -59,16 +59,12 @@ function Lobby() {
     };
 
     const joinSeek = (seekId) => {
-        console.log("Attempting to join seek:", seekId);
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-            console.log("Socket open, sending join_seek payload...");
             socketRef.current.send(JSON.stringify({
                 type: "join_seek",
                 seek_id: seekId,
                 user: user
             }));
-        } else {
-            console.error("Socket not ready or closed.", socketRef.current?.readyState);
         }
     };
 
@@ -108,10 +104,7 @@ function Lobby() {
                             </tr>
                         </thead>
                         <tbody>
-                            {seeks.map(seek => {
-                                const isMySeek = user && seek.user_id === user.id;
-                                console.log(`Seek ${seek.id}: user=${user?.id}, seek.user_id=${seek.user_id}, isMySeek=${isMySeek}`);
-                                return (
+                            {seeks.map(seek => (
                                 <tr key={seek.id}>
                                     <td>{seek.user_name}</td>
                                     <td>{seek.variant}</td>
@@ -119,14 +112,13 @@ function Lobby() {
                                     <td>
                                         <button 
                                             onClick={() => joinSeek(seek.id)}
-                                            disabled={isMySeek}
+                                            disabled={user && seek.user_id === user.id}
                                         >
                                             Join
                                         </button>
                                     </td>
                                 </tr>
-                                );
-                            })}
+                            ))}
                         </tbody>
                     </table>
                 )}
