@@ -32,13 +32,31 @@ function GameConfig({
             </div>
 
             {showColorSelect && (
-                <div className="form-group color-select-group">
-                    <label>Your Color:</label>
-                    <select value={selectedColor} onChange={(e) => setSelectedColor(e.target.value)}>
-                        <option value="random">Random</option>
-                        <option value="white">White</option>
-                        <option value="black">Black</option>
-                    </select>
+                <div className="color-selection-container">
+                    <label style={{ display: 'block', marginBottom: '10px' }}>Your Color:</label>
+                    <div className="variants-grid">
+                        <button
+                            className={`variant-select-btn ${selectedColor === 'white' ? 'active' : ''}`}
+                            onClick={() => setSelectedColor('white')}
+                        >
+                            <span className="variant-icon">⚪</span>
+                            <span>White</span>
+                        </button>
+                        <button
+                            className={`variant-select-btn ${selectedColor === 'random' ? 'active' : ''}`}
+                            onClick={() => setSelectedColor('random')}
+                        >
+                            <span className="variant-icon">❓</span>
+                            <span>Random</span>
+                        </button>
+                        <button
+                            className={`variant-select-btn ${selectedColor === 'black' ? 'active' : ''}`}
+                            onClick={() => setSelectedColor('black')}
+                        >
+                            <span className="variant-icon">⚫</span>
+                            <span>Black</span>
+                        </button>
+                    </div>
                 </div>
             )}
 
