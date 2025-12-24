@@ -51,6 +51,37 @@
     background: #a9cc5d;
 }
 
+.lobby-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.create-button, .otb-button {
+    flex: 1;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: background 0.2s;
+}
+
+.create-button {
+    background: #95bb4a;
+}
+
+.otb-button {
+    background: #373743;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.otb-button:hover {
+    background: #454552;
+}
+
 .seeks-list table {
     width: 100%;
     border-collapse: collapse;

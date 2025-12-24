@@ -179,7 +179,15 @@ function Lobby() {
                     )}
                 </div>
 
-                <button onClick={createSeek} className="create-button">Create Seek</button>
+                <div className="lobby-actions">
+                    <button onClick={createSeek} className="create-button">Create Game Lobby</button>
+                    <button 
+                        onClick={() => navigate(selectedVariant === 'standard' ? '/otb' : `/otb/${selectedVariant}`)} 
+                        className="otb-button"
+                    >
+                        Play Over the Board
+                    </button>
+                </div>
             </div>
 
             <div className="seeks-list">

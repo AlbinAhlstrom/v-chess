@@ -246,6 +246,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
 
     const initializeGame = async (fenToLoad = null, variantToLoad = null, tc = null) => {
         const timeControl = tc || (isTimeControlEnabled ? { starting_time: startingTime, increment: increment } : null);
+        console.log("Initializing game with TC:", timeControl);
         try {
             const { game_id: newGameId } = await createGame(variantToLoad || variant, fenToLoad, timeControl);
             gameStartSound.current.play().catch(e => console.error("Error playing game start sound:", e));
@@ -607,11 +608,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         if (newGameSelectedVariant === variant) {
             initializeGame();
         } else {
-            // Need to pass time control if changing variant
-            // Actually, initializeGame uses state startingTime/increment.
-            // But navigate to /variant will trigger initializeGame in useEffect.
-            // We should ensure the state is preserved across navigation or passed.
-            navigate(newGameSelectedVariant === 'standard' ? '/' : `/${newGameSelectedVariant}`);
+            navigate(newGameSelectedVariant === 'standard' ? '/otb' : `/otb/${newGameSelectedVariant}`);
         }
     };
 
