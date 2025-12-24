@@ -596,6 +596,18 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                         continue
 
                 move_uci = message["uci"]
+                
+                # Check for auto-promotion if piece is a pawn reaching the last row
+                try:
+                    start_sq = Square(move_uci[:2])
+                    end_sq = Square(move_uci[2:4])
+                    piece = game.state.board.get_piece(start_sq)
+                    if piece and piece.fen.lower() == 'p' and len(move_uci) == 4:
+                        if end_sq.is_promotion_row(piece.color):
+                            move_uci += 'q' # Auto-promote to Queen
+                except Exception:
+                    pass
+
                 try:
                     move = Move(move_uci, player_to_move=game.state.turn)
                     game.take_turn(move)

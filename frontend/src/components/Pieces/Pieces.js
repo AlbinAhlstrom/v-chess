@@ -402,7 +402,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         
         // Mock event object for calculateSquare
         const mockEvent = { clientX, clientY };
-        const { rank: toRank, algebraic: toSquare } = calculateSquare(mockEvent);
+        const { algebraic: toSquare } = calculateSquare(mockEvent);
         
         const fromSquare = coordsToAlgebraic(file, rank);
 
@@ -414,21 +414,13 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
             return;
         }
 
-        const isPawn = piece.toLowerCase() === 'p';
-        const isPromotion = isPawn && (toRank === 0 || toRank === 7);
-
-        if (isPromotion) {
-            setPromotionMove({ from: fromSquare, to: toSquare });
-            setPromotionDialogOpen(true);
-        } else {
-            try {
-                const moveUci = `${fromSquare}${toSquare}`;
-                if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-                    ws.current.send(JSON.stringify({ type: "move", uci: moveUci }));
-                }
-            } catch (error) {
-                console.error("Failed to make move:", error);
+        try {
+            const moveUci = `${fromSquare}${toSquare}`;
+            if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+                ws.current.send(JSON.stringify({ type: "move", uci: moveUci }));
             }
+        } catch (error) {
+            console.error("Failed to make move:", error);
         }
     }
 
@@ -514,16 +506,10 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
             });
 
             if (movesToTarget.length > 0) {
-                // If there are multiple moves to the target square (e.g., different promotion pieces)
-                // or if the move is a promotion (length 5 for UCI), open the promotion dialog.
-                if (movesToTarget.length > 1 || movesToTarget[0].length === 5) {
-                    setPromotionMove({ from: selectedSquare, to: clickedSquare });
-                    setPromotionDialogOpen(true);
-                } else {
-                    const moveUci = movesToTarget[0];
-                    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-                        ws.current.send(JSON.stringify({ type: "move", uci: moveUci }));
-                    }
+                // Just send the base move (length 4), backend handles auto-promotion
+                const moveUci = movesToTarget[0].slice(0, 4);
+                if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+                    ws.current.send(JSON.stringify({ type: "move", uci: moveUci }));
                 }
             } else {
                 if (clickedSquare === selectedSquare) {
