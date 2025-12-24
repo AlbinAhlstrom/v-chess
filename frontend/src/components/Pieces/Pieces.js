@@ -208,7 +208,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                 } else if (message.status === "game_over") {
                     console.log("Game over detected!");
                     gameEndSound.current.play().catch(e => console.error("Error playing game end sound:", e));
-                if (message.status === "timeout") {
+                } else if (message.status === "timeout") {
                     console.log("Timeout detected!");
                     gameEndSound.current.play().catch(e => console.error("Error playing game end sound:", e));
                 }
