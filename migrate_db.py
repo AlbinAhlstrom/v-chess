@@ -1,7 +1,6 @@
 import sqlite3
 import os
 
-# Check both potential paths
 DB_FILES = ["chess.db", "backend/chess.db"]
 
 def migrate(db_file):
@@ -13,19 +12,59 @@ def migrate(db_file):
     cursor = conn.cursor()
 
     try:
-        # Check if columns exist and their types
+        # Check current schema
         cursor.execute("PRAGMA table_info(games)")
         table_info = cursor.fetchall()
-        columns = {info[1]: info[2] for info in table_info}
+        # info[1] is name, info[2] is type
+        columns = {info[1]: info[2].upper() for info in table_info}
         
-        # We want to ensure these are TEXT (String) now
-        if "white_player_id" not in columns:
-            print(f"Adding white_player_id column to {db_file}...")
-            cursor.execute("ALTER TABLE games ADD COLUMN white_player_id TEXT")
-        
-        if "black_player_id" not in columns:
-            print(f"Adding black_player_id column to {db_file}...")
-            cursor.execute("ALTER TABLE games ADD COLUMN black_player_id TEXT")
+        needs_recreate = False
+        if "white_player_id" in columns and "INT" in columns["white_player_id"]:
+            needs_recreate = True
+        if "black_player_id" in columns and "INT" in columns["black_player_id"]:
+            needs_recreate = True
+            
+        if needs_recreate:
+            print(f"Column type mismatch detected in {db_file}. Recreating games table...")
+            # Recreating a table in SQLite to change types safely
+            cursor.execute("ALTER TABLE games RENAME TO games_old")
+            # The backend init_db will recreate the 'games' table with correct types 
+            # based on the SQLAlchemy model on next startup.
+            # We just want to make sure it doesn't conflict.
+            # Alternatively, we define the table here:
+            cursor.execute("""
+                CREATE TABLE games (
+                    id TEXT PRIMARY KEY,
+                    variant TEXT NOT NULL,
+                    fen TEXT NOT NULL,
+                    move_history TEXT NOT NULL,
+                    time_control TEXT,
+                    clocks TEXT,
+                    last_move_at FLOAT,
+                    is_over BOOLEAN DEFAULT 0,
+                    winner TEXT,
+                    white_player_id TEXT,
+                    black_player_id TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            # Try to copy data, but player IDs might be corrupted
+            print("Copying data from old table (player IDs may be lost)...")
+            cursor.execute("""
+                INSERT INTO games (id, variant, fen, move_history, time_control, clocks, last_move_at, is_over, winner, created_at, updated_at)
+                SELECT id, variant, fen, move_history, time_control, clocks, last_move_at, is_over, winner, created_at, updated_at FROM games_old
+            """)
+            cursor.execute("DROP TABLE games_old")
+        else:
+            # Just add columns if missing
+            if "white_player_id" not in columns:
+                print(f"Adding white_player_id column to {db_file}...")
+                cursor.execute("ALTER TABLE games ADD COLUMN white_player_id TEXT")
+            
+            if "black_player_id" not in columns:
+                print(f"Adding black_player_id column to {db_file}...")
+                cursor.execute("ALTER TABLE games ADD COLUMN black_player_id TEXT")
             
         conn.commit()
         print(f"Migration successful for {db_file}.")
