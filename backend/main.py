@@ -11,7 +11,7 @@ import random
 from oop_chess.game import Game, IllegalMoveException
 from oop_chess.move import Move
 from oop_chess.square import Square
-from oop_chess.enums import Color
+from oop_chess.enums import Color, GameOverReason
 from oop_chess.rules import (
     AntichessRules, StandardRules, AtomicRules, Chess960Rules,
     CrazyhouseRules, HordeRules, KingOfTheHillRules, RacingKingsRules,
