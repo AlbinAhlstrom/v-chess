@@ -34,8 +34,8 @@ class GameModel(Base):
     last_move_at: Mapped[Optional[float]] = mapped_column(Float)
     is_over: Mapped[bool] = mapped_column(Boolean, default=False)
     winner: Mapped[Optional[str]] = mapped_column(String)
-    white_player_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"))
-    black_player_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"))
+    white_player_id: Mapped[Optional[str]] = mapped_column(String)
+    black_player_id: Mapped[Optional[str]] = mapped_column(String)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime.datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 async def init_db():

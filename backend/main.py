@@ -261,7 +261,7 @@ pending_takebacks: dict[str, int] = {}
 async def lobby_websocket(websocket: WebSocket):
     await manager.connect_lobby(websocket)
     user_session = websocket.session.get("user")
-    current_user_id = user_session.get("id") if user_session else None
+    current_user_id = str(user_session.get("id")) if user_session else None
     print(f"DEBUG: Lobby WS Connected. Session User ID: {current_user_id}, Name: {user_session.get('name') if user_session else 'None'}", flush=True)
 
     try:
@@ -478,12 +478,13 @@ async def auth(request: Request):
                     await session.flush()
 
                 request.session['user'] = {
-                    "id": user.id,
+                    "id": str(user.google_id), # Use unique Google ID
+                    "db_id": int(user.id),     # Keep DB ID as secondary
                     "name": str(user.name),
                     "email": str(user.email),
                     "picture": user.picture
                 }
-                print(f"AUTH SUCCESS: Set session for {user.name} (ID: {user.id})", flush=True)
+                print(f"AUTH SUCCESS: Set session for {user.name} (GoogleID: {user.google_id})", flush=True)
 
     # Redirect to frontend
     frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
@@ -566,7 +567,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                 black_player_id = model.black_player_id
 
         user = websocket.session.get("user")
-        user_id = user.get("id") if user else None
+        user_id = str(user.get("id")) if user else None
 
         winner_color = game.rules.get_winner()
         is_over = game.rules.is_game_over()
