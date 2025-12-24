@@ -478,7 +478,7 @@ async def auth(request: Request):
                     await session.flush()
 
                 request.session['user'] = {
-                    "id": int(user.id), # Force correct ID
+                    "id": user.id,
                     "name": str(user.name),
                     "email": str(user.email),
                     "picture": user.picture

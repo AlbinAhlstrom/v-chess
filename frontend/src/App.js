@@ -4,7 +4,7 @@ import { Pieces } from './components/Pieces/Pieces.js';
 import { useCallback, useState, useEffect } from 'react';
 import Lobby from './components/Lobby/Lobby.js';
 import Profile from './components/Profile/Profile.js';
-import { BrowserRouter, Routes, Route, Link, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useParams, Navigate } from 'react-router-dom';
 import { getMe, getAuthLinks } from './api.js';
 
 function Header() {
@@ -89,7 +89,7 @@ function App() {
     <BrowserRouter>
       <Header />
       <Routes>
-        <Route path="/" element={<Lobby />} />
+        <Route path="/" element={<Navigate to="/create-game" replace />} />
         <Route path="/create-game" element={<Lobby />} />
         <Route path="/otb" element={<GameBoard variant="standard" />} />
         <Route path="/otb/:variant" element={<GameBoard />} />
