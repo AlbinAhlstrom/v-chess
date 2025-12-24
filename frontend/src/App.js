@@ -37,7 +37,7 @@ function Header() {
   return (
     <header className="main-header">
       <nav className="header-nav">
-        <Link to="/create-game" className="header-logo">v-chess</Link>
+        <Link to="/create-game" className="header-logo">V-Chess</Link>
         <Link to="/create-game" className="header-link">Create Game</Link>
       </nav>
       <div className="auth-section">
