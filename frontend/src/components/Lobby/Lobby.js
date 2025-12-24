@@ -191,8 +191,8 @@ function Lobby() {
             </div>
 
             <div className="seeks-list">
-                <h2>Open Seeks</h2>
-                {seeks.length === 0 ? <p>No open seeks. Create one!</p> : (
+                <h2>Open Lobbies</h2>
+                {seeks.length === 0 ? <p>No open lobbies found. Create one!</p> : (
                     <table>
                         <thead>
                             <tr>
