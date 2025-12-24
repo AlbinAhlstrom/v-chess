@@ -38,13 +38,19 @@ class Game:
         self.move_history: list[str] = []
 
         # Timing
-        self.time_control = time_control # {starting_time: min, increment: sec}
+        self.time_control = time_control # {starting_time: min, increment: sec} OR {limit: sec, increment: sec}
         self.clocks = None
         self.last_move_at = None
         self.is_over_by_timeout = False
         
         if self.time_control:
-            start_sec = float(self.time_control['starting_time'] * 60)
+            if 'limit' in self.time_control:
+                start_sec = float(self.time_control['limit'])
+            elif 'starting_time' in self.time_control:
+                start_sec = float(self.time_control['starting_time'] * 60)
+            else:
+                start_sec = 600.0 # Default 10 min
+
             self.clocks = {
                 Color.WHITE: start_sec,
                 Color.BLACK: start_sec

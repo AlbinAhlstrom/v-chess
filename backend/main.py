@@ -283,45 +283,94 @@ async def lobby_websocket(websocket: WebSocket):
                         "seek_id": seek_id
                     }))
 
-            elif message["type"] == "join_seek":
-                print(f"DEBUG: Received join_seek for {message.get('seek_id')} from {message.get('user')}")
-                seek_id = message.get("seek_id")
-                joining_user = message.get("user")
-                if seek_id in seeks:
-                    print(f"DEBUG: Found seek {seek_id}, creating game...")
-                    seek = seeks.pop(seek_id)
-                    
-                    # Create a new game
-                    game_id = str(uuid4())
-                    variant = seek["variant"]
-                    rules_cls = RULES_MAP.get(variant.lower(), StandardRules)
-                    rules = rules_cls()
-                    
-                    # For now: Seeker is White, Joiner is Black
-                    game = Game(rules=rules, time_control=seek["time_control"])
-                    games[game_id] = game
-                    game_variants[game_id] = variant
-                    
-                    # Assign players in DB
-                    async with async_session() as session:
-                        async with session.begin():
-                            model = GameModel(
-                                id=game_id,
-                                variant=variant,
-                                fen=game.state.fen,
-                                move_history=json.dumps(game.move_history),
-                                time_control=json.dumps(game.time_control) if game.time_control else None,
-                                white_player_id=seek["user_id"],
-                                black_player_id=joining_user.get("id") if joining_user else None,
-                                is_over=False
-                            )
-                            session.add(model)
+import traceback
 
+# ... imports ...
+
+@app.websocket("/ws/lobby")
+async def lobby_websocket(websocket: WebSocket):
+    await manager.connect_lobby(websocket)
+    try:
+        # ... (send initial seeks)
+
+        while True:
+            data = await websocket.receive_text()
+            message = json.loads(data)
+
+            if message["type"] == "create_seek":
+                # ... (existing create logic)
+                seek_id = str(uuid4())
+                user = message.get("user")
+                seek_data = {
+                    "id": seek_id,
+                    "user_id": user.get("id") if user else None,
+                    "user_name": user.get("name") if user else "Anonymous",
+                    "variant": message.get("variant", "standard"),
+                    "time_control": message.get("time_control"),
+                    "created_at": asyncio.get_event_loop().time()
+                }
+                seeks[seek_id] = seek_data
+                await manager.broadcast_lobby(json.dumps({
+                    "type": "seek_created",
+                    "seek": seek_data
+                }))
+
+            elif message["type"] == "cancel_seek":
+                # ... (existing cancel logic)
+                seek_id = message.get("seek_id")
+                if seek_id in seeks:
+                    del seeks[seek_id]
                     await manager.broadcast_lobby(json.dumps({
-                        "type": "seek_accepted",
-                        "seek_id": seek_id,
-                        "game_id": game_id
+                        "type": "seek_removed",
+                        "seek_id": seek_id
                     }))
+
+            elif message["type"] == "join_seek":
+                print(f"DEBUG: Received join_seek for {message.get('seek_id')} from {message.get('user')}", flush=True)
+                try:
+                    seek_id = message.get("seek_id")
+                    joining_user = message.get("user")
+                    if seek_id in seeks:
+                        print(f"DEBUG: Found seek {seek_id}, creating game...", flush=True)
+                        seek = seeks.pop(seek_id)
+                        
+                        # Create a new game
+                        game_id = str(uuid4())
+                        variant = seek["variant"]
+                        rules_cls = RULES_MAP.get(variant.lower(), StandardRules)
+                        rules = rules_cls()
+                        
+                        # For now: Seeker is White, Joiner is Black
+                        game = Game(rules=rules, time_control=seek["time_control"])
+                        games[game_id] = game
+                        game_variants[game_id] = variant
+                        
+                        # Assign players in DB
+                        async with async_session() as session:
+                            async with session.begin():
+                                model = GameModel(
+                                    id=game_id,
+                                    variant=variant,
+                                    fen=game.state.fen,
+                                    move_history=json.dumps(game.move_history),
+                                    time_control=json.dumps(game.time_control) if game.time_control else None,
+                                    white_player_id=seek["user_id"],
+                                    black_player_id=joining_user.get("id") if joining_user else None,
+                                    is_over=False
+                                )
+                                session.add(model)
+
+                        print(f"DEBUG: Game {game_id} created in DB. Broadcasting...", flush=True)
+                        await manager.broadcast_lobby(json.dumps({
+                            "type": "seek_accepted",
+                            "seek_id": seek_id,
+                            "game_id": game_id
+                        }))
+                except Exception as e:
+                    print(f"CRITICAL ERROR in join_seek: {e}", flush=True)
+                    traceback.print_exc()
+
+    except WebSocketDisconnect:
 
     except WebSocketDisconnect:
         manager.disconnect_lobby(websocket)
