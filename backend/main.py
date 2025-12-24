@@ -522,6 +522,9 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
         winner_color = game.rules.get_winner()
         is_over = game.rules.is_game_over()
 
+        # DEBUG: Broadcast player IDs
+        print(f"DEBUG: WS Connected. Game: {game_id}, WhiteID: {white_player_id}, BlackID: {black_player_id}, UserID: {user_id}", flush=True)
+
         await manager.broadcast(game_id, json.dumps({
             "type": "game_state",
             "fen": game.state.fen,
@@ -531,7 +534,8 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
             "winner": winner_color.value if winner_color else None,
             "move_history": game.move_history,
             "clocks": {c.value: t for c, t in game.clocks.items()} if game.clocks else None,
-            "status": "connected"
+            "status": "connected",
+            "debug_players": {"white": white_player_id, "black": black_player_id, "you": user_id}
         }))
 
         while True:

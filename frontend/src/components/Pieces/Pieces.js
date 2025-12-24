@@ -159,6 +159,9 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         ws.current.onmessage = (event) => {
             const message = JSON.parse(event.data);
             if (message.type === "game_state") {
+                if (message.debug_players) {
+                    console.log("DEBUG PLAYERS:", message.debug_players);
+                }
                 setFen(message.fen);
                 setInCheck(message.in_check);
                 setMoveHistory(message.move_history || []);
