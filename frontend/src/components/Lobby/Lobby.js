@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getWsBase, getMe } from '../../api';
 import './Lobby.css';
+import '../Pieces/Pieces.css'; // Reuse dialog/config styles
+import GameConfig from '../Pieces/subcomponents/GameConfig';
 
 const VARIANTS = [
     { id: 'standard', title: 'Standard', icon: '♟️' },
@@ -107,77 +109,22 @@ function Lobby() {
             <div className="create-seek-panel">
                 <h2>Variant</h2>
                 
-                <div className="variants-grid">
-                    {VARIANTS.map(v => (
-                        <button
-                            key={v.id}
-                            className={`variant-select-btn ${selectedVariant === v.id ? 'active' : ''}`}
-                            onClick={() => setSelectedVariant(v.id)}
-                        >
-                            <span className="variant-icon">{v.icon}</span>
-                            <span>{v.title}</span>
-                        </button>
-                    ))}
-                </div>
-
-                <div className="form-group color-select-group">
-                    <label>Your Color:</label>
-                    <select value={selectedColor} onChange={(e) => setSelectedColor(e.target.value)}>
-                        <option value="random">Random</option>
-                        <option value="white">White</option>
-                        <option value="black">Black</option>
-                    </select>
-                </div>
-
-                <div className="time-control-settings">
-                    <div className="setting-row">
-                        <label className="switch-container">
-                            <span>Time Control</span>
-                            <input 
-                                type="checkbox" 
-                                checked={isTimeControlEnabled} 
-                                onChange={(e) => setIsTimeControlEnabled(e.target.checked)} 
-                            />
-                            <span className="slider round"></span>
-                        </label>
-                    </div>
-                    
-                    {isTimeControlEnabled && (
-                        <>
-                            <div className="setting-row slider-setting">
-                                <div className="slider-label">
-                                    <span>Starting Time</span>
-                                    <span>
-                                        {startingTime === 0.25 ? '1/4' : 
-                                         startingTime === 0.5 ? '1/2' : 
-                                         startingTime === 1.5 ? '1 1/2' : 
-                                         startingTime} min
-                                    </span>
-                                </div>
-                                <input 
-                                    type="range" 
-                                    min="0" 
-                                    max={STARTING_TIME_VALUES.length - 1} 
-                                    value={STARTING_TIME_VALUES.indexOf(startingTime)} 
-                                    onChange={(e) => setStartingTime(STARTING_TIME_VALUES[parseInt(e.target.value)])} 
-                                />
-                            </div>
-                            <div className="setting-row slider-setting">
-                                <div className="slider-label">
-                                    <span>Increment</span>
-                                    <span>{increment} sec</span>
-                                </div>
-                                <input 
-                                    type="range" 
-                                    min="0" 
-                                    max={INCREMENT_VALUES.length - 1} 
-                                    value={INCREMENT_VALUES.indexOf(increment)} 
-                                    onChange={(e) => setIncrement(INCREMENT_VALUES[parseInt(e.target.value)])} 
-                                />
-                            </div>
-                        </>
-                    )}
-                </div>
+                <GameConfig 
+                    VARIANTS={VARIANTS}
+                    selectedVariant={selectedVariant}
+                    setSelectedVariant={setSelectedVariant}
+                    selectedColor={selectedColor}
+                    setSelectedColor={setSelectedColor}
+                    isTimeControlEnabled={isTimeControlEnabled}
+                    setIsTimeControlEnabled={setIsTimeControlEnabled}
+                    startingTime={startingTime}
+                    setStartingTime={setStartingTime}
+                    STARTING_TIME_VALUES={STARTING_TIME_VALUES}
+                    increment={increment}
+                    setIncrement={setIncrement}
+                    INCREMENT_VALUES={INCREMENT_VALUES}
+                    showColorSelect={true}
+                />
 
                 <div className="lobby-actions">
                     <button onClick={createSeek} className="create-button">Create Game Lobby</button>
