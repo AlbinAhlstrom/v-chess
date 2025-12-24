@@ -5,7 +5,7 @@ import HighlightSquare from '../HighlightSquare/HighlightSquare.js';
 import PromotionDialog from '../PromotionDialog/PromotionDialog.js';
 import ImportDialog from '../ImportDialog/ImportDialog.js';
 import { fenToPosition, coordsToAlgebraic, algebraicToCoords } from '../../helpers.js'
-import { createGame, getLegalMoves, getAllLegalMoves, getGame, getMe, login, logout, getWsBase } from '../../api.js'
+import { createGame, getAllLegalMoves, getGame, getMe, login, logout, getWsBase } from '../../api.js'
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -49,6 +49,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
     const [fen, setFen] = useState();
     const [gameId, setGameId] = useState(null);
     const [legalMoves, setLegalMoves] = useState([]);
+    const [allPossibleMoves, setAllPossibleMoves] = useState([]);
     const [selectedSquare, setSelectedSquare] = useState(null);
     const [inCheck, setInCheck] = useState(false);
     const [flashKingSquare, setFlashKingSquare] = useState(null);
@@ -307,7 +308,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
             if (gameId) {
                 getAllLegalMoves(gameId).then(response => {
                     if (response.status === "success") {
-                        // All Legal Moves logic could go here
+                        setAllPossibleMoves(response.moves);
                     }
                 }).catch(error => {
                     console.error("Failed to fetch all legal moves:", error);
@@ -493,15 +494,9 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         dragStartSelectionState.current = (selectedSquare === square);
         setSelectedSquare(square);
         
-        try {
-            const response = await getLegalMoves(gameId, square);
-            if (response.status === "success") {
-                setLegalMoves(response.moves);
-            }
-        } catch (error) {
-            console.error("Failed to fetch legal moves:", error);
-        }
-    }, [gameId, isGameOver, canMovePiece, selectedSquare]);
+        const moves = allPossibleMoves.filter(m => m.startsWith(square));
+        setLegalMoves(moves);
+    }, [gameId, isGameOver, canMovePiece, selectedSquare, allPossibleMoves]);
 
     const handlePieceDragEnd = useCallback(() => {
         
@@ -554,14 +549,8 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                     
                     if (canMovePiece(pieceColor)) {
                         setSelectedSquare(clickedSquare);
-                        try {
-                            const response = await getLegalMoves(gameId, clickedSquare);
-                            if (response.status === "success") {
-                                setLegalMoves(response.moves);
-                            }
-                        } catch (error) {
-                            console.error("Failed to fetch legal moves:", error);
-                        }
+                        const moves = allPossibleMoves.filter(m => m.startsWith(clickedSquare));
+                        setLegalMoves(moves);
                     }
                 } else {
                     setSelectedSquare(null);
@@ -575,18 +564,12 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
 
                 if (canMovePiece(pieceColor)) {
                     setSelectedSquare(clickedSquare);
-                    try {
-                        const response = await getLegalMoves(gameId, clickedSquare);
-                        if (response.status === "success") {
-                            setLegalMoves(response.moves);
-                        }
-                    } catch (error) {
-                        console.error("Failed to fetch legal moves:", error);
-                    }
+                    const moves = allPossibleMoves.filter(m => m.startsWith(clickedSquare));
+                    setLegalMoves(moves);
                 }
             }
         }
-    }, [gameId, fen, isGameOver, calculateSquare, position, selectedSquare, legalMoves, canMovePiece]);
+    }, [gameId, fen, isGameOver, calculateSquare, position, selectedSquare, legalMoves, canMovePiece, allPossibleMoves]);
 
     const handleNewGameClick = (e) => {
         e.stopPropagation();
