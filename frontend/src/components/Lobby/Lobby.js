@@ -109,10 +109,9 @@ function Lobby() {
 
     return (
         <div className="lobby-container">
-            <h1>Create Game</h1>
             
             <div className="create-seek-panel">
-                <h2>Variant</h2>
+                <h2>Choose a Variant:</h2>
                 
                 <GameConfig 
                     VARIANTS={VARIANTS}

@@ -33,7 +33,7 @@ function GameConfig({
 
             {showColorSelect && (
                 <div className="color-selection-container">
-                    <label style={{ display: 'block', marginBottom: '10px' }}>Your Color:</label>
+                    <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Color:</label>
                     <div className="variants-grid">
                         <button
                             className={`variant-select-btn ${selectedColor === 'white' ? 'active' : ''}`}
