@@ -47,13 +47,14 @@ const MORE_ICON = (
 
 const DRAW_ICON = (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
-        <path d="M256 48C141.1 48 48 141.1 48 256s93.1 208 208 208 208-93.1 208-208S370.9 48 256 48zm0 384c-97.1 0-176-78.9-176-176S158.9 80 256 80s176 78.9 176 176-78.9 176-176 176zm-48-176c0-26.5 21.5-48 48-48s48 21.5 48 48-21.5 48-48 48-48-21.5-48-48z"/>
+        <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z" opacity="0.2"/>
+        <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fontSize="280" fontWeight="900" fontFamily="system-ui" fill="currentColor">½</text>
     </svg>
 );
 
 const RESIGN_ICON = (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
-        <path d="M440.5 34.2c-16.5-13.1-40.4-10.4-53.7 6.1L216 256l-84.8-106.1c-13.3-16.6-37.2-19.2-53.7-6.1-16.5 13.1-19.2 37.1-6.1 53.7L162.1 312l-90.7 113.4c-13.1 16.5-10.4 40.4 6.1 53.7 16.5 13.1 40.4 10.4 53.7-6.1L216 368l84.8 106.1c13.3 16.6 37.2 19.2 53.7 6.1 16.5-13.1 19.2-37.1 6.1-53.7L269.9 312l90.7-113.4c13.1-16.5 10.4-40.4-6.1-53.7z"/>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
+        <path d="M48 24C48 10.7 37.3 0 24 0S0 10.7 0 24V64 350.5 400v88c0 13.3 10.7 24 24 24s24-10.7 24-24V400h80 8 24 80c21.7 0 40.6-14.6 46.2-35.3l12.3-45.2c6-22.1 26-37.5 48.9-37.5H424c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H338.6c-22.9 0-43 15.4-48.9 37.5l-12.3 45.2c-5.6 20.7-24.5 35.3-46.2 35.3H152V120 64H48V24z"/>
     </svg>
 );
 
