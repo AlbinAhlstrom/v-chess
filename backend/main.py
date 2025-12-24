@@ -540,12 +540,16 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
 
             if message["type"] == "move":
                 # Validate turn ownership
+                print(f"DEBUG: Move request. Turn: {game.state.turn}, UserID: {user_id}, White: {white_player_id}, Black: {black_player_id}", flush=True)
+                
                 if game.state.turn == Color.WHITE and white_player_id is not None:
                     if user_id != white_player_id:
+                        print(f"DEBUG: Blocked White move. {user_id} != {white_player_id}", flush=True)
                         await websocket.send_text(json.dumps({"type": "error", "message": "Not your turn!"}))
                         continue
                 elif game.state.turn == Color.BLACK and black_player_id is not None:
                     if user_id != black_player_id:
+                        print(f"DEBUG: Blocked Black move. {user_id} != {black_player_id}", flush=True)
                         await websocket.send_text(json.dumps({"type": "error", "message": "Not your turn!"}))
                         continue
 
