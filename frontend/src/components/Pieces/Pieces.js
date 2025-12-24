@@ -9,54 +9,11 @@ import { createGame, getLegalMoves, getAllLegalMoves, getGame, getMe, login, log
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom';
 
-const UNDO_ICON = (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
-        <path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/>
-    </svg>
-);
-
-const EXPORT_ICON = (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
-        <path d="M307 34.8c-11.5 5.1-19 16.6-19 29.2v64H176C78.8 128 0 206.8 0 304C0 417.3 81.5 467.9 100.2 478.1c2.5 1.4 5.3 1.9 7.8 1.9c10.9 0 19.7-8.9 19.7-19.7c0-7.5-4.3-14.4-9.8-19.5C108.8 431.9 96 414.4 96 384c0-53 43-96 96-96h96v64c0 12.6 7.4 24.1 19 29.2s25 3 34.4-5.4l160-144c6.7-6.1 10.6-14.7 10.6-24s-3.9-17.9-10.6-24l-160-144c-9.4-8.5-22.9-10.6-34.4-5.4z"/>
-    </svg>
-);
-
-const NEW_GAME_ICON = (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
-        <path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/>
-    </svg>
-);
-
-const IMPORT_ICON = (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
-        <path d="M128 64c0-35.3 28.7-64 64-64H352V128c0 17.7 14.3 32 32 32H512V448c0 35.3-28.7 64-64 64H192c-35.3 0-64-28.7-64-64V336H302.1l-39 39c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l80-80c9.4-9.4 9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l39 39H128V64zm0 224v48H24c-13.3 0-24-10.7-24-24s10.7-24 24-24H128zM512 128H384c-17.7 0-32-14.3-32-32V0L512 128z"/>
-    </svg>
-);
-
-const RESET_ICON = (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
-        <path d="M463.5 224H472c13.3 0 24-10.7 24-24V72c0-9.7-5.8-18.5-14.8-22.2s-19.3-1.7-26.2 5.2L413.4 96.6c-87.6-86.5-228.7-86.2-315.8 1c-87.5 87.5-87.5 229.3 0 316.8s229.3 87.5 316.8 0c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0c-62.5 62.5-163.8 62.5-226.3 0s-62.5-163.8 0-226.3c62.2-62.2 162.7-62.5 225.3-1L327 183c-6.9 6.9-8.9 17.2-5.2 26.2s12.5 14.8 22.2 14.8H463.5z"/>
-    </svg>
-);
-
-const MORE_ICON = (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
-        <path d="M64 360a56 56 0 1 0 0 112 56 56 0 1 0 0-112zm0-160a56 56 0 1 0 0 112 56 56 0 1 0 0-112zM120 96A56 56 0 1 0 8 96a56 56 0 1 0 112 0z"/>
-    </svg>
-);
-
-const DRAW_ICON = (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
-        <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z" opacity="0.2"/>
-        <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fontSize="280" fontWeight="900" fontFamily="system-ui" fill="currentColor">½</text>
-    </svg>
-);
-
-const RESIGN_ICON = (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
-        <path d="M48 24C48 10.7 37.3 0 24 0S0 10.7 0 24V64 350.5 400v88c0 13.3 10.7 24 24 24s24-10.7 24-24V400h80 8 24 80c21.7 0 40.6-14.6 46.2-35.3l12.3-45.2c6-22.1 26-37.5 48.9-37.5H424c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H338.6c-22.9 0-43 15.4-48.9 37.5l-12.3 45.2c-5.6 20.7-24.5 35.3-46.2 35.3H152V120 64H48V24z"/>
-    </svg>
-);
+// Subcomponents
+import GameSidebar from './subcomponents/GameSidebar';
+import NewGameDialog from './subcomponents/NewGameDialog';
+import PlayerNameDisplay from './subcomponents/PlayerNameDisplay';
+import GameOverIndicator from './subcomponents/GameOverIndicator';
 
 const VARIANTS = [
     { id: 'standard', title: 'Standard', icon: '♟️' },
@@ -404,6 +361,47 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         }
     }
 
+    const renderPiece = (pieceType, fileIndex, rankIndex) => {
+        let displayFile = isFlipped ? 7 - fileIndex : fileIndex;
+        let displayRank = isFlipped ? 7 - rankIndex : rankIndex;
+
+        return (
+            <Piece
+                key={`p-${rankIndex}-${fileIndex}`}
+                rank={displayRank}
+                file={displayFile}
+                actualRank={rankIndex}
+                actualFile={fileIndex}
+                piece={pieceType}
+                onDragStartCallback={handlePieceDragStart}
+                onDragEndCallback={handlePieceDragEnd}
+                onDropCallback={handleManualDrop}
+                onDragHoverCallback={handlePieceDragHover}
+                isCapture={isCaptureMove(fileIndex, rankIndex)}
+              />
+        );
+    };
+
+    const renderLegalMove = (moveUci, index) => {
+        const targetSquare = moveUci.slice(2, 4);
+        const { file, rank } = algebraicToCoords(targetSquare);
+        let displayFile = isFlipped ? 7 - file : file;
+        let displayRank = isFlipped ? 7 - rank : rank;
+        return <LegalMoveDot key={index} file={displayFile} rank={displayRank} />;
+    };
+
+    const renderHighlight = (square) => {
+        const { file, rank } = algebraicToCoords(square);
+        let displayFile = isFlipped ? 7 - file : file;
+        let displayRank = isFlipped ? 7 - rank : rank;
+        const isDark = (file + rank) % 2 !== 0;
+        return <HighlightSquare
+            file={displayFile}
+            rank={displayRank}
+            isDark={isDark}
+        />;
+    };
+
     const handleManualDrop = ({ clientX, clientY, piece, file, rank }) => {
         if (highlightRef.current) highlightRef.current.style.display = 'none';
         
@@ -698,335 +696,194 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
 
     const promotionColor = fen && fen.split(' ')[1] === 'w' ? 'w' : 'b';
 
-    return (
-        <div
-            className="pieces"
-            ref={ref}
-            onClick={(e) => {
-                handleSquareClick(e);
-                if (isMenuOpen) setIsMenuOpen(false);
-            }}
-            >
-            
-            <div className="player-name-display opponent-name">
-                <span className="name-text">{isFlipped ? playerName : opponentName}</span>
-                {takebackOffer && user && takebackOffer.by_user_id !== user.id && (
-                    <span className="takeback-prompt">Accept takeback?</span>
+        return (
+
+            <div
+
+                className="pieces"
+
+                ref={ref}
+
+                onClick={(e) => {
+
+                    handleSquareClick(e);
+
+                    if (isMenuOpen) setIsMenuOpen(false);
+
+                }}
+
+                >
+
+                
+
+                <PlayerNameDisplay 
+
+                    isOpponent={true}
+
+                    isFlipped={isFlipped}
+
+                    playerName={playerName}
+
+                    opponentName={opponentName}
+
+                    takebackOffer={takebackOffer}
+
+                    user={user}
+
+                    timers={timers}
+
+                    turn={turn}
+
+                    formatTime={formatTime}
+
+                />
+
+    
+
+                <GameSidebar 
+
+                    matchmaking={matchmaking}
+
+                    moveHistory={moveHistory}
+
+                    handleUndo={handleUndo}
+
+                    handleReset={handleReset}
+
+                    handleNewGameClick={handleNewGameClick}
+
+                    handleMenuToggle={handleMenuToggle}
+
+                    handleResign={handleResign}
+
+                    handleOfferDraw={handleOfferDraw}
+
+                    handleAcceptTakeback={handleAcceptTakeback}
+
+                    handleDeclineTakeback={handleDeclineTakeback}
+
+                    isMenuOpen={isMenuOpen}
+
+                    copyFenToClipboard={copyFenToClipboard}
+
+                    handleImportClick={handleImportClick}
+
+                    takebackOffer={takebackOffer}
+
+                    user={user}
+
+                    isGameOver={isGameOver}
+
+                />
+
+    
+
+                {isNewGameDialogOpen && (
+
+                    <NewGameDialog 
+
+                        setNewGameDialogOpen={setNewGameDialogOpen}
+
+                        opponentName={opponentName}
+
+                        setOpponentName={setOpponentName}
+
+                        VARIANTS={VARIANTS}
+
+                        newGameSelectedVariant={newGameSelectedVariant}
+
+                        handleVariantSelect={handleVariantSelect}
+
+                        isTimeControlEnabled={isTimeControlEnabled}
+
+                        setIsTimeControlEnabled={setIsTimeControlEnabled}
+
+                        startingTime={startingTime}
+
+                        setStartingTime={setStartingTime}
+
+                        STARTING_TIME_VALUES={STARTING_TIME_VALUES}
+
+                        increment={increment}
+
+                        setIncrement={setIncrement}
+
+                        INCREMENT_VALUES={INCREMENT_VALUES}
+
+                        handleStartNewGame={handleStartNewGame}
+
+                    />
+
                 )}
-                {timers && <span className={`clock-display ${turn === (isFlipped ? 'w' : 'b') ? 'active' : ''}`}>{formatTime(timers[isFlipped ? 'w' : 'b'])}</span>}
+
+    
+
+                {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
+
+                {isImportDialogOpen && <ImportDialog onImport={handleImport} onCancel={handleCancelImport} />}
+
+    
+
+                {selectedSquare && renderHighlight(selectedSquare)}
+
+    
+
+                {position.map((rankArray, rankIndex) =>
+
+                    rankArray.map((pieceType, fileIndex) => 
+
+                        pieceType ? renderPiece(pieceType, fileIndex, rankIndex) : null
+
+                    )
+
+                )}
+
+    
+
+                {!isGameOver && legalMoves.map((moveUci, index) => renderLegalMove(moveUci, index))}
+
+    
+
+                <GameOverIndicator 
+
+                    isGameOver={isGameOver}
+
+                    position={position}
+
+                    winner={winner}
+
+                    isFlipped={isFlipped}
+
+                />
+
+    
+
+                <PlayerNameDisplay 
+
+                    isOpponent={false}
+
+                    isFlipped={isFlipped}
+
+                    playerName={playerName}
+
+                    opponentName={opponentName}
+
+                    takebackOffer={takebackOffer}
+
+                    user={user}
+
+                    timers={timers}
+
+                    turn={turn}
+
+                    formatTime={formatTime}
+
+                />
+
             </div>
 
-            <div className="game-sidebar" onClick={e => e.stopPropagation()}>
-                <div className="move-history">
-                    <div className="history-header">
-                        Moves
-                    </div>
-                    {moveHistory.reduce((rows, move, index) => {
-                        if (index % 2 === 0) rows.push([move]);
-                        else rows[rows.length - 1].push(move);
-                        return rows;
-                    }, []).map((row, i) => (
-                        <div key={i} className="history-row">
-                            <span style={{ color: '#888' }}>{i + 1}.</span>
-                            <span>{row[0]}</span>
-                            <span>{row[1] || ''}</span>
-                        </div>
-                    ))}
-                </div>
+        );
 
-                <div className="game-controls">
-                    {matchmaking ? (
-                        <>
-                            {takebackOffer && user && takebackOffer.by_user_id !== user.id ? (
-                                <div className="takeback-actions">
-                                    <button 
-                                        onClick={handleAcceptTakeback}
-                                        title="Accept Takeback"
-                                        className="control-button accept-btn"
-                                        disabled={isGameOver}
-                                    >
-                                        <svg viewBox="0 0 448 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
-                                            <path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/>
-                                        </svg>
-                                    </button>
-                                    <button 
-                                        onClick={handleDeclineTakeback}
-                                        title="Decline Takeback"
-                                        className="control-button decline-btn"
-                                        disabled={isGameOver}
-                                    >
-                                        <svg viewBox="0 0 384 512" fill="currentColor" style={{ width: 'var(--button-icon-size)', height: 'var(--button-icon-size)' }}>
-                                            <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                            ) : (
-                                <button 
-                                    onClick={handleUndo}
-                                    title={takebackOffer ? "Takeback Offered..." : "Offer Takeback"}
-                                    className={`control-button ${takebackOffer ? 'waiting' : ''}`}
-                                    disabled={!!takebackOffer || isGameOver}
-                                >
-                                    {UNDO_ICON}
-                                </button>
-                            )}
-                            <button 
-                                onClick={handleOfferDraw}
-                                title="Offer Draw"
-                                className="control-button"
-                                disabled={isGameOver}
-                            >
-                                {DRAW_ICON}
-                            </button>
-                            <button 
-                                onClick={handleResign}
-                                title="Surrender"
-                                className="control-button"
-                                disabled={isGameOver}
-                            >
-                                {RESIGN_ICON}
-                            </button>
-                        </>
-                    ) : (
-                        <>
-                            <button 
-                                onClick={handleUndo}
-                                title="Undo"
-                                className="control-button"
-                            >
-                                {UNDO_ICON}
-                            </button>
-                            <button 
-                                onClick={handleReset}
-                                title="Reset Game"
-                                className="control-button"
-                            >
-                                {RESET_ICON}
-                            </button>
-                            <button 
-                                onClick={handleNewGameClick}
-                                title="New Game"
-                                className="control-button"
-                            >
-                                {NEW_GAME_ICON}
-                            </button>
-                        </>
-                    )}
-                    <button 
-                        onClick={handleMenuToggle}
-                        title="More"
-                        className="control-button"
-                    >
-                        {MORE_ICON}
-                    </button>
+    }
 
-                    {isMenuOpen && (
-                        <div className="more-menu-dropdown">
-                             <button className="menu-item" onClick={copyFenToClipboard}>
-                                {EXPORT_ICON} Export Game
-                             </button>
-                             <button className="menu-item" onClick={handleImportClick}>
-                                {IMPORT_ICON} Import Game
-                             </button>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {isNewGameDialogOpen && (
-                <div className="new-game-dialog-overlay" onClick={() => setNewGameDialogOpen(false)}>
-                    <div className="new-game-dialog" onClick={e => e.stopPropagation()}>
-                        <h2>New Game</h2>
-                        
-                        <div className="player-names-input">
-                            <div className="setting-row">
-                                <label>Opponent Name</label>
-                                <input 
-                                    type="text" 
-                                    value={opponentName} 
-                                    onChange={(e) => setOpponentName(e.target.value)}
-                                    placeholder="Anonymous Opponent"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="variants-grid">
-                            {VARIANTS.map(v => (
-                                <button
-                                    key={v.id}
-                                    className={`variant-select-btn ${newGameSelectedVariant === v.id ? 'active' : ''}`}
-                                    onClick={() => handleVariantSelect(v.id)}
-                                >
-                                    <span className="variant-icon">{v.icon}</span>
-                                    <span>{v.title}</span>
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="time-control-settings">
-                            <div className="setting-row">
-                                <label className="switch-container">
-                                    <span>Time Control</span>
-                                    <input 
-                                        type="checkbox" 
-                                        checked={isTimeControlEnabled} 
-                                        onChange={(e) => setIsTimeControlEnabled(e.target.checked)} 
-                                    />
-                                    <span className="slider round"></span>
-                                </label>
-                            </div>
-                            
-                            {isTimeControlEnabled && (
-                                <>
-                                    <div className="setting-row slider-setting">
-                                        <div className="slider-label">
-                                            <span>Starting Time</span>
-                                            <span>
-                                                {startingTime === 0.25 ? '1/4' : 
-                                                 startingTime === 0.5 ? '1/2' : 
-                                                 startingTime === 1.5 ? '1 1/2' : 
-                                                 startingTime} min
-                                            </span>
-                                        </div>
-                                        <input 
-                                            type="range" 
-                                            min="0" 
-                                            max={STARTING_TIME_VALUES.length - 1} 
-                                            value={STARTING_TIME_VALUES.indexOf(startingTime)} 
-                                            onChange={(e) => setStartingTime(STARTING_TIME_VALUES[parseInt(e.target.value)])} 
-                                        />
-                                    </div>
-                                    <div className="setting-row slider-setting">
-                                        <div className="slider-label">
-                                            <span>Increment</span>
-                                            <span>{increment} sec</span>
-                                        </div>
-                                        <input 
-                                            type="range" 
-                                            min="0" 
-                                            max={INCREMENT_VALUES.length - 1} 
-                                            value={INCREMENT_VALUES.indexOf(increment)} 
-                                            onChange={(e) => setIncrement(INCREMENT_VALUES[parseInt(e.target.value)])} 
-                                        />
-                                    </div>
-                                </>
-                            )}
-                        </div>
-
-                        <div className="dialog-actions">
-                            <button className="cancel-btn" onClick={() => setNewGameDialogOpen(false)}>Cancel</button>
-                            <button className="start-btn" onClick={handleStartNewGame}>Start game</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
-            {isImportDialogOpen && <ImportDialog onImport={handleImport} onCancel={handleCancelImport} />}
-
-            {selectedSquare && (() => {
-                const { file, rank } = algebraicToCoords(selectedSquare);
-                let displayFile = isFlipped ? 7 - file : file;
-                let displayRank = isFlipped ? 7 - rank : rank;
-                const isDark = (file + rank) % 2 !== 0; // Chessboard pattern
-                return <HighlightSquare
-                    file={displayFile}
-                    rank={displayRank}
-                    isDark={isDark}
-                />;
-            })()}
-
-            {position.map((rankArray, rankIndex) =>
-                rankArray.map((pieceType, fileIndex) => {
-                    if (!pieceType) return null;
-                    
-                    let displayFile = isFlipped ? 7 - fileIndex : fileIndex;
-                    let displayRank = isFlipped ? 7 - rankIndex : rankIndex;
-
-                    return <Piece
-                            key={`p-${rankIndex}-${fileIndex}`}
-                            rank={displayRank}
-                            file={displayFile}
-                            actualFile={fileIndex}
-                            actualRank={rankIndex}
-                            piece={pieceType}
-                            onDragStartCallback={handlePieceDragStart}
-                            onDragEndCallback={handlePieceDragEnd}
-                            onDropCallback={handleManualDrop}
-                            onDragHoverCallback={handlePieceDragHover}
-                            isCapture={isCaptureMove(fileIndex, rankIndex)}
-                          />;
-                })
-            )}
-
-            {!isGameOver && legalMoves.map((moveUci, index) => {
-                const targetSquare = moveUci.slice(2, 4);
-                const { file, rank } = algebraicToCoords(targetSquare);
-                let displayFile = isFlipped ? 7 - file : file;
-                let displayRank = isFlipped ? 7 - rank : rank;
-                return <LegalMoveDot key={index} file={displayFile} rank={displayRank} />;
-            })}
-
-            {isGameOver && (() => {
-                const getKingSquare = (color) => {
-                    const kingChar = color === 'w' ? 'K' : 'k';
-                    for (let r = 0; r < 8; r++) {
-                        for (let f = 0; f < 8; f++) {
-                            if (position[r] && position[r][f] === kingChar) {
-                                return { file: f, rank: r };
-                            }
-                        }
-                    }
-                    return color === 'w' ? { file: 4, rank: 7 } : { file: 4, rank: 0 };
-                };
-
-                const whiteKingSq = getKingSquare('w');
-                const blackKingSq = getKingSquare('b');
-
-                const getStatusColor = (color) => {
-                    if (!winner) return 'grey'; // Draw
-                    return winner === color ? '#4CAF50' : '#F44336';
-                };
-
-                const renderIndicator = (sq, color) => {
-                    let displayFile = isFlipped ? 7 - sq.file : sq.file;
-                    let displayRank = isFlipped ? 7 - sq.rank : sq.rank;
-                    return (
-                        <div style={{
-                            position: 'absolute',
-                            left: `calc(${displayFile} * var(--square-size) + var(--square-size) / 2 - 15px)`,
-                            top: `calc(${displayRank} * var(--square-size) + var(--square-size) / 2 - 15px)`,
-                            width: '30px',
-                            height: '30px',
-                            borderRadius: '50%',
-                            backgroundColor: getStatusColor(color),
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            zIndex: 1000,
-                            boxShadow: '0 2px 5px rgba(0,0,0,0.5)'
-                        }}>
-                            <img 
-                                src={`/images/pieces/${color === 'w' ? 'K' : 'k'}.png`} 
-                                style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} 
-                                alt="" 
-                            />
-                        </div>
-                    );
-                };
-
-                return (
-                    <>
-                        {renderIndicator(whiteKingSq, 'w')}
-                        {renderIndicator(blackKingSq, 'b')}
-                    </>
-                );
-            })()}
-
-            <div className="player-name-display player-name">
-                <span className="name-text">{isFlipped ? opponentName : playerName}</span>
-                {timers && <span className={`clock-display ${turn === (isFlipped ? 'b' : 'w') ? 'active' : ''}`}>{formatTime(timers[isFlipped ? 'b' : 'w'])}</span>}
-            </div>
-        </div>
-    );
-}
+    
