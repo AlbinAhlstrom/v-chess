@@ -22,6 +22,17 @@ class User(Base):
     picture: Mapped[Optional[str]] = mapped_column(String)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, server_default=func.now())
 
+class Rating(Base):
+    __tablename__ = "ratings"
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.google_id"), index=True)
+    variant: Mapped[str] = mapped_column(String, index=True)
+    rating: Mapped[float] = mapped_column(Float, default=1500.0)
+    rd: Mapped[float] = mapped_column(Float, default=350.0)
+    volatility: Mapped[float] = mapped_column(Float, default=0.06)
+    last_updated: Mapped[datetime.datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
 class GameModel(Base):
     __tablename__ = "games"
     
@@ -38,6 +49,7 @@ class GameModel(Base):
     black_player_id: Mapped[Optional[str]] = mapped_column(String)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime.datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

@@ -17,7 +17,8 @@ from oop_chess.rules import (
     CrazyhouseRules, HordeRules, KingOfTheHillRules, RacingKingsRules,
     ThreeCheckRules
 )
-from backend.database import init_db, async_session, GameModel, User
+from backend.database import init_db, async_session, GameModel, User, Rating
+from backend.rating import update_game_ratings
 from sqlalchemy import select, update
 import json
 import os
@@ -39,8 +40,6 @@ app = FastAPI()
 if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
     print("WARNING: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set. Google Login will not work.")
 
-# Configure session middleware
-# In production, we need SameSite=None and Secure=True for cross-domain cookies
 is_prod = os.environ.get("ENV") == "prod"
 app.add_middleware(
     SessionMiddleware, 
@@ -51,15 +50,15 @@ app.add_middleware(
 )
 oauth = OAuth()
 oauth.register(
-    name='google',
+    name="google",
     client_id=GOOGLE_CLIENT_ID,
     client_secret=GOOGLE_CLIENT_SECRET,
-    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
     client_kwargs={
-        'scope': 'openid email profile'
+        "scope": "openid email profile"
     },
     authorize_params={
-        'prompt': 'select_account'
+        "prompt": "select_account"
     }
 )
 
@@ -82,10 +81,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 games: dict[str, Game] = {}
 game_variants: dict[str, str] = {} # game_id -> variant name
-
 
 async def save_game_to_db(game_id: str):
     game = games.get(game_id)
@@ -104,6 +101,9 @@ async def save_game_to_db(game_id: str):
                 clocks_data = json.dumps({k.value: v for k, v in game.clocks.items()})
 
             if model:
+                if game.is_over and not model.is_over:
+                    await update_game_ratings(session, model, game.winner)
+                
                 model.fen = game.state.fen
                 model.move_history = json.dumps(game.move_history)
                 model.clocks = clocks_data
@@ -124,9 +124,7 @@ async def save_game_to_db(game_id: str):
                 )
                 session.add(model)
 
-
 async def timeout_monitor():
-    """Background task to check for timeouts every 100ms."""
     print("Timeout monitor started.")
     while True:
         try:
@@ -136,12 +134,9 @@ async def timeout_monitor():
                     current_clocks = game.get_current_clocks()
                     for color, time_left in current_clocks.items():
                         if time_left <= 0:
-                            print(f"Timeout detected for game {game_id}, color {color}")
                             game.is_over_by_timeout = True
                             winner = Color.WHITE if color == Color.BLACK else Color.BLACK
-
                             await save_game_to_db(game_id)
-
                             await manager.broadcast(game_id, json.dumps({
                                 "type": "game_state",
                                 "fen": game.state.fen,
@@ -153,12 +148,10 @@ async def timeout_monitor():
                                 "clocks": {c.value: 0 if c == color else t for c, t in current_clocks.items()},
                                 "status": "timeout"
                             }))
-
             await asyncio.sleep(0.1)
         except Exception as e:
             print(f"Error in timeout monitor: {e}")
             await asyncio.sleep(1)
-
 
 RULES_MAP = {
     "standard": StandardRules,
@@ -172,65 +165,49 @@ RULES_MAP = {
     "threecheck": ThreeCheckRules,
 }
 
-
 @app.on_event("startup")
 async def startup_event():
     await init_db()
-
-    # Load active games from DB
     async with async_session() as session:
         stmt = select(GameModel).where(GameModel.is_over == False)
         result = await session.execute(stmt)
         models = result.scalars().all()
-
         for model in models:
             rules_cls = RULES_MAP.get(model.variant.lower(), StandardRules)
             rules = rules_cls()
-
             time_control = json.loads(model.time_control) if model.time_control else None
             game = Game(state=model.fen, rules=rules, time_control=time_control)
             game.move_history = json.loads(model.move_history)
-
             if model.clocks:
                 clocks_dict = json.loads(model.clocks)
                 game.clocks = {Color(k): v for k, v in clocks_dict.items()}
-
             game.last_move_at = model.last_move_at
-
             games[model.id] = game
             game_variants[model.id] = model.variant
-
     asyncio.create_task(timeout_monitor())
-
 
 class ConnectionManager:
     def __init__(self):
         self.active_connections: dict[str, list[WebSocket]] = {}
         self.lobby_connections: list[WebSocket] = []
-
     async def connect(self, websocket: WebSocket, game_id: str):
         await websocket.accept()
         if game_id not in self.active_connections:
             self.active_connections[game_id] = []
         self.active_connections[game_id].append(websocket)
-
     def disconnect(self, websocket: WebSocket, game_id: str):
         if game_id in self.active_connections:
             self.active_connections[game_id].remove(websocket)
-
     async def broadcast(self, game_id: str, message: str):
         if game_id in self.active_connections:
             for connection in self.active_connections[game_id]:
                 await connection.send_text(message)
-
     async def connect_lobby(self, websocket: WebSocket):
         await websocket.accept()
         self.lobby_connections.append(websocket)
-
     def disconnect_lobby(self, websocket: WebSocket):
         if websocket in self.lobby_connections:
             self.lobby_connections.remove(websocket)
-
     async def broadcast_lobby(self, message: str):
         for connection in self.lobby_connections:
             try:
@@ -238,54 +215,24 @@ class ConnectionManager:
             except Exception:
                 continue
 
-
 manager = ConnectionManager()
-
-# Seek storage: seek_id -> seek_data
-
 seeks: dict[str, dict] = {}
-
-# game_id -> user_id who offered
-
 pending_takebacks: dict[str, int] = {}
 
-
-
-
-
 @app.websocket("/ws/lobby")
-
-
-
-
 async def lobby_websocket(websocket: WebSocket):
     await manager.connect_lobby(websocket)
     user_session = websocket.session.get("user")
     current_user_id = str(user_session.get("id")) if user_session else None
-    print(f"DEBUG: Lobby WS Connected. Session User ID: {current_user_id}, Name: {user_session.get('name') if user_session else 'None'}", flush=True)
-
     try:
-        # Send initial seek list
-        await websocket.send_text(json.dumps({
-            "type": "seeks",
-            "seeks": list(seeks.values())
-        }))
-
+        await websocket.send_text(json.dumps({"type": "seeks", "seeks": list(seeks.values())}))
         while True:
             data = await websocket.receive_text()
             message = json.loads(data)
-
             if message["type"] == "create_seek":
                 seek_id = str(uuid4())
                 user = message.get("user")
-                
-                # Verify the creator matches the session
-                if current_user_id and user and user.get("id") != current_user_id:
-                     print(f"WARNING: User {current_user_id} tried to create seek as {user.get('id')}")
-                     seek_user_id = current_user_id
-                else:
-                     seek_user_id = user.get("id") if user else None
-
+                seek_user_id = user.get("id") if user else current_user_id
                 seek_data = {
                     "id": seek_id,
                     "user_id": seek_user_id,
@@ -296,89 +243,36 @@ async def lobby_websocket(websocket: WebSocket):
                     "created_at": asyncio.get_event_loop().time()
                 }
                 seeks[seek_id] = seek_data
-                await manager.broadcast_lobby(json.dumps({
-                    "type": "seek_created",
-                    "seek": seek_data
-                }))
-
+                await manager.broadcast_lobby(json.dumps({"type": "seek_created", "seek": seek_data}))
             elif message["type"] == "cancel_seek":
                 seek_id = message.get("seek_id")
-                if seek_id in seeks:
-                    seek = seeks[seek_id]
-                    # Validate ownership
-                    if seek["user_id"] == current_user_id:
-                        del seeks[seek_id]
-                        await manager.broadcast_lobby(json.dumps({
-                            "type": "seek_removed",
-                            "seek_id": seek_id
-                        }))
-                    else:
-                        print(f"WARNING: User {current_user_id} attempted to cancel seek {seek_id} owned by {seek['user_id']}")
-
+                if seek_id in seeks and seeks[seek_id]["user_id"] == current_user_id:
+                    del seeks[seek_id]
+                    await manager.broadcast_lobby(json.dumps({"type": "seek_removed", "seek_id": seek_id}))
             elif message["type"] == "join_seek":
-                try:
-                    seek_id = message.get("seek_id")
-                    joining_user = message.get("user")
-                    joining_user_id = joining_user.get("id") if joining_user else None
-
-                    if seek_id in seeks:
-                        seek = seeks.pop(seek_id)
-                        
-                        # Create a new game
-                        game_id = str(uuid4())
-                        variant = seek["variant"]
-                        rules_cls = RULES_MAP.get(variant.lower(), StandardRules)
-                        rules = rules_cls()
-                        
-                        game = Game(rules=rules, time_control=seek["time_control"])
-                        games[game_id] = game
-                        game_variants[game_id] = variant
-                        
-                        # Handle color assignment
-                        preferred_color = seek.get("color", "random")
-                        seeker_id = seek["user_id"]
-                        joiner_id = joining_user_id
-
-                        if preferred_color == "white":
-                            white_id, black_id = seeker_id, joiner_id
-                        elif preferred_color == "black":
-                            white_id, black_id = joiner_id, seeker_id
-                        else: # random
-                            if random.choice([True, False]):
-                                white_id, black_id = seeker_id, joiner_id
-                            else:
-                                white_id, black_id = joiner_id, seeker_id
-
-                        # Assign players in DB
-                        async with async_session() as session:
-                            async with session.begin():
-                                model = GameModel(
-                                    id=game_id,
-                                    variant=variant,
-                                    fen=game.state.fen,
-                                    move_history=json.dumps(game.move_history),
-                                    time_control=json.dumps(game.time_control) if game.time_control else None,
-                                    white_player_id=white_id,
-                                    black_player_id=black_id,
-                                    is_over=False
-                                )
-                                session.add(model)
-
-                        await manager.broadcast_lobby(json.dumps({
-                            "type": "seek_accepted",
-                            "seek_id": seek_id,
-                            "game_id": game_id
-                        }))
-                except Exception as e:
-                    print(f"CRITICAL ERROR in join_seek: {e}", flush=True)
-                    traceback.print_exc()
-
-    except WebSocketDisconnect:
-        manager.disconnect_lobby(websocket)
-    except Exception as e:
-        print(f"Lobby WebSocket error: {e}")
-        manager.disconnect_lobby(websocket)
-
+                seek_id = message.get("seek_id")
+                if seek_id in seeks:
+                    seek = seeks.pop(seek_id)
+                    game_id = str(uuid4())
+                    variant = seek["variant"]
+                    rules_cls = RULES_MAP.get(variant.lower(), StandardRules)
+                    rules = rules_cls()
+                    game = Game(rules=rules, time_control=seek["time_control"])
+                    games[game_id] = game
+                    game_variants[game_id] = variant
+                    seeker_id, joiner_id = seek["user_id"], message.get("user", {}).get("id")
+                    if seek.get("color") == "white": white_id, black_id = seeker_id, joiner_id
+                    elif seek.get("color") == "black": white_id, black_id = joiner_id, seeker_id
+                    else:
+                        if random.choice([True, False]): white_id, black_id = seeker_id, joiner_id
+                        else: white_id, black_id = joiner_id, seeker_id
+                    async with async_session() as session:
+                        async with session.begin():
+                            model = GameModel(id=game_id, variant=variant, fen=game.state.fen, move_history=json.dumps(game.move_history), time_control=json.dumps(game.time_control) if game.time_control else None, white_player_id=white_id, black_player_id=black_id, is_over=False)
+                            session.add(model)
+                    await manager.broadcast_lobby(json.dumps({"type": "seek_accepted", "seek_id": seek_id, "game_id": game_id}))
+    except WebSocketDisconnect: manager.disconnect_lobby(websocket)
+    except Exception as e: print(f"Lobby WS error: {e}"); manager.disconnect_lobby(websocket)
 
 async def get_game(game_id: str) -> Game:
     if game_id not in games:
@@ -386,416 +280,118 @@ async def get_game(game_id: str) -> Game:
             stmt = select(GameModel).where(GameModel.id == game_id)
             result = await session.execute(stmt)
             model = result.scalar_one_or_none()
-
             if model:
                 rules_cls = RULES_MAP.get(model.variant.lower(), StandardRules)
                 rules = rules_cls()
-
                 time_control = json.loads(model.time_control) if model.time_control else None
                 game = Game(state=model.fen, rules=rules, time_control=time_control)
                 game.move_history = json.loads(model.move_history)
-
                 if model.clocks:
                     clocks_dict = json.loads(model.clocks)
                     game.clocks = {Color(k): v for k, v in clocks_dict.items()}
-
                 game.last_move_at = model.last_move_at
-
                 games[game_id] = game
                 game_variants[game_id] = model.variant
-            else:
-                raise HTTPException(status_code=404, detail=f"Game ID '{game_id}' not found.")
+            else: raise HTTPException(status_code=404, detail="Game not found")
     return games[game_id]
-
-
-class MoveRequest(BaseModel):
-    move_uci: str
-
-
-class GameRequest(BaseModel):
-    game_id: str
-
-
-class SquareRequest(BaseModel):
-    game_id: str
-    square: str
-
-
-class SquareSelection(BaseModel):
-    square: str
-
 
 class NewGameRequest(BaseModel):
     variant: str = "standard"
     fen: Optional[str] = None
     time_control: Optional[dict] = None
 
-
 @app.get("/auth/login")
 async def login(request: Request):
-    # Use REDIRECT_URI if provided in .env, otherwise generate one
-    redirect_uri = REDIRECT_URI
-    if not redirect_uri:
-        redirect_uri = request.url_for('auth')
-        # If in production, force https
-        if os.environ.get("ENV") == "prod":
-            redirect_uri = str(redirect_uri).replace("http://", "https://")
-
-    print(f"DEBUG: Using redirect_uri: {redirect_uri}")
-    return await oauth.google.authorize_redirect(request, str(redirect_uri))
-
+    redirect_uri = REDIRECT_URI or str(request.url_for("auth"))
+    if is_prod: redirect_uri = redirect_uri.replace("http://", "https://")
+    return await oauth.google.authorize_redirect(request, redirect_uri)
 
 @app.get("/auth/auth")
 async def auth(request: Request):
-    try:
-        token = await oauth.google.authorize_access_token(request)
-    except OAuthError as error:
-        return {"error": error.error}
-
-    user_info = token.get('userinfo')
+    token = await oauth.google.authorize_access_token(request)
+    user_info = token.get("userinfo")
     if user_info:
-        print(f"AUTH DEBUG: Processing login for {user_info.get('email')} (sub: {user_info.get('sub')})", flush=True)
         async with async_session() as session:
             async with session.begin():
-                stmt = select(User).where(User.google_id == user_info['sub'])
+                stmt = select(User).where(User.google_id == user_info["sub"])
                 result = await session.execute(stmt)
                 user = result.scalar_one_or_none()
-
                 if not user:
-                    print(f"AUTH DEBUG: Creating new user for {user_info.get('email')}", flush=True)
-                    user = User(
-                        google_id=user_info['sub'],
-                        email=user_info['email'],
-                        name=user_info['name'],
-                        picture=user_info.get('picture')
-                    )
+                    user = User(google_id=user_info["sub"], email=user_info["email"], name=user_info["name"], picture=user_info.get("picture"))
                     session.add(user)
-                    await session.flush() # Get user.id
                 else:
-                    print(f"AUTH DEBUG: Existing user found. ID: {user.id}", flush=True)
-                    user.name = user_info['name']
-                    user.picture = user_info.get('picture')
-                    await session.flush()
-
-                request.session['user'] = {
-                    "id": str(user.google_id), # Use unique Google ID
-                    "db_id": int(user.id),     # Keep DB ID as secondary
-                    "name": str(user.name),
-                    "email": str(user.email),
-                    "picture": user.picture
-                }
-                print(f"AUTH SUCCESS: Set session for {user.name} (GoogleID: {user.google_id})", flush=True)
-
-    # Redirect to frontend
-    frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
-    return RedirectResponse(url=frontend_url)
-
+                    user.name, user.picture = user_info["name"], user_info.get("picture")
+                await session.flush()
+                request.session["user"] = {"id": str(user.google_id), "db_id": int(user.id), "name": str(user.name), "email": str(user.email), "picture": user.picture}
+    return RedirectResponse(url=os.environ.get("FRONTEND_URL", "http://localhost:3000"))
 
 @app.get("/auth/logout")
 async def logout(request: Request):
     request.session.clear()
-    frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
-    return RedirectResponse(url=frontend_url)
-
+    return RedirectResponse(url=os.environ.get("FRONTEND_URL", "http://localhost:3000"))
 
 @app.get("/api/me")
-async def me(request: Request):
-    user = request.session.get('user')
-    return {"user": user}
+async def me(request: Request): return {"user": request.session.get("user")}
 
+@app.get("/api/ratings/{user_id}")
+async def get_user_ratings(user_id: str):
+    async with async_session() as session:
+        stmt = select(Rating).where(Rating.user_id == user_id)
+        result = await session.execute(stmt)
+        ratings = result.scalars().all()
+        
+        rating_list = [{"variant": r.variant, "rating": r.rating, "rd": r.rd} for r in ratings]
+        overall = sum(r.rating for r in ratings) / len(ratings) if ratings else 1500.0
+        
+        return {"ratings": rating_list, "overall": overall}
 
 @app.post("/api/game/new")
 async def new_game(req: NewGameRequest):
     game_id = str(uuid4())
-
-    rules_cls = RULES_MAP.get(req.variant.lower(), StandardRules)
-    rules = rules_cls()
-
-    try:
-        game = Game(state=req.fen, rules=rules, time_control=req.time_control)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid FEN: {e}")
-
-    games[game_id] = game
-    game_variants[game_id] = req.variant
-
+    rules = RULES_MAP.get(req.variant.lower(), StandardRules)()
+    game = Game(state=req.fen, rules=rules, time_control=req.time_control)
+    games[game_id], game_variants[game_id] = game, req.variant
     await save_game_to_db(game_id)
-
     return {"game_id": game_id, "fen": game.state.fen, "turn": game.state.turn}
-
 
 @app.get("/api/game/{game_id}")
 async def get_game_state(game_id: str):
     game = await get_game(game_id)
-    
     async with async_session() as session:
-        stmt = select(GameModel).where(GameModel.id == game_id)
-        result = await session.execute(stmt)
-        model = result.scalar_one_or_none()
-        
-        white_player_id = model.white_player_id if model else None
-        black_player_id = model.black_player_id if model else None
-
-    return {
-        "game_id": game_id,
-        "fen": game.state.fen,
-        "turn": game.state.turn.value,
-        "is_over": game.is_over,
-        "move_history": game.move_history,
-        "winner": game.winner,
-        "variant": game_variants.get(game_id),
-        "white_player_id": white_player_id,
-        "black_player_id": black_player_id
-    }
-
+        model = (await session.execute(select(GameModel).where(GameModel.id == game_id))).scalar_one_or_none()
+        return {"game_id": game_id, "fen": game.state.fen, "turn": game.state.turn.value, "is_over": game.is_over, "move_history": game.move_history, "winner": game.winner, "variant": game_variants.get(game_id), "white_player_id": model.white_player_id if model else None, "black_player_id": model.black_player_id if model else None}
 
 @app.websocket("/ws/{game_id}")
 async def websocket_endpoint(websocket: WebSocket, game_id: str):
     await manager.connect(websocket, game_id)
+    game = await get_game(game_id)
+    async with async_session() as session:
+        model = (await session.execute(select(GameModel).where(GameModel.id == game_id))).scalar_one_or_none()
+        white_id, black_id = (model.white_player_id, model.black_player_id) if model else (None, None)
+    user_id = str(websocket.session.get("user", {}).get("id"))
+    await manager.broadcast(game_id, json.dumps({"type": "game_state", "fen": game.state.fen, "turn": game.state.turn.value, "is_over": game.is_over, "in_check": game.rules.is_check(), "winner": game.winner, "move_history": game.move_history, "clocks": {c.value: t for c, t in game.clocks.items()} if game.clocks else None}))
     try:
-        game = await get_game(game_id)
-
-        # Fetch player assignments to validate moves
-        white_player_id = None
-        black_player_id = None
-        async with async_session() as session:
-            stmt = select(GameModel).where(GameModel.id == game_id)
-            result = await session.execute(stmt)
-            model = result.scalar_one_or_none()
-            if model:
-                white_player_id = model.white_player_id
-                black_player_id = model.black_player_id
-
-        user = websocket.session.get("user")
-        user_id = str(user.get("id")) if user else None
-
-        winner_color = game.rules.get_winner()
-        is_over = game.rules.is_game_over()
-
-        await manager.broadcast(game_id, json.dumps({
-            "type": "game_state",
-            "fen": game.state.fen,
-            "turn": game.state.turn.value,
-            "is_over": is_over,
-            "in_check": game.rules.is_check(),
-            "winner": winner_color.value if winner_color else None,
-            "move_history": game.move_history,
-            "clocks": {c.value: t for c, t in game.clocks.items()} if game.clocks else None,
-            "status": "connected"
-        }))
-
         while True:
             data = await websocket.receive_text()
             message = json.loads(data)
-
             if message["type"] == "move":
-                # Validate turn ownership
-                if game.state.turn == Color.WHITE and white_player_id is not None:
-                    if str(user_id) != str(white_player_id):
-                        await websocket.send_text(json.dumps({"type": "error", "message": "Not your turn!"}))
-                        continue
-                elif game.state.turn == Color.BLACK and black_player_id is not None:
-                    if str(user_id) != str(black_player_id):
-                        await websocket.send_text(json.dumps({"type": "error", "message": "Not your turn!"}))
-                        continue
-
+                if (game.state.turn == Color.WHITE and white_id and user_id != white_id) or (game.state.turn == Color.BLACK and black_id and user_id != black_id): continue
                 move_uci = message["uci"]
-                
-                # Check for auto-promotion if piece is a pawn reaching the last row
                 try:
-                    start_sq = Square(move_uci[:2])
-                    end_sq = Square(move_uci[2:4])
+                    start_sq, end_sq = Square(move_uci[:2]), Square(move_uci[2:4])
                     piece = game.state.board.get_piece(start_sq)
-                    if piece and piece.fen.lower() == 'p' and len(move_uci) == 4:
-                        if end_sq.is_promotion_row(piece.color):
-                            move_uci += 'q' # Auto-promote to Queen
-                except Exception:
-                    pass
-
-                try:
-                    move = Move(move_uci, player_to_move=game.state.turn)
-                    game.take_turn(move)
+                    if piece and piece.fen.lower() == "p" and len(move_uci) == 4 and end_sq.is_promotion_row(piece.color): move_uci += "q"
+                    game.take_turn(Move(move_uci, player_to_move=game.state.turn))
                     await save_game_to_db(game_id)
-                    
-                    # Clear any pending takeback offers on a new move
-                    if game_id in pending_takebacks:
-                        del pending_takebacks[game_id]
-                    await manager.broadcast(game_id, json.dumps({
-                        "type": "takeback_cleared"
-                    }))
-                except (ValueError, IllegalMoveException) as e:
-                    await websocket.send_text(json.dumps({"type": "error", "message": str(e)}))
-                    continue
-
-            elif message["type"] == "undo":
-                try:
-                    game.undo_move()
-                    await save_game_to_db(game_id)
-                except ValueError as e:
-                    await websocket.send_text(json.dumps({"type": "error", "message": str(e)}))
-                    continue
-
+                except Exception as e: await websocket.send_text(json.dumps({"type": "error", "message": str(e)}))
             elif message["type"] == "resign":
-                if user_id in [white_player_id, black_player_id]:
-                    game.game_over_reason_override = GameOverReason.SURRENDER
-                    # Determine winner
-                    if user_id == white_player_id:
-                        game.winner_override = Color.BLACK.value
-                    else:
-                        game.winner_override = Color.WHITE.value
-                    
+                if user_id in [white_id, black_id]:
+                    game.game_over_reason_override, game.winner_override = GameOverReason.SURRENDER, (Color.BLACK.value if user_id == white_id else Color.WHITE.value)
                     await save_game_to_db(game_id)
-                    await manager.broadcast(game_id, json.dumps({
-                        "type": "game_state",
-                        "fen": game.state.fen,
-                        "turn": game.state.turn.value,
-                        "is_over": True,
-                        "winner": game.winner,
-                        "status": "resign"
-                    }))
-
-            elif message["type"] == "draw_offer":
-                if user_id in [white_player_id, black_player_id]:
-                    # Broadcast offer to both (so UI can show 'Draw Offered')
-                    await manager.broadcast(game_id, json.dumps({
-                        "type": "draw_offered",
-                        "by_user_id": user_id
-                    }))
-
-            elif message["type"] == "takeback_offer":
-                if user_id in [white_player_id, black_player_id]:
-                    pending_takebacks[game_id] = user_id
-                    await manager.broadcast(game_id, json.dumps({
-                        "type": "takeback_offered",
-                        "by_user_id": user_id
-                    }))
-
-            elif message["type"] == "takeback_accept":
-                if user_id in [white_player_id, black_player_id]:
-                    try:
-                        offering_user_id = pending_takebacks.get(game_id)
-                        if offering_user_id is None:
-                            # Fallback to single undo if somehow missing
-                            game.undo_move()
-                        else:
-                            offering_color = Color.WHITE if offering_user_id == white_player_id else Color.BLACK
-                            
-                            # Revert to state BEFORE the offering user's last move.
-                            # If it's the offering user's turn, undo 2 moves (opponent's + own).
-                            # If it's NOT their turn, undo 1 move (own last move).
-                            num_undo = 2 if game.state.turn == offering_color else 1
-                            
-                            for _ in range(num_undo):
-                                if game.history:
-                                    game.undo_move()
-                            
-                            if game_id in pending_takebacks:
-                                del pending_takebacks[game_id]
-
-                        await save_game_to_db(game_id)
-                        # Broadcast state update + clear offer
-                        await manager.broadcast(game_id, json.dumps({
-                            "type": "takeback_cleared"
-                        }))
-                        # Standard state broadcast to refresh board
-                        winner_color = game.rules.get_winner()
-                        await manager.broadcast(game_id, json.dumps({
-                            "type": "game_state",
-                            "fen": game.state.fen,
-                            "turn": game.state.turn.value,
-                            "is_over": game.rules.is_game_over(),
-                            "in_check": game.rules.is_check(),
-                            "winner": winner_color.value if winner_color else None,
-                            "move_history": game.move_history,
-                            "clocks": {c.value: t for c, t in game.clocks.items()} if game.clocks else None,
-                            "status": "takeback_accepted"
-                        }))
-                    except ValueError as e:
-                        await websocket.send_text(json.dumps({"type": "error", "message": str(e)}))
-
-            elif message["type"] == "takeback_decline":
-                if user_id in [white_player_id, black_player_id]:
-                    await manager.broadcast(game_id, json.dumps({
-                        "type": "takeback_cleared"
-                    }))
-
-            winner_color = game.rules.get_winner()
-            is_over = game.rules.is_game_over()
-
-            status = "active"
-            if game.rules.is_checkmate:
-                status = "checkmate"
-            elif game.rules.is_draw:
-                status = "draw"
-            elif is_over:
-                status = "game_over"
-
-            # Check for timeout using live clock method
-            current_clocks = game.get_current_clocks()
-            if current_clocks:
-                for color, time_left in current_clocks.items():
-                    if time_left <= 0:
-                        status = "timeout"
-                        current_clocks[color] = 0
-
-            await manager.broadcast(game_id, json.dumps({
-                "type": "game_state",
-                "fen": game.state.fen,
-                "turn": game.state.turn.value,
-                "is_over": game.is_over or status == "timeout",
-                "in_check": game.rules.is_check(),
-                "winner": game.winner if game.winner else (game.state.turn.opposite.value if status == "timeout" else None),
-                "move_history": game.move_history,
-                "clocks": {c.value: t for c, t in current_clocks.items()} if current_clocks else None,
-                "status": status
-            }))
-
-    except WebSocketDisconnect:
-        manager.disconnect(websocket, game_id)
-    except Exception as e:
-        await websocket.send_text(json.dumps({"type": "error", "message": str(e)}))
-        manager.disconnect(websocket, game_id)
-
-
-@app.post("/api/moves/legal")
-async def get_legal_moves_for_square(req: SquareRequest):
-    game = await get_game(req.game_id)
-
-    try:
-        sq_obj = Square(req.square)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid square format.")
-
-    piece = game.state.board.get_piece(sq_obj)
-
-    if piece is None:
-        return {"moves": [], "status": "success"}
-
-    if piece.color != game.state.turn:
-        raise HTTPException(status_code=400, detail=f"Piece belongs to the opponent ({piece.color}).")
-
-    all_legal_moves = game.rules.get_legal_moves()
-    piece_moves = [
-        m.uci for m in all_legal_moves
-        if m.start == sq_obj
-    ]
-
-    return {
-        "moves": piece_moves,
-        "status": "success",
-    }
-
+            await manager.broadcast(game_id, json.dumps({"type": "game_state", "fen": game.state.fen, "turn": game.state.turn.value, "is_over": game.is_over, "in_check": game.rules.is_check(), "winner": game.winner, "move_history": game.move_history, "clocks": {c.value: t for c, t in game.get_current_clocks().items()} if game.clocks else None}))
+    except WebSocketDisconnect: manager.disconnect(websocket, game_id)
 
 @app.post("/api/moves/all_legal")
 async def get_all_legal_moves(req: GameRequest):
-    try:
-        game = await get_game(req.game_id)
-        all_legal_moves = [m.uci for m in game.rules.get_legal_moves()]
-        return {
-            "moves": all_legal_moves,
-            "status": "success",
-        }
-    except Exception as e:
-        print(f"Error in get_all_legal_moves for game {req.game_id}: {e}")
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+    game = await get_game(req.game_id)
+    return {"moves": [m.uci for m in game.rules.get_legal_moves()], "status": "success"}

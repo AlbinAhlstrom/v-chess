@@ -128,3 +128,50 @@ input:checked + .slider:before {
 .slider.round:before {
     border-radius: 50%;
 }
+
+.overall-rating {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+}
+
+.overall-rating .value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--accent-primary);
+}
+
+.ratings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.rating-item {
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.variant-name {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.variant-rating {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.variant-rd {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
