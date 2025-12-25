@@ -788,9 +788,14 @@ async def get_legal_moves_for_square(req: SquareRequest):
 
 @app.post("/api/moves/all_legal")
 async def get_all_legal_moves(req: GameRequest):
-    game = await get_game(req.game_id)
-    all_legal_moves = [m.uci for m in game.rules.get_legal_moves()]
-    return {
-        "moves": all_legal_moves,
-        "status": "success",
-    }
+    try:
+        game = await get_game(req.game_id)
+        all_legal_moves = [m.uci for m in game.rules.get_legal_moves()]
+        return {
+            "moves": all_legal_moves,
+            "status": "success",
+        }
+    except Exception as e:
+        print(f"Error in get_all_legal_moves for game {req.game_id}: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))

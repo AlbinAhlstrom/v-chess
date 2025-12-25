@@ -117,12 +117,12 @@ class HordeRules(StandardRules):
     def move_pseudo_legality_reason(self, move: Move) -> MoveLegalityReason:
         piece = self.state.board.get_piece(move.start)
         if piece and isinstance(piece, Pawn) and piece.color == Color.WHITE:
-            if move.start.row == 7: # Rank 1
-                direction = piece.direction
-                one_step = move.start.get_step(direction)
-                two_step = one_step.get_step(direction) if one_step else None
+            # White Rank 1: row 7. Double push is valid if path is clear.
+            if move.start.row == 7:
+                one_step = move.start.get_step(Direction.UP)
+                two_step = one_step.get_step(Direction.UP) if one_step else None
                 if move.end == two_step:
                     if self.state.board.get_piece(one_step) is None and self.state.board.get_piece(two_step) is None:
-                        return MoveLegalityReason.LEGAL
+                        return self.MoveLegalityReason.LEGAL
 
         return super().move_pseudo_legality_reason(move)
