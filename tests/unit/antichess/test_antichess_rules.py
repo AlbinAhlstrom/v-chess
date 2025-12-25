@@ -1,9 +1,9 @@
 import pytest
-from oop_chess.rules import AntichessRules
-from oop_chess.game_state import GameState
-from oop_chess.move import Move
-from oop_chess.square import Square
-from oop_chess.enums import Color, MoveLegalityReason, GameOverReason
+from v_chess.rules import AntichessRules
+from v_chess.game_state import GameState
+from v_chess.move import Move
+from v_chess.square import Square
+from v_chess.enums import Color, MoveLegalityReason, GameOverReason
 
 def test_mandatory_capture_simple():
     # White R at a1, Black P at a2. Capture available.

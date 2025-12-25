@@ -1,4 +1,4 @@
-# file: /home/albin/projects/oop_chess/oop_chess/game.py
+# file: /home/albin/projects/v_chess/v_chess/game.py
 # hypothesis_version: 6.148.5
 
 ['#', '+', 'No moves to undo.']

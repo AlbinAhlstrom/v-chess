@@ -1,8 +1,8 @@
-from oop_chess.game import Game
-from oop_chess.move import Move
-from oop_chess.rules import HordeRules
-from oop_chess.enums import Color, GameOverReason, MoveLegalityReason
-from oop_chess.piece import Queen, Pawn, Knight, King
+from v_chess.game import Game
+from v_chess.move import Move
+from v_chess.rules import HordeRules
+from v_chess.enums import Color, GameOverReason, MoveLegalityReason
+from v_chess.piece import Queen, Pawn, Knight, King
 
 def test_horde_win_white_checkmate():
     """Verify White wins by checkmating Black King."""
@@ -39,7 +39,7 @@ def test_horde_pawn_rank1_double_push():
     assert game.is_move_legal(Move("a1a3"))
     game.take_turn(Move("a1a3"))
     
-    from oop_chess.square import Square
+    from v_chess.square import Square
     assert isinstance(game.state.board.get_piece(Square("a3")), Pawn)
 
 def test_horde_get_legal_moves_white():

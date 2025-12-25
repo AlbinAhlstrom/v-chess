@@ -1,10 +1,10 @@
 import pytest
-from oop_chess.board import Board
-from oop_chess.piece.pawn import Pawn
-from oop_chess.piece.king import King
-from oop_chess.piece.rook import Rook
-from oop_chess.enums import Color
-from oop_chess.square import Square
+from v_chess.board import Board
+from v_chess.piece.pawn import Pawn
+from v_chess.piece.king import King
+from v_chess.piece.rook import Rook
+from v_chess.enums import Color
+from v_chess.square import Square
 
 def test_board_empty():
     board = Board.empty()

@@ -1,9 +1,9 @@
 from dataclasses import replace
-from oop_chess.enums import GameOverReason, MoveLegalityReason, BoardLegalityReason, Color, Direction
-from oop_chess.game_state import GameState
-from oop_chess.move import Move
-from oop_chess.piece import Pawn, King
-from oop_chess.square import Square
+from v_chess.enums import GameOverReason, MoveLegalityReason, BoardLegalityReason, Color, Direction
+from v_chess.game_state import GameState
+from v_chess.move import Move
+from v_chess.piece import Pawn, King
+from v_chess.square import Square
 from .standard import StandardRules
 
 

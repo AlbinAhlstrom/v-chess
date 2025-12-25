@@ -3,11 +3,11 @@ import os
 import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from oop_chess.board import Board
-from oop_chess.game import Game
-from oop_chess.move import Move
-from oop_chess.square import Square
-from oop_chess.piece.queen import Queen
+from v_chess.board import Board
+from v_chess.game import Game
+from v_chess.move import Move
+from v_chess.square import Square
+from v_chess.piece.queen import Queen
 import traceback
 
 def run_test(test_func):

@@ -1,15 +1,15 @@
 from hypothesis import given, strategies as st
-from oop_chess.game import Game
-from oop_chess.board import Board
-from oop_chess.move import Move
-from oop_chess.square import Square
-from oop_chess.enums import Color, MoveLegalityReason, CastlingRight
-from oop_chess.piece.pawn import Pawn
-from oop_chess.piece.rook import Rook
-from oop_chess.game_state import GameState
-from oop_chess.rules import StandardRules
+from v_chess.game import Game
+from v_chess.board import Board
+from v_chess.move import Move
+from v_chess.square import Square
+from v_chess.enums import Color, MoveLegalityReason, CastlingRight
+from v_chess.piece.pawn import Pawn
+from v_chess.piece.rook import Rook
+from v_chess.game_state import GameState
+from v_chess.rules import StandardRules
 
-from oop_chess.rules import StandardRules
+from v_chess.rules import StandardRules
 
 def make_game(board):
     rules = StandardRules()

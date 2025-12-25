@@ -1,8 +1,8 @@
 import pytest
-from oop_chess.game_state import GameState
-from oop_chess.enums import Color, CastlingRight
-from oop_chess.square import Square
-from oop_chess.board import Board
+from v_chess.game_state import GameState
+from v_chess.enums import Color, CastlingRight
+from v_chess.square import Square
+from v_chess.board import Board
 
 def test_fen_parsing_starting_position():
     fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"

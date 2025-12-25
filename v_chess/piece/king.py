@@ -1,8 +1,8 @@
 from math import inf
 from dataclasses import dataclass
 
-from oop_chess.piece.piece import Piece
-from oop_chess.enums import Color, Direction
+from v_chess.piece.piece import Piece
+from v_chess.enums import Color, Direction
 
 
 @dataclass(frozen=True)

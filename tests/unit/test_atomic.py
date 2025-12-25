@@ -1,8 +1,8 @@
-from oop_chess.game import Game
-from oop_chess.move import Move
-from oop_chess.rules import AtomicRules
-from oop_chess.enums import Color, GameOverReason, MoveLegalityReason
-from oop_chess.piece import Queen, Pawn, Knight, King
+from v_chess.game import Game
+from v_chess.move import Move
+from v_chess.rules import AtomicRules
+from v_chess.enums import Color, GameOverReason, MoveLegalityReason
+from v_chess.piece import Queen, Pawn, Knight, King
 
 def test_atomic_explosion_simple():
     """Verify standard explosion."""
@@ -14,7 +14,7 @@ def test_atomic_explosion_simple():
     # 1. Nxd4
     game.take_turn(Move("f3d4"))
     
-    from oop_chess.square import Square
+    from v_chess.square import Square
     assert game.state.board.get_piece(Square("d4")) is None
     assert game.state.board.get_piece(Square("f3")) is None
     assert game.state.board.get_piece(Square("e5")) is None
@@ -29,7 +29,7 @@ def test_atomic_explosion_pawn_immunity():
     
     game.take_turn(Move("f3e5"))
     
-    from oop_chess.square import Square
+    from v_chess.square import Square
     assert game.state.board.get_piece(Square("e5")) is None
     # Bishop d4 exploded
     assert game.state.board.get_piece(Square("d4")) is None

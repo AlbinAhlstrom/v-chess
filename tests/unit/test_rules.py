@@ -1,10 +1,10 @@
 import pytest
-from oop_chess.rules import StandardRules
-from oop_chess.game_state import GameState
-from oop_chess.move import Move
-from oop_chess.enums import Color, CastlingRight
-from oop_chess.square import Square
-from oop_chess.board import Board
+from v_chess.rules import StandardRules
+from v_chess.game_state import GameState
+from v_chess.move import Move
+from v_chess.enums import Color, CastlingRight
+from v_chess.square import Square
+from v_chess.board import Board
 
 def test_castling_rights_king_move_revokes_all():
     fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"

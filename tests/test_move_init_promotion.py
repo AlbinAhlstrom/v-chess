@@ -1,5 +1,5 @@
-from oop_chess.move import Move
-from oop_chess.enums import Color
+from v_chess.move import Move
+from v_chess.enums import Color
 
 def test_move_init_promotion():
     print("--- Test Move Initialization with Promotion ---")

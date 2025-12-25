@@ -1,8 +1,8 @@
 import pytest
-from oop_chess.move import Move
-from oop_chess.square import Square
-from oop_chess.enums import Color
-from oop_chess.piece.queen import Queen
+from v_chess.move import Move
+from v_chess.square import Square
+from v_chess.enums import Color
+from v_chess.piece.queen import Queen
 
 def test_move_uci_parsing_normal():
     move = Move("e2e4")

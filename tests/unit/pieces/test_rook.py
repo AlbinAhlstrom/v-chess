@@ -1,6 +1,6 @@
-from oop_chess.piece.rook import Rook
-from oop_chess.enums import Color
-from oop_chess.square import Square
+from v_chess.piece.rook import Rook
+from v_chess.enums import Color
+from v_chess.square import Square
 
 def test_rook_theoretical_moves_center():
     rook = Rook(Color.WHITE)

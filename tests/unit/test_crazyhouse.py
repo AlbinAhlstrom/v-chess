@@ -1,9 +1,9 @@
-from oop_chess.game import Game
-from oop_chess.move import Move
-from oop_chess.rules import CrazyhouseRules
-from oop_chess.enums import Color, GameOverReason
-from oop_chess.game_state import CrazyhouseGameState
-from oop_chess.piece import Queen, Pawn, Knight
+from v_chess.game import Game
+from v_chess.move import Move
+from v_chess.rules import CrazyhouseRules
+from v_chess.enums import Color, GameOverReason
+from v_chess.game_state import CrazyhouseGameState
+from v_chess.piece import Queen, Pawn, Knight
 
 def test_crazyhouse_capture_to_pocket():
     """Verify that capturing a piece adds it to the pocket."""
@@ -34,7 +34,7 @@ def test_crazyhouse_drop_move():
     game.take_turn(drop_move)
     
     # Knight should be on e4
-    from oop_chess.square import Square
+    from v_chess.square import Square
     piece = game.state.board.get_piece(Square("e4"))
     assert isinstance(piece, Knight)
     assert piece.color == Color.WHITE

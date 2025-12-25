@@ -1,6 +1,6 @@
-from oop_chess.game import Game, IllegalMoveException
-from oop_chess.move import Move
-from oop_chess.enums import GameOverReason, MoveLegalityReason
+from v_chess.game import Game, IllegalMoveException
+from v_chess.move import Move
+from v_chess.enums import GameOverReason, MoveLegalityReason
 
 
 def main():

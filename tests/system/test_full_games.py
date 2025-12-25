@@ -1,7 +1,7 @@
 import pytest
 import random
-from oop_chess.game import Game
-from oop_chess.move import Move
+from v_chess.game import Game
+from v_chess.move import Move
 
 def test_fools_mate():
     """Verify the fastest possible checkmate (2 moves)."""

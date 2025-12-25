@@ -1,9 +1,9 @@
 import pytest
-from oop_chess.game_state import GameState
-from oop_chess.rules import AntichessRules
-from oop_chess.enums import MoveLegalityReason
-from oop_chess.move import Move
-from oop_chess.square import Square
+from v_chess.game_state import GameState
+from v_chess.rules import AntichessRules
+from v_chess.enums import MoveLegalityReason
+from v_chess.move import Move
+from v_chess.square import Square
 
 def test_antichess_reason_mandatory_capture():
     fen = "8/8/8/8/8/8/p7/R7 w - - 0 1"

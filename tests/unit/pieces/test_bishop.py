@@ -1,6 +1,6 @@
-from oop_chess.piece.bishop import Bishop
-from oop_chess.enums import Color
-from oop_chess.square import Square
+from v_chess.piece.bishop import Bishop
+from v_chess.enums import Color
+from v_chess.square import Square
 
 def test_bishop_theoretical_moves_center():
     bishop = Bishop(Color.WHITE)

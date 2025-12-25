@@ -1,7 +1,7 @@
 import pytest
-from oop_chess.game import Game
-from oop_chess.move import Move
-from oop_chess.enums import MoveLegalityReason
+from v_chess.game import Game
+from v_chess.move import Move
+from v_chess.enums import MoveLegalityReason
 
 def test_sliding_piece_blocked_by_friendly():
     """Verify sliding piece blocked by friendly piece."""

@@ -1,6 +1,6 @@
-from oop_chess.game import Game
-from oop_chess.rules import AntichessRules
-from oop_chess.move import Move
+from v_chess.game import Game
+from v_chess.rules import AntichessRules
+from v_chess.move import Move
 
 def test_reproduce_illegal_move_ghost_pawn():
     """Reproduce 'move not in piece moveset' for c8c6 in Antichess."""
@@ -47,13 +47,13 @@ def test_reproduce_illegal_board_valid():
     # game.rules.is_board_state_legal()
     # Should use AntichessRules.is_board_state_legal (Inherited from Standard)
     # which calls self.board_state_legality_reason (Overridden in Antichess)
-    from oop_chess.enums import BoardLegalityReason
+    from v_chess.enums import BoardLegalityReason
     is_legal = game.rules.validate_board_state() == BoardLegalityReason.VALID
 
     # This should be True for Antichess
     assert is_legal is True
 
     # If we use StandardRules, it should be False
-    from oop_chess.rules import StandardRules
+    from v_chess.rules import StandardRules
     std_rules = StandardRules(game.state)
     assert (std_rules.validate_board_state() == BoardLegalityReason.VALID) is False # No black king

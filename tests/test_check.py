@@ -1,5 +1,5 @@
-from oop_chess.game import Game
-from oop_chess.move import Move
+from v_chess.game import Game
+from v_chess.move import Move
 
 
 def test_king_attacked_by_pawn_is_check():

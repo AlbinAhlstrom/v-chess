@@ -7,12 +7,13 @@ import json
 import asyncio
 import traceback
 import random
+from contextlib import asynccontextmanager
 
-from oop_chess.game import Game, IllegalMoveException
-from oop_chess.move import Move
-from oop_chess.square import Square
-from oop_chess.enums import Color, GameOverReason
-from oop_chess.rules import (
+from v_chess.game import Game, IllegalMoveException
+from v_chess.move import Move
+from v_chess.square import Square
+from v_chess.enums import Color, GameOverReason
+from v_chess.rules import (
     AntichessRules, StandardRules, AtomicRules, Chess960Rules,
     CrazyhouseRules, HordeRules, KingOfTheHillRules, RacingKingsRules,
     ThreeCheckRules
@@ -35,51 +36,17 @@ GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
 SECRET_KEY = os.environ.get("SECRET_KEY", "a-very-secret-key")
 REDIRECT_URI = os.environ.get("REDIRECT_URI") # Optional override
 
-app = FastAPI()
-
-if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
-    print("WARNING: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set. Google Login will not work.")
-
-is_prod = os.environ.get("ENV") == "prod"
-app.add_middleware(
-    SessionMiddleware, 
-    secret_key=SECRET_KEY,
-    session_cookie="v_chess_session",
-    same_site="none" if is_prod else "lax",
-    https_only=is_prod
-)
-oauth = OAuth()
-oauth.register(
-    name="google",
-    client_id=GOOGLE_CLIENT_ID,
-    client_secret=GOOGLE_CLIENT_SECRET,
-    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-    client_kwargs={
-        "scope": "openid email profile"
-    },
-    authorize_params={
-        "prompt": "select_account"
-    }
-)
-
-origins = [
-    "https://v-chess.com",
-    "https://www.v-chess.com",
-    "https://api.v-chess.com",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.v-chess\.com",
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+RULES_MAP = {
+    "standard": StandardRules,
+    "antichess": AntichessRules,
+    "atomic": AtomicRules,
+    "chess960": Chess960Rules,
+    "crazyhouse": CrazyhouseRules,
+    "horde": HordeRules,
+    "kingofthehill": KingOfTheHillRules,
+    "racingkings": RacingKingsRules,
+    "threecheck": ThreeCheckRules,
+}
 
 games: dict[str, Game] = {}
 game_variants: dict[str, str] = {} # game_id -> variant name
@@ -153,20 +120,8 @@ async def timeout_monitor():
             print(f"Error in timeout monitor: {e}")
             await asyncio.sleep(1)
 
-RULES_MAP = {
-    "standard": StandardRules,
-    "antichess": AntichessRules,
-    "atomic": AtomicRules,
-    "chess960": Chess960Rules,
-    "crazyhouse": CrazyhouseRules,
-    "horde": HordeRules,
-    "kingofthehill": KingOfTheHillRules,
-    "racingkings": RacingKingsRules,
-    "threecheck": ThreeCheckRules,
-}
-
-@app.on_event("startup")
-async def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     await init_db()
     async with async_session() as session:
         stmt = select(GameModel).where(GameModel.is_over == False)
@@ -184,7 +139,15 @@ async def startup_event():
             game.last_move_at = model.last_move_at
             games[model.id] = game
             game_variants[model.id] = model.variant
-    asyncio.create_task(timeout_monitor())
+    task = asyncio.create_task(timeout_monitor())
+    yield
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
+
+app = FastAPI(lifespan=lifespan)
 
 class ConnectionManager:
     def __init__(self):
@@ -222,7 +185,7 @@ pending_takebacks: dict[str, int] = {}
 @app.websocket("/ws/lobby")
 async def lobby_websocket(websocket: WebSocket):
     await manager.connect_lobby(websocket)
-    user_session = websocket.session.get("user")
+    user_session = websocket.scope.get("session", {}).get("user")
     current_user_id = str(user_session.get("id")) if user_session else None
     try:
         await websocket.send_text(json.dumps({"type": "seeks", "seeks": list(seeks.values())}))
@@ -345,14 +308,21 @@ async def get_user_ratings(user_id: str):
         
         return {"ratings": rating_list, "overall": overall}
 
+class LegalMovesRequest(BaseModel):
+    game_id: str
+    square: str
+
 @app.post("/api/game/new")
 async def new_game(req: NewGameRequest):
-    game_id = str(uuid4())
-    rules = RULES_MAP.get(req.variant.lower(), StandardRules)()
-    game = Game(state=req.fen, rules=rules, time_control=req.time_control)
-    games[game_id], game_variants[game_id] = game, req.variant
-    await save_game_to_db(game_id)
-    return {"game_id": game_id, "fen": game.state.fen, "turn": game.state.turn}
+    try:
+        game_id = str(uuid4())
+        rules = RULES_MAP.get(req.variant.lower(), StandardRules)()
+        game = Game(state=req.fen, rules=rules, time_control=req.time_control)
+        games[game_id], game_variants[game_id] = game, req.variant
+        await save_game_to_db(game_id)
+        return {"game_id": game_id, "fen": game.state.fen, "turn": game.state.turn}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/api/game/{game_id}")
 async def get_game_state(game_id: str):
@@ -368,7 +338,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
     async with async_session() as session:
         model = (await session.execute(select(GameModel).where(GameModel.id == game_id))).scalar_one_or_none()
         white_id, black_id = (model.white_player_id, model.black_player_id) if model else (None, None)
-    user_id = str(websocket.session.get("user", {}).get("id"))
+    user_id = str(websocket.scope.get("session", {}).get("user", {}).get("id"))
     await manager.broadcast(game_id, json.dumps({"type": "game_state", "fen": game.state.fen, "turn": game.state.turn.value, "is_over": game.is_over, "in_check": game.rules.is_check(), "winner": game.winner, "move_history": game.move_history, "clocks": {c.value: t for c, t in game.clocks.items()} if game.clocks else None}))
     try:
         while True:
@@ -391,7 +361,29 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
             await manager.broadcast(game_id, json.dumps({"type": "game_state", "fen": game.state.fen, "turn": game.state.turn.value, "is_over": game.is_over, "in_check": game.rules.is_check(), "winner": game.winner, "move_history": game.move_history, "clocks": {c.value: t for c, t in game.get_current_clocks().items()} if game.clocks else None}))
     except WebSocketDisconnect: manager.disconnect(websocket, game_id)
 
+class GameRequest(BaseModel):
+    game_id: str
+
 @app.post("/api/moves/all_legal")
 async def get_all_legal_moves(req: GameRequest):
     game = await get_game(req.game_id)
     return {"moves": [m.uci for m in game.rules.get_legal_moves()], "status": "success"}
+
+@app.post("/api/moves/legal")
+async def get_legal_moves(req: LegalMovesRequest):
+    game = await get_game(req.game_id)
+    try:
+        square = Square(req.square)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid square")
+        
+    piece = game.state.board.get_piece(square)
+    if not piece:
+        return {"moves": [], "status": "success"}
+    
+    if piece.color != game.state.turn:
+         raise HTTPException(status_code=400, detail="Piece belongs to the opponent")
+
+    legal_moves = game.rules.get_legal_moves()
+    moves = [m.uci for m in legal_moves if m.start == square]
+    return {"moves": moves, "status": "success"}

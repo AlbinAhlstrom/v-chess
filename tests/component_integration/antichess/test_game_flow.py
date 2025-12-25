@@ -1,7 +1,7 @@
-from oop_chess.game import Game
-from oop_chess.rules import AntichessRules
-from oop_chess.move import Move
-from oop_chess.enums import MoveLegalityReason, GameOverReason
+from v_chess.game import Game
+from v_chess.rules import AntichessRules
+from v_chess.move import Move
+from v_chess.enums import MoveLegalityReason, GameOverReason
 
 def test_forced_sequence():
     """Verify game enforces captures in a sequence."""

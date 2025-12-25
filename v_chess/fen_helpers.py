@@ -1,12 +1,12 @@
 from typing import TYPE_CHECKING, Tuple, List
-from oop_chess.enums import CastlingRight, Color
-from oop_chess.piece.piece import Piece
-from oop_chess.square import Square
-from oop_chess.piece import piece_from_char
+from v_chess.enums import CastlingRight, Color
+from v_chess.piece.piece import Piece
+from v_chess.square import Square
+from v_chess.piece import piece_from_char
 
 if TYPE_CHECKING:
-    from oop_chess.game_state import GameState
-    from oop_chess.board import Board
+    from v_chess.game_state import GameState
+    from v_chess.board import Board
 
 
 def board_from_fen(fen_board: str) -> dict[Square, Piece]:
@@ -86,9 +86,9 @@ def _serialize_pocket(white_pocket: Tuple[Piece, ...], black_pocket: Tuple[Piece
     return f"[{s}]" if s else ""
 
 def state_from_fen(fen: str) -> "GameState":
-    from oop_chess.game_state import GameState, ThreeCheckGameState, CrazyhouseGameState
-    from oop_chess.board import Board
-    from oop_chess.rules import StandardRules
+    from v_chess.game_state import GameState, ThreeCheckGameState, CrazyhouseGameState
+    from v_chess.board import Board
+    from v_chess.rules import StandardRules
 
     # Pre-processing for Variants
     # Check for Three-Check: ends with +N+M
@@ -151,7 +151,7 @@ def state_from_fen(fen: str) -> "GameState":
     return state
 
 def state_to_fen(state: "GameState") -> str:
-    from oop_chess.game_state import ThreeCheckGameState, CrazyhouseGameState
+    from v_chess.game_state import ThreeCheckGameState, CrazyhouseGameState
     
     """Serializes the state to FEN."""
     placement = state.board.fen

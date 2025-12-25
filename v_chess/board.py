@@ -1,11 +1,11 @@
 from __future__ import annotations
 from typing import TypeVar
 
-from oop_chess.fen_helpers import board_from_fen, get_fen_from_board
-from oop_chess.enums import Color
-from oop_chess.piece.piece import Piece
-from oop_chess.square import Coordinate, Square
-from oop_chess.bitboard import BitboardState
+from v_chess.fen_helpers import board_from_fen, get_fen_from_board
+from v_chess.enums import Color
+from v_chess.piece.piece import Piece
+from v_chess.square import Coordinate, Square
+from v_chess.bitboard import BitboardState
 
 
 T = TypeVar("T", bound=Piece)

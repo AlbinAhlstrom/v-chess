@@ -1,4 +1,4 @@
-# file: /home/albin/projects/oop_chess/oop_chess/rules.py
+# file: /home/albin/projects/v_chess/v_chess/rules.py
 # hypothesis_version: 6.148.5
 
 ['Move is legal']

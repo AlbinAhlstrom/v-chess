@@ -1,4 +1,4 @@
-# file: /home/albin/projects/oop_chess/oop_chess/move.py
+# file: /home/albin/projects/v_chess/v_chess/move.py
 # hypothesis_version: 6.148.5
 
 ['#', '+', ', ', 'Board', 'Move', 'O-O', 'O-O-O', 'P', 'a', 'c1', 'c8', 'e1', 'e8', 'g1', 'g8']

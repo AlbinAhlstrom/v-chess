@@ -2,15 +2,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from oop_chess.piece.pawn import Pawn
-from oop_chess.piece.king import King
-from oop_chess.square import Square
-from oop_chess.enums import Color, MoveLegalityReason
-from oop_chess.piece.piece import Piece
-from oop_chess.piece import piece_from_char
+from v_chess.piece.pawn import Pawn
+from v_chess.piece.king import King
+from v_chess.square import Square
+from v_chess.enums import Color, MoveLegalityReason
+from v_chess.piece.piece import Piece
+from v_chess.piece import piece_from_char
 
 if TYPE_CHECKING:
-    from oop_chess.game import Game
+    from v_chess.game import Game
 
 
 @dataclass(frozen=True, eq=True)

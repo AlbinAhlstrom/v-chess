@@ -1,9 +1,9 @@
 import pytest
-from oop_chess.game_state import GameState
-from oop_chess.rules import StandardRules
-from oop_chess.enums import MoveLegalityReason, Color
-from oop_chess.move import Move
-from oop_chess.piece import Queen
+from v_chess.game_state import GameState
+from v_chess.rules import StandardRules
+from v_chess.enums import MoveLegalityReason, Color
+from v_chess.move import Move
+from v_chess.piece import Queen
 
 def test_reason_no_piece():
     state = GameState.starting_setup()
@@ -76,7 +76,7 @@ def test_reason_path_blocked():
     move = Move("a1a3")
     assert rules.validate_move(move) == MoveLegalityReason.PATH_BLOCKED
 
-from oop_chess.square import Square
+from v_chess.square import Square
 
 def test_reason_early_promotion():
     state = GameState.starting_setup()

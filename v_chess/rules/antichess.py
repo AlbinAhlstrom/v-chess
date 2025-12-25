@@ -1,6 +1,6 @@
-from oop_chess.enums import Color, MoveLegalityReason, BoardLegalityReason, GameOverReason
-from oop_chess.move import Move
-from oop_chess.piece import King, Pawn
+from v_chess.enums import Color, MoveLegalityReason, BoardLegalityReason, GameOverReason
+from v_chess.move import Move
+from v_chess.piece import King, Pawn
 from .standard import StandardRules
 
 

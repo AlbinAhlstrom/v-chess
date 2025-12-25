@@ -1,7 +1,7 @@
-from oop_chess.game import Game
-from oop_chess.move import Move
-from oop_chess.rules import KingOfTheHillRules
-from oop_chess.enums import GameOverReason
+from v_chess.game import Game
+from v_chess.move import Move
+from v_chess.rules import KingOfTheHillRules
+from v_chess.enums import GameOverReason
 
 def test_koth_win_center():
     """Test that moving the king to the center wins the game."""

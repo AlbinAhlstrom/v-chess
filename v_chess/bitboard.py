@@ -1,11 +1,11 @@
 
-from oop_chess.enums import Color, Direction
-from oop_chess.piece import Piece, Pawn, Knight, Bishop, Rook, Queen, King
+from v_chess.enums import Color, Direction
+from v_chess.piece import Piece, Pawn, Knight, Bishop, Rook, Queen, King
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from oop_chess.board import Board
-    from oop_chess.square import Square
+    from v_chess.board import Board
+    from v_chess.square import Square
 
 # Precompute Leaper Attacks
 KNIGHT_ATTACKS = [0] * 64

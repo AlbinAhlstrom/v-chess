@@ -1,9 +1,9 @@
 from dataclasses import replace
-from oop_chess.enums import GameOverReason, MoveLegalityReason, BoardLegalityReason, Color
-from oop_chess.game_state import CrazyhouseGameState
-from oop_chess.move import Move
-from oop_chess.piece import Pawn, Piece
-from oop_chess.square import Square
+from v_chess.enums import GameOverReason, MoveLegalityReason, BoardLegalityReason, Color
+from v_chess.game_state import CrazyhouseGameState
+from v_chess.move import Move
+from v_chess.piece import Pawn, Piece
+from v_chess.square import Square
 from .standard import StandardRules
 
 
@@ -36,7 +36,7 @@ class CrazyhouseRules(StandardRules):
             captured_piece_to_pocket = target_piece
         elif isinstance(moving_piece, Pawn) and move.end == self.state.ep_square:
             # En Passant
-            from oop_chess.enums import Direction
+            from v_chess.enums import Direction
             direction = Direction.DOWN if moving_piece.color == Color.WHITE else Direction.UP
             captured_sq = move.end.adjacent(direction)
             captured_piece_to_pocket = self.state.board.get_piece(captured_sq)

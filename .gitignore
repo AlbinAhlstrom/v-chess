@@ -3,9 +3,10 @@ __pycache__/
 clean_comments.py
 .hypothesis
 AGENTS.md
-oop_chess_engine.egg-info/
+v_chess_engine.egg-info/
 *.md
 *.env
 *.db
 chess.db
 *.db
+hypothesis/constants/*

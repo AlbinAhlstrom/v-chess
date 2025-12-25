@@ -1,8 +1,8 @@
-from oop_chess.game import Game
-from oop_chess.move import Move
-from oop_chess.rules import Chess960Rules
-from oop_chess.enums import Color, MoveLegalityReason
-from oop_chess.piece import King, Rook
+from v_chess.game import Game
+from v_chess.move import Move
+from v_chess.rules import Chess960Rules
+from v_chess.enums import Color, MoveLegalityReason
+from v_chess.piece import King, Rook
 
 def test_chess960_castling_non_standard():
     """Verify castling in a 960 position (King on f1, Rook on h1)."""
@@ -18,7 +18,7 @@ def test_chess960_castling_non_standard():
     
     game.take_turn(move)
     
-    from oop_chess.square import Square
+    from v_chess.square import Square
     print(f"Post-move FEN: {game.state.fen}")
     # game.state.board.print() # Would need stdout capture
     

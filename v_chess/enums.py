@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from oop_chess.square import Square
+    from v_chess.square import Square
 
 
 def _v(name: str, members: dict[str, str]) -> StrEnum:
@@ -165,7 +165,7 @@ class CastlingRight(StrEnum):
 
     @property
     def expected_rook_square(self) -> Square:
-        from oop_chess.square import Square
+        from v_chess.square import Square
         if self == CastlingRight.WHITE_SHORT: return Square("h1")
         if self == CastlingRight.WHITE_LONG: return Square("a1")
         if self == CastlingRight.BLACK_SHORT: return Square("h8")
@@ -179,7 +179,7 @@ class CastlingRight(StrEnum):
 
     @property
     def expected_king_square(self) -> Square:
-        from oop_chess.square import Square
+        from v_chess.square import Square
         if self.value.isupper():
             return Square("e1")
         if self.value.islower():
@@ -291,7 +291,7 @@ class Direction(Enum):
         Stops when the board edge is reached or max_squares is hit.
         """
 
-        from oop_chess.square import Square
+        from v_chess.square import Square
 
         d_col, d_row = self.value
 

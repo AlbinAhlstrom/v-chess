@@ -1,6 +1,6 @@
 import pytest
-from oop_chess.game import Game
-from oop_chess.move import Move
+from v_chess.game import Game
+from v_chess.move import Move
 
 def test_castling_prevented_through_check():
     fen = "5k2/5r2/8/8/8/8/8/R3K2R w KQ - 0 1"

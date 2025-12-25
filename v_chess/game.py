@@ -2,11 +2,11 @@ from __future__ import annotations
 import time
 from dataclasses import replace
 from typing import Optional, Dict
-from oop_chess.game_state import GameState
-from oop_chess.move import Move
-from oop_chess.rules import Rules
-from oop_chess.exceptions import IllegalMoveException, IllegalBoardException
-from oop_chess.enums import MoveLegalityReason, BoardLegalityReason, GameOverReason, Color
+from v_chess.game_state import GameState
+from v_chess.move import Move
+from v_chess.rules import Rules
+from v_chess.exceptions import IllegalMoveException, IllegalBoardException
+from v_chess.enums import MoveLegalityReason, BoardLegalityReason, GameOverReason, Color
 
 
 class Game:

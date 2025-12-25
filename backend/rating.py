@@ -1,5 +1,5 @@
 import math
-from oop_chess.enums import Color
+from v_chess.enums import Color
 
 # Glicko-2 constants
 TAU = 0.5

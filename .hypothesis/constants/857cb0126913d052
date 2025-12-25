@@ -1,4 +1,4 @@
-# file: /home/albin/projects/oop_chess/oop_chess/enums.py
+# file: /home/albin/projects/v_chess/v_chess/enums.py
 # hypothesis_version: 6.148.5
 
 ['-', 'K', 'Q', 'a1', 'a8', 'b', 'black', 'e1', 'e8', 'h1', 'h8', 'k', 'king left in check', 'more than 2 checkers', 'move is legal', 'no black king', 'no piece moved', 'no white king', 'path is blocked', 'pawns on back rank', 'q', 'too many black pawns', 'too many kings', 'too many white pawns', 'valid', 'w', 'white', 'wrong piece color']

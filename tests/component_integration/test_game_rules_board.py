@@ -1,12 +1,12 @@
 import pytest
-from oop_chess.game import Game
-from oop_chess.move import Move
-from oop_chess.square import Square
-from oop_chess.enums import Color, CastlingRight
-from oop_chess.piece.pawn import Pawn
-from oop_chess.piece.rook import Rook
-from oop_chess.piece.king import King
-from oop_chess.piece.queen import Queen
+from v_chess.game import Game
+from v_chess.move import Move
+from v_chess.square import Square
+from v_chess.enums import Color, CastlingRight
+from v_chess.piece.pawn import Pawn
+from v_chess.piece.rook import Rook
+from v_chess.piece.king import King
+from v_chess.piece.queen import Queen
 
 def test_move_application_updates_board():
     """Verify making a move updates the board state correctly."""

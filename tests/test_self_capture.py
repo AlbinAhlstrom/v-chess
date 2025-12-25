@@ -4,13 +4,13 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from oop_chess.game import Game
-from oop_chess.board import Board
-from oop_chess.move import Move
-from oop_chess.square import Square
-from oop_chess.enums import Color, CastlingRight
-from oop_chess.game_state import GameState
-from oop_chess.rules import StandardRules
+from v_chess.game import Game
+from v_chess.board import Board
+from v_chess.move import Move
+from v_chess.square import Square
+from v_chess.enums import Color, CastlingRight
+from v_chess.game_state import GameState
+from v_chess.rules import StandardRules
 
 def test_capture_own_king_bug():
     print("--- Diagnostic Test: Capture Own King ---")

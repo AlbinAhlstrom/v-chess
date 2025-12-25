@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from oop_chess.enums import Color, MoveLegalityReason, BoardLegalityReason, GameOverReason
-from oop_chess.move import Move
+from v_chess.enums import Color, MoveLegalityReason, BoardLegalityReason, GameOverReason
+from v_chess.move import Move
 
 if TYPE_CHECKING:
-    from oop_chess.game_state import GameState
+    from v_chess.game_state import GameState
 
 
 class Rules(ABC):
@@ -35,7 +35,7 @@ class Rules(ABC):
     @property
     def starting_fen(self) -> str:
         """The default starting position for this variant."""
-        from oop_chess.game_state import GameState
+        from v_chess.game_state import GameState
         return GameState.STARTING_FEN
 
     def get_legal_moves(self) -> list[Move]:

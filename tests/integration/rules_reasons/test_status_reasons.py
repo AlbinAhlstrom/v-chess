@@ -1,6 +1,6 @@
-from oop_chess.game_state import GameState
-from oop_chess.rules import StandardRules
-from oop_chess.enums import BoardLegalityReason
+from v_chess.game_state import GameState
+from v_chess.rules import StandardRules
+from v_chess.enums import BoardLegalityReason
 
 def test_status_reason_valid():
     state = GameState.starting_setup()

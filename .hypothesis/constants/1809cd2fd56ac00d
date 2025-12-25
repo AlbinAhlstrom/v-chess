@@ -1,4 +1,4 @@
-# file: /home/albin/projects/oop_chess/oop_chess/piece/rook.py
+# file: /home/albin/projects/v_chess/v_chess/piece/rook.py
 # hypothesis_version: 6.148.5
 
 ['R', 'r', '♖', '♜']

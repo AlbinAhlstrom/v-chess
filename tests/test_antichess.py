@@ -1,5 +1,5 @@
-from oop_chess.game import Game
-from oop_chess.rules import AntichessRules
+from v_chess.game import Game
+from v_chess.rules import AntichessRules
 
 def test_mandatory_capture():
     fen = "8/8/8/3p4/4P3/8/8/8 w - - 0 1"

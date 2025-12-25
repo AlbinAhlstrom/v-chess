@@ -1,7 +1,7 @@
 from dataclasses import replace
-from oop_chess.enums import GameOverReason, MoveLegalityReason, BoardLegalityReason, Color
-from oop_chess.game_state import ThreeCheckGameState
-from oop_chess.move import Move
+from v_chess.enums import GameOverReason, MoveLegalityReason, BoardLegalityReason, Color
+from v_chess.game_state import ThreeCheckGameState
+from v_chess.move import Move
 from .standard import StandardRules
 
 

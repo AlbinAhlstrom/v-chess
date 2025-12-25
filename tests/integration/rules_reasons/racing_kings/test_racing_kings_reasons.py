@@ -1,11 +1,11 @@
 
 import pytest
-from oop_chess.rules import RacingKingsRules
-from oop_chess.fen_helpers import state_from_fen
-from oop_chess.enums import BoardLegalityReason, MoveLegalityReason, GameOverReason, Color
-from oop_chess.square import Square
-from oop_chess.move import Move
-from oop_chess.piece import King
+from v_chess.rules import RacingKingsRules
+from v_chess.fen_helpers import state_from_fen
+from v_chess.enums import BoardLegalityReason, MoveLegalityReason, GameOverReason, Color
+from v_chess.square import Square
+from v_chess.move import Move
+from v_chess.piece import King
 import dataclasses
 
 def test_racing_kings_board_legality_king_in_check():

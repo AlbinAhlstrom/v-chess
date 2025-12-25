@@ -1,9 +1,9 @@
 import pytest
-from oop_chess.board import Board
-from oop_chess.square import Square
-from oop_chess.piece.pawn import Pawn
-from oop_chess.piece.bishop import Bishop
-from oop_chess.enums import Color
+from v_chess.board import Board
+from v_chess.square import Square
+from v_chess.piece.pawn import Pawn
+from v_chess.piece.bishop import Bishop
+from v_chess.enums import Color
 
 def test_coordinate_alignment():
     """Verify Piece move patterns map correctly to Board coordinates."""

@@ -1,5 +1,5 @@
-from oop_chess.game import Game
-from oop_chess.move import Move
+from v_chess.game import Game
+from v_chess.move import Move
 
 def test_undo_restores_previous_state():
     """Verify undo_move restores previous GameState."""

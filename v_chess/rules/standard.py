@@ -1,11 +1,11 @@
 from itertools import chain
 
-from oop_chess.board import Board
-from oop_chess.enums import Color, CastlingRight, Direction, MoveLegalityReason, BoardLegalityReason, GameOverReason
-from oop_chess.move import Move
-from oop_chess.piece import King, Pawn, Piece, Rook, Queen, Bishop, Knight
-from oop_chess.square import Square
-from oop_chess.game_state import GameState
+from v_chess.board import Board
+from v_chess.enums import Color, CastlingRight, Direction, MoveLegalityReason, BoardLegalityReason, GameOverReason
+from v_chess.move import Move
+from v_chess.piece import King, Pawn, Piece, Rook, Queen, Bishop, Knight
+from v_chess.square import Square
+from v_chess.game_state import GameState
 from .core import Rules
 
 

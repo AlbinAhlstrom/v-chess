@@ -1,6 +1,6 @@
-from oop_chess.enums import GameOverReason, Color
-from oop_chess.square import Square
-from oop_chess.piece import King
+from v_chess.enums import GameOverReason, Color
+from v_chess.square import Square
+from v_chess.piece import King
 from .standard import StandardRules
 
 class KingOfTheHillRules(StandardRules):

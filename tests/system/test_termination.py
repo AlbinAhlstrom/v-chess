@@ -1,7 +1,7 @@
-from oop_chess.game import Game
-from oop_chess.enums import GameOverReason
-from oop_chess.rules import AntichessRules
-from oop_chess.move import Move
+from v_chess.game import Game
+from v_chess.enums import GameOverReason
+from v_chess.rules import AntichessRules
+from v_chess.move import Move
 from dataclasses import replace
 
 def test_termination_checkmate():

@@ -4,11 +4,11 @@ import re
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from oop_chess.move import Move
-from oop_chess.game import Game
-from oop_chess.board import Board
-from oop_chess.game_state import GameState
-from oop_chess.enums import Color, CastlingRight
+from v_chess.move import Move
+from v_chess.game import Game
+from v_chess.board import Board
+from v_chess.game_state import GameState
+from v_chess.enums import Color, CastlingRight
 
 def parse_moves(game_string):
     moves_section = game_string.split('\n\n')[-1]
@@ -60,9 +60,9 @@ def diagnose_moves3():
             print(f"Player to move: {game.state.turn}")
 
             if "Kc7" in san:
-                from oop_chess.piece.king import King
-                from oop_chess.square import Square
-                from oop_chess.enums import Color
+                from v_chess.piece.king import King
+                from v_chess.square import Square
+                from v_chess.enums import Color
                 pieces = game.state.board.get_pieces(King, game.state.turn)
                 print(f"King found: {pieces}")
                 if pieces:

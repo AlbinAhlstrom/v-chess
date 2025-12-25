@@ -1,6 +1,6 @@
 import pytest
-from oop_chess.game import Game, IllegalMoveException
-from oop_chess.move import Move
+from v_chess.game import Game, IllegalMoveException
+from v_chess.move import Move
 
 def test_take_turn_raises_illegal_move():
     """Verify take_turn raises exception for illegal moves."""

@@ -1,9 +1,9 @@
 import pytest
-from oop_chess.game import Game
-from oop_chess.move import Move
-from oop_chess.enums import Color, CastlingRight
-from oop_chess.square import Square
-from oop_chess.game_state import GameState
+from v_chess.game import Game
+from v_chess.move import Move
+from v_chess.enums import Color, CastlingRight
+from v_chess.square import Square
+from v_chess.game_state import GameState
 
 def test_turn_switch():
     """Verify turn switches from White to Black and back."""

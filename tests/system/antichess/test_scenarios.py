@@ -1,7 +1,7 @@
 import pytest
-from oop_chess.game import Game
-from oop_chess.rules import AntichessRules
-from oop_chess.move import Move
+from v_chess.game import Game
+from v_chess.rules import AntichessRules
+from v_chess.move import Move
 
 def test_full_game_short():
     """Simulate a short antichess game."""

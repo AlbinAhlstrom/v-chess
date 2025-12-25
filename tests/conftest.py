@@ -1,9 +1,12 @@
 from hypothesis import strategies as st
+import pytest
+from fastapi.testclient import TestClient
+from backend.main import app
 
-from oop_chess.square import Square
-from oop_chess.enums import Color
-from oop_chess.piece.piece import Piece
-from oop_chess.piece import piece_from_char
+from v_chess.square import Square
+from v_chess.enums import Color
+from v_chess.piece.piece import Piece
+from v_chess.piece import piece_from_char
 from typing import Type
 
 
@@ -30,3 +33,8 @@ def random_square_str(draw):
     file_char = draw(st.sampled_from("abcdefgh"))
     rank_char = draw(st.sampled_from("12345678"))
     return file_char + rank_char
+
+@pytest.fixture(scope="module")
+def client():
+    with TestClient(app) as c:
+        yield c

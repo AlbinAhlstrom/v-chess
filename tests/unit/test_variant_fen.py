@@ -1,7 +1,7 @@
-from oop_chess.game_state import GameState, ThreeCheckGameState, CrazyhouseGameState
-from oop_chess.fen_helpers import state_from_fen, state_to_fen
-from oop_chess.piece import Queen, Pawn
-from oop_chess.enums import Color
+from v_chess.game_state import GameState, ThreeCheckGameState, CrazyhouseGameState
+from v_chess.fen_helpers import state_from_fen, state_to_fen
+from v_chess.piece import Queen, Pawn
+from v_chess.enums import Color
 
 def test_three_check_fen_parsing():
     fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 +2+1"

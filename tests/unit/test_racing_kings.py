@@ -1,8 +1,8 @@
-from oop_chess.game import Game
-from oop_chess.move import Move
-from oop_chess.rules import RacingKingsRules
-from oop_chess.enums import Color, GameOverReason, MoveLegalityReason
-from oop_chess.piece import Queen, Pawn, Knight, King
+from v_chess.game import Game
+from v_chess.move import Move
+from v_chess.rules import RacingKingsRules
+from v_chess.enums import Color, GameOverReason, MoveLegalityReason
+from v_chess.piece import Queen, Pawn, Knight, King
 
 def test_rk_win_white():
     """Verify White wins if King reaches 8th and Black fails to follow."""

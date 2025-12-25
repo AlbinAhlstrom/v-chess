@@ -1,8 +1,8 @@
 from dataclasses import replace
-from oop_chess.enums import GameOverReason, MoveLegalityReason, BoardLegalityReason, Color, Direction
-from oop_chess.game_state import GameState
-from oop_chess.move import Move
-from oop_chess.piece import Pawn, King
+from v_chess.enums import GameOverReason, MoveLegalityReason, BoardLegalityReason, Color, Direction
+from v_chess.game_state import GameState
+from v_chess.move import Move
+from v_chess.piece import Pawn, King
 from .standard import StandardRules
 
 
@@ -76,7 +76,7 @@ class AtomicRules(StandardRules):
 
     def _update_castling_rights_after_explosion(self, board) -> tuple:
         # Castling rights are lost if King or Rook are exploded
-        from oop_chess.enums import CastlingRight
+        from v_chess.enums import CastlingRight
         new_rights = []
         for right in self.state.castling_rights:
             if right == CastlingRight.NONE: continue
