@@ -8,7 +8,7 @@ const getApiBase = () => {
         return `https://api.v-chess.com/api`;
     }
     
-    // If we are on a LAN IP or anything else that isn'''t localhost,
+    // If we are on a LAN IP or anything else that isn't localhost,
     // assume backend is on the same host, port 8000
     return `http://${hostname}:8000/api`;
 };
@@ -32,7 +32,7 @@ export const getAllLegalMoves = async (gameId) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ game_id: gameId }),
-        credentials: '''include'''
+        credentials: 'include'
     });
     return res.json();
 };
@@ -46,7 +46,7 @@ export const createGame = async (variant = "standard", fen = null, timeControl =
             fen,
             time_control: timeControl 
         }),
-        credentials: '''include'''
+        credentials: 'include'
     });
     return res.json();
 };
@@ -56,35 +56,35 @@ export const getLegalMoves = async (gameId, square) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ game_id: gameId, square }),
-        credentials: '''include'''
+        credentials: 'include'
     });
     return res.json();
 };
 
 export const getGame = async (gameId) => {
     const res = await fetch(`${API_BASE}/game/${gameId}`, {
-        credentials: '''include'''
+        credentials: 'include'
     });
     return res.json();
 };
 
 export const getMe = async () => {
     const res = await fetch(`${API_BASE}/me`, {
-        credentials: '''include'''
+        credentials: 'include'
     });
     return res.json();
 };
 
 export const getUserRatings = async (userId) => {
     const res = await fetch(`${API_BASE}/ratings/${userId}`, {
-        credentials: '''include'''
+        credentials: 'include'
     });
     return res.json();
 };
 
 export const getAuthLinks = () => {
     const hostname = window.location.hostname;
-    const isProd = hostname === '''v-chess.com''' || hostname === '''www.v-chess.com''' || hostname.endsWith('''.vercel.app''');
+    const isProd = hostname === 'v-chess.com' || hostname === 'www.v-chess.com' || hostname.endsWith('.vercel.app');
     const base = isProd ? "https://api.v-chess.com/auth" : `http://${hostname}:8000/auth`;
     return {
         loginLink: `${base}/login`,
