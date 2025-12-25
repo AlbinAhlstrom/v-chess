@@ -291,6 +291,17 @@
     box-sizing: border-box;
 }
 
+.player-info {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.rating-text {
+    font-weight: 400;
+    color: #888;
+}
+
 .clock-display {
     background-color: #312e2b;
     color: #fff;

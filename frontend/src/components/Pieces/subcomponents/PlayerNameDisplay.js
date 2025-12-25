@@ -3,8 +3,7 @@ import React from 'react';
 function PlayerNameDisplay({ 
     isOpponent, 
     isFlipped, 
-    playerName, 
-    opponentName, 
+    player,
     takebackOffer, 
     user, 
     timers, 
@@ -13,13 +12,8 @@ function PlayerNameDisplay({
 }) {
     const displayClass = isOpponent ? "opponent-name" : "player-name";
     
-    // Logic for which name to show based on flipping
-    let nameToShow;
-    if (isOpponent) {
-        nameToShow = isFlipped ? playerName : opponentName;
-    } else {
-        nameToShow = isFlipped ? opponentName : playerName;
-    }
+    const playerName = player ? player.name : "Anonymous";
+    const rating = player && player.rating ? player.rating : null;
 
     // Logic for which timer to show
     const timerKey = isOpponent 
@@ -30,7 +24,10 @@ function PlayerNameDisplay({
 
     return (
         <div className={`player-name-display ${displayClass}`}>
-            <span className="name-text">{nameToShow}</span>
+            <div className="player-info">
+                <span className="name-text">{playerName}</span>
+                {rating && <span className="rating-text"> ({rating})</span>}
+            </div>
             
             {isOpponent && takebackOffer && user && takebackOffer.by_user_id !== user.id && (
                 <span className="takeback-prompt">Accept takeback?</span>

@@ -80,8 +80,8 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
     const [increment, setIncrement] = useState(2);
 
     // Player Names State
-    const [playerName, setPlayerName] = useState("Anonymous");
-    const [opponentName, setOpponentName] = useState("Anonymous Opponent");
+    const [whitePlayer, setWhitePlayer] = useState({ name: "Anonymous", rating: 1500 });
+    const [blackPlayer, setBlackPlayer] = useState({ name: "Anonymous", rating: 1500 });
     const [whitePlayerId, setWhitePlayerId] = useState(null);
     const [blackPlayerId, setBlackPlayerId] = useState(null);
     const [takebackOffer, setTakebackOffer] = useState(null); // { by_user_id: number }
@@ -91,10 +91,8 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         if (matchmaking && user && (whitePlayerId || blackPlayerId)) {
             if (user.id === blackPlayerId) {
                 setFlippedCombined(true);
-                setPlayerName(user.name);
             } else if (user.id === whitePlayerId) {
                 setFlippedCombined(false);
-                setPlayerName(user.name);
             }
         }
     }, [user, matchmaking, whitePlayerId, blackPlayerId]);
@@ -224,8 +222,14 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                 setIsGameOver(data.is_over);
                 setTurn(data.turn);
                 
-                if (data.white_player_id) setWhitePlayerId(data.white_player_id);
-                if (data.black_player_id) setBlackPlayerId(data.black_player_id);
+                if (data.white_player) {
+                    setWhitePlayer(data.white_player);
+                    setWhitePlayerId(data.white_player.id);
+                }
+                if (data.black_player) {
+                    setBlackPlayer(data.black_player);
+                    setBlackPlayerId(data.black_player.id);
+                }
 
                 connectWebSocket(id);
             }
@@ -240,7 +244,6 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         getMe().then(data => {
             if (data.user) {
                 setUser(data.user);
-                setPlayerName(data.user.name);
             }
         }).catch(e => console.error("Failed to fetch user:", e));
     }, []);
@@ -657,6 +660,9 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
 
     const promotionColor = fen && fen.split(' ')[1] === 'w' ? 'w' : 'b';
 
+    const topPlayer = isFlipped ? whitePlayer : blackPlayer;
+    const bottomPlayer = isFlipped ? blackPlayer : whitePlayer;
+
         return (
 
             <div
@@ -683,9 +689,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
 
                     isFlipped={isFlipped}
 
-                    playerName={playerName}
-
-                    opponentName={opponentName}
+                    player={topPlayer}
 
                     takebackOffer={takebackOffer}
 
@@ -766,9 +770,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
 
                     isFlipped={isFlipped}
 
-                    playerName={playerName}
-
-                    opponentName={opponentName}
+                    player={bottomPlayer}
 
                     takebackOffer={takebackOffer}
 

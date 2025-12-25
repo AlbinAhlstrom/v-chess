@@ -305,6 +305,19 @@ async def get_game(game_id: str) -> Game:
             else: raise HTTPException(status_code=404, detail="Game not found")
     return games[game_id]
 
+async def get_player_info(session, user_id, variant):
+    if not user_id:
+        return {"name": "Anonymous", "rating": 1500}
+    
+    user = (await session.execute(select(User).where(User.google_id == user_id))).scalar_one_or_none()
+    rating_obj = (await session.execute(select(Rating).where(Rating.user_id == user_id, Rating.variant == variant))).scalar_one_or_none()
+    
+    return {
+        "id": user_id,
+        "name": user.name if user else "Unknown",
+        "rating": int(rating_obj.rating) if rating_obj else 1500
+    }
+
 class NewGameRequest(BaseModel):
     variant: str = "standard"
     fen: Optional[str] = None
@@ -385,9 +398,24 @@ async def new_game(req: NewGameRequest):
 @app.get("/api/game/{game_id}")
 async def get_game_state(game_id: str):
     game = await get_game(game_id)
+    variant = game_variants.get(game_id, "standard")
     async with async_session() as session:
         model = (await session.execute(select(GameModel).where(GameModel.id == game_id))).scalar_one_or_none()
-        return {"game_id": game_id, "fen": game.state.fen, "turn": game.state.turn.value, "is_over": game.is_over, "move_history": game.move_history, "winner": game.winner, "variant": game_variants.get(game_id), "white_player_id": model.white_player_id if model else None, "black_player_id": model.black_player_id if model else None}
+        
+        white_player = await get_player_info(session, model.white_player_id if model else None, variant)
+        black_player = await get_player_info(session, model.black_player_id if model else None, variant)
+
+        return {
+            "game_id": game_id, 
+            "fen": game.state.fen, 
+            "turn": game.state.turn.value, 
+            "is_over": game.is_over, 
+            "move_history": game.move_history, 
+            "winner": game.winner, 
+            "variant": variant, 
+            "white_player": white_player,
+            "black_player": black_player
+        }
 
 @app.websocket("/ws/{game_id}")
 async def websocket_endpoint(websocket: WebSocket, game_id: str):
