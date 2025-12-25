@@ -42,7 +42,9 @@ function Lobby() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        getMe().then(data => setUser(data.user));
+        getMe()
+            .then(data => setUser(data.user))
+            .catch(err => console.error("Failed to fetch user in Lobby:", err));
     }, []);
 
     useEffect(() => {

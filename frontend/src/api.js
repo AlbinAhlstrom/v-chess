@@ -27,8 +27,21 @@ export const getWsBase = () => {
 
 const API_BASE = getApiBase();
 
+const fetchWithLog = async (url, options = {}) => {
+    try {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            console.error(`[API] HTTP error ${response.status} fetching ${url}`);
+        }
+        return response;
+    } catch (error) {
+        console.error(`[API] Network error fetching ${url}:`, error);
+        throw error;
+    }
+};
+
 export const getAllLegalMoves = async (gameId) => {
-    const res = await fetch(`${API_BASE}/moves/all_legal`, {
+    const res = await fetchWithLog(`${API_BASE}/moves/all_legal`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ game_id: gameId }),
@@ -38,7 +51,7 @@ export const getAllLegalMoves = async (gameId) => {
 };
 
 export const createGame = async (variant = "standard", fen = null, timeControl = null) => {
-    const res = await fetch(`${API_BASE}/game/new`, { 
+    const res = await fetchWithLog(`${API_BASE}/game/new`, { 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -52,7 +65,7 @@ export const createGame = async (variant = "standard", fen = null, timeControl =
 };
 
 export const getLegalMoves = async (gameId, square) => {
-    const res = await fetch(`${API_BASE}/moves/legal`, {
+    const res = await fetchWithLog(`${API_BASE}/moves/legal`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ game_id: gameId, square }),
@@ -62,21 +75,21 @@ export const getLegalMoves = async (gameId, square) => {
 };
 
 export const getGame = async (gameId) => {
-    const res = await fetch(`${API_BASE}/game/${gameId}`, {
+    const res = await fetchWithLog(`${API_BASE}/game/${gameId}`, {
         credentials: 'include'
     });
     return res.json();
 };
 
 export const getMe = async () => {
-    const res = await fetch(`${API_BASE}/me`, {
+    const res = await fetchWithLog(`${API_BASE}/me`, {
         credentials: 'include'
     });
     return res.json();
 };
 
 export const getUserRatings = async (userId) => {
-    const res = await fetch(`${API_BASE}/ratings/${userId}`, {
+    const res = await fetchWithLog(`${API_BASE}/ratings/${userId}`, {
         credentials: 'include'
     });
     return res.json();
