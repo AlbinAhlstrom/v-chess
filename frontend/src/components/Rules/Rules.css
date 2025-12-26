@@ -1,0 +1,134 @@
+.rules-container {
+    display: flex;
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 20px;
+    background: var(--history-bg-color);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-height: 500px;
+}
+
+.rules-sidebar {
+    width: 250px;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding-right: 20px;
+}
+
+.rules-sidebar h3 {
+    margin-top: 0;
+    color: #888;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+
+.rules-sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.rules-sidebar li {
+    margin-bottom: 5px;
+}
+
+.rules-sidebar a {
+    color: var(--history-text-color);
+    text-decoration: none;
+    padding: 8px 12px;
+    display: block;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.rules-sidebar a:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.rules-sidebar li.active a {
+    background: var(--button-bg-color);
+    color: white;
+    font-weight: bold;
+}
+
+.rules-content {
+    flex: 1;
+    padding-left: 40px;
+}
+
+.rules-content h1 {
+    margin-top: 0;
+    font-size: 2.5rem;
+}
+
+.variant-description {
+    font-size: 1.2rem;
+    color: #aaa;
+    margin-bottom: 30px;
+    font-style: italic;
+}
+
+.rules-list {
+    padding-left: 20px;
+}
+
+.rules-list li {
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #ddd;
+}
+
+.rules-actions {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.play-button {
+    display: inline-block;
+    background-color: var(--dark-square);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.play-button:hover {
+    background-color: #77AB5F;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .rules-container {
+        flex-direction: column;
+        margin: 20px;
+    }
+
+    .rules-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-right: 0;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+    }
+
+    .rules-sidebar ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .rules-sidebar li {
+        margin-bottom: 0;
+    }
+
+    .rules-content {
+        padding-left: 0;
+    }
+}

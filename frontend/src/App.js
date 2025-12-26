@@ -5,6 +5,7 @@ import { useCallback, useState, useEffect } from 'react';
 import Lobby from './components/Lobby/Lobby.js';
 import Profile from './components/Profile/Profile.js';
 import About from './components/About/About.js';
+import Rules from './components/Rules/Rules.js';
 import LandingPage from './components/LandingPage/LandingPage.js';
 import Settings from './components/Settings/Settings.js';
 import Leaderboard from './components/Leaderboard/Leaderboard.js';
@@ -35,6 +36,7 @@ function Header({ user }) {
           <img src="/v_chess_dot_com.png" alt="V-Chess.com" className="header-logo-img" />
         </Link>
         <Link to="/create-game" className="header-link header-link-create">Create Game</Link>
+        <Link to="/rules/standard" className="header-link">Rules</Link>
         <Link to="/leaderboards" className="header-link">Leaderboards</Link>
         <Link to="/about" className="header-link">About</Link>
       </nav>
@@ -101,6 +103,7 @@ function Footer() {
     <footer className="main-footer">
       <a href="https://discord.gg/wGCBs5Qr" target="_blank" rel="noopener noreferrer" className="footer-link">Discord</a>
       <a href="https://docs.google.com/forms/d/1KbRrUx4oW_jXlli110CnDYjQJqX_dtr_4uFmVjO6poU/viewform" target="_blank" rel="noopener noreferrer" className="footer-link">Feedback</a>
+      <Link to="/rules/standard" className="footer-link">Rules</Link>
       <Link to="/about" className="footer-link">About</Link>
     </footer>
   );
@@ -152,6 +155,8 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/leaderboards" element={<Leaderboard />} />
             <Route path="/leaderboards/:variant" element={<Leaderboard />} />
+            <Route path="/rules" element={<Rules />} />
+            <Route path="/rules/:variant" element={<Rules />} />
             <Route path="/about" element={<About />} />
           </Routes>
         </main>
