@@ -39,6 +39,8 @@ html,body, #root {
 .header-logo-img {
     height: 44px;
     width: auto;
+    display: block;
+    transform: translateY(-5px);
 }
 
 .header-link {
