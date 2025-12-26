@@ -22,18 +22,76 @@ html,body, #root {
     align-items: center;
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(5px);
+    height: 70px;
+    box-sizing: border-box;
 }
 
-.header-nav {
+.header-left {
     display: flex;
     align-items: center;
     gap: 20px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
+.header-nav-desktop {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.hamburger-button {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    flex-shrink: 0;
+}
+
+/* Mobile Menu Styles */
+.mobile-menu-overlay {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    z-index: 1999;
+}
+
+.mobile-menu-container {
+    background: var(--history-bg-color);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-nav-link {
+    color: white;
+    text-decoration: none;
+    font-size: 1.5rem;
+    padding: 15px 0;
+    font-weight: 700;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mobile-nav-link:last-child {
+    border-bottom: none;
 }
 
 .header-logo {
     display: flex;
     align-items: center;
     text-decoration: none;
+    min-width: 0;
 }
 
 .header-logo-img {
@@ -41,6 +99,7 @@ html,body, #root {
     width: auto;
     display: block;
     transform: translateY(-5px);
+    max-width: 100%;
 }
 
 .header-link {
@@ -55,19 +114,32 @@ html,body, #root {
     opacity: 0.8;
 }
 
-@media (max-width: 650px) {
-    .header-link {
-        font-size: 0.9rem;
+@media (max-width: 850px) {
+    .header-nav-desktop {
+        display: none;
     }
 
-    .header-link-create {
-        display: none;
+    .hamburger-button {
+        display: block;
+        order: 1;
+    }
+
+    .auth-section {
+        order: 2;
+    }
+
+    .header-logo-img {
+        height: 36px;
+        transform: translateY(-3px);
     }
 }
 
 .auth-section {
     display: flex;
     align-items: center;
+    min-width: 32px;
+    min-height: 32px;
+    flex-shrink: 0;
 }
 
 .main-footer {
