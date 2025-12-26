@@ -15,6 +15,7 @@ const BADGES = {
 };
 
 function SupporterBadge({ badgeType }) {
+    console.log("SupporterBadge rendering with type:", badgeType);
     if (!badgeType || !BADGES[badgeType]) return null;
 
     const badge = BADGES[badgeType];

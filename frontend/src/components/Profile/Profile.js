@@ -15,6 +15,7 @@ function Profile() {
         if (urlUserId) {
             // Viewing a public profile
             getUserProfile(urlUserId).then(data => {
+                console.log("Profile data received:", data);
                 setUser(data.user);
                 setRatings(data.ratings);
                 setOverall(data.overall);

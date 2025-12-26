@@ -336,6 +336,8 @@ async def get_player_info(session, user_id, variant):
     return {
         "id": user_id,
         "name": user.name,
+        "picture": user.picture,
+        "supporter_badge": user.supporter_badge,
         "rating": int(rating_obj.rating) if rating_obj else 1500
     }
 
@@ -474,6 +476,7 @@ async def get_user_profile(user_id: str, request: Request):
         rating_list = [{"variant": r.variant, "rating": r.rating, "rd": r.rd} for r in ratings]
         overall = sum(r.rating for r in ratings) / len(ratings) if ratings else 1500.0
         
+        print(f"DEBUG: Returning profile for {user_id}. Badge: {user.supporter_badge}")
         return {
             "user": {
                 "id": user.google_id,
