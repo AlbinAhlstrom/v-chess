@@ -177,7 +177,11 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                 
                 if (history.length > 0) {
                     const last = history[history.length - 1];
-                    setLastMove({ from: last.slice(0, 2), to: last.slice(2, 4) });
+                    // UCI moves are typically 4 chars (e2e4) or 5 for promotions (e7e8q)
+                    const from = last.substring(0, 2);
+                    const to = last.substring(2, 4);
+                    console.log(`DEBUG: Last move detected: ${last} (from: ${from}, to: ${to})`);
+                    setLastMove({ from, to });
                 } else {
                     setLastMove(null);
                 }
@@ -254,7 +258,9 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                 
                 if (history.length > 0) {
                     const last = history[history.length - 1];
-                    setLastMove({ from: last.slice(0, 2), to: last.slice(2, 4) });
+                    const from = last.substring(0, 2);
+                    const to = last.substring(2, 4);
+                    setLastMove({ from, to });
                 } else {
                     setLastMove(null);
                 }
@@ -426,13 +432,13 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         return <LegalMoveDot key={index} file={displayFile} rank={displayRank} />;
     };
 
-    const renderHighlight = (square, color) => {
+    const renderHighlight = (square, color, keyPrefix = 'highlight') => {
         const { file, rank } = algebraicToCoords(square);
         let displayFile = isFlipped ? 7 - file : file;
         let displayRank = isFlipped ? 7 - rank : rank;
         const isDark = (file + rank) % 2 !== 0;
         return <HighlightSquare
-            key={`highlight-${square}`}
+            key={`${keyPrefix}-${square}`}
             file={displayFile}
             rank={displayRank}
             isDark={isDark}
@@ -776,9 +782,9 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
 
     
 
-                {selectedSquare && renderHighlight(selectedSquare)}
-                {lastMove && renderHighlight(lastMove.from, 'var(--last-move-highlight)')}
-                {lastMove && renderHighlight(lastMove.to, 'var(--last-move-highlight)')}
+                {selectedSquare && renderHighlight(selectedSquare, null, 'selected')}
+                {lastMove && renderHighlight(lastMove.from, 'var(--last-move-highlight)', 'last-from')}
+                {lastMove && renderHighlight(lastMove.to, 'var(--last-move-highlight)', 'last-to')}
 
     
 
