@@ -100,6 +100,82 @@ async def save_game_to_db(game_id: str):
             
             return rating_diffs
 
+async def match_players():
+    global quick_match_queue
+    if len(quick_match_queue) < 2:
+        return
+
+    # Try to find a match
+    to_remove = set()
+    matches = []
+
+    for i in range(len(quick_match_queue)):
+        if i in to_remove: continue
+        for j in range(i + 1, len(quick_match_queue)):
+            if j in to_remove: continue
+            
+            p1 = quick_match_queue[i]
+            p2 = quick_match_queue[j]
+
+            if p1["variant"] == p2["variant"] and p1["time_control"] == p2["time_control"]:
+                rating_diff = abs(p1["rating"] - p2["rating"])
+                if rating_diff <= p1["range"] and rating_diff <= p2["range"]:
+                    matches.append((p1, p2))
+                    to_remove.add(i)
+                    to_remove.add(j)
+                    break
+    
+    # Process matches
+    for p1, p2 in matches:
+        game_id = str(uuid4())
+        variant = p1["variant"]
+        rules_cls = RULES_MAP.get(variant.lower(), StandardRules)
+        rules = rules_cls()
+        game = Game(rules=rules, time_control=p1["time_control"])
+        games[game_id] = game
+        game_variants[game_id] = variant
+        
+        # Randomize colors
+        if random.choice([True, False]):
+            white_id, black_id = p1["user_id"], p2["user_id"]
+        else:
+            white_id, black_id = p2["user_id"], p1["user_id"]
+            
+        async with async_session() as session:
+            async with session.begin():
+                model = GameModel(
+                    id=game_id, 
+                    variant=variant, 
+                    fen=game.state.fen, 
+                    move_history=json.dumps(game.move_history), 
+                    uci_history=json.dumps(game.uci_history),
+                    time_control=json.dumps(game.time_control) if game.time_control else None, 
+                    white_player_id=white_id, 
+                    black_player_id=black_id, 
+                    is_over=False
+                )
+                session.add(model)
+        
+        # Notify players
+        await manager.broadcast_lobby(json.dumps({
+            "type": "quick_match_found",
+            "game_id": game_id,
+            "users": [p1["user_id"], p2["user_id"]]
+        }))
+
+    # Update queue
+    quick_match_queue = [p for idx, p in enumerate(quick_match_queue) if idx not in to_remove]
+
+async def quick_match_monitor():
+    print("Quick match monitor started.")
+    while True:
+        try:
+            await match_players()
+            await asyncio.sleep(2)
+        except Exception as e:
+            print(f"Error in quick match monitor: {e}")
+            await asyncio.sleep(1)
+
 async def timeout_monitor():
     print("Timeout monitor started.")
     while True:
@@ -153,10 +229,12 @@ async def lifespan(app: FastAPI):
             games[model.id] = game
             game_variants[model.id] = model.variant
     task = asyncio.create_task(timeout_monitor())
+    qm_task = asyncio.create_task(quick_match_monitor())
     yield
     task.cancel()
+    qm_task.cancel()
     try:
-        await task
+        await asyncio.gather(task, qm_task)
     except asyncio.CancelledError:
         pass
 
@@ -242,6 +320,7 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 seeks: dict[str, dict] = {}
+quick_match_queue: list[dict] = []
 pending_takebacks: dict[str, int] = {}
 
 @app.websocket("/ws/lobby")
@@ -274,6 +353,28 @@ async def lobby_websocket(websocket: WebSocket):
                 if seek_id in seeks and seeks[seek_id]["user_id"] == current_user_id:
                     del seeks[seek_id]
                     await manager.broadcast_lobby(json.dumps({"type": "seek_removed", "seek_id": seek_id}))
+            elif message["type"] == "join_quick_match":
+                if not current_user_id:
+                    continue
+                variant = message.get("variant", "standard")
+                async with async_session() as session:
+                    rating_info = await get_player_info(session, current_user_id, variant)
+                    user_rating = rating_info["rating"]
+                
+                # Remove if already in queue
+                quick_match_queue[:] = [p for p in quick_match_queue if p["user_id"] != current_user_id]
+                
+                quick_match_queue.append({
+                    "user_id": current_user_id,
+                    "variant": variant,
+                    "time_control": message.get("time_control"),
+                    "rating": user_rating,
+                    "range": message.get("range", 200),
+                    "joined_at": asyncio.get_event_loop().time()
+                })
+            elif message["type"] == "leave_quick_match":
+                if current_user_id:
+                    quick_match_queue[:] = [p for p in quick_match_queue if p["user_id"] != current_user_id]
             elif message["type"] == "join_seek":
                 seek_id = message.get("seek_id")
                 if seek_id in seeks:
@@ -306,8 +407,14 @@ async def lobby_websocket(websocket: WebSocket):
                             )
                             session.add(model)
                     await manager.broadcast_lobby(json.dumps({"type": "seek_accepted", "seek_id": seek_id, "game_id": game_id}))
-    except WebSocketDisconnect: manager.disconnect_lobby(websocket)
-    except Exception as e: print(f"Lobby WS error: {e}"); manager.disconnect_lobby(websocket)
+    except WebSocketDisconnect: 
+        if current_user_id:
+            quick_match_queue[:] = [p for p in quick_match_queue if p["user_id"] != current_user_id]
+        manager.disconnect_lobby(websocket)
+    except Exception as e: 
+        if current_user_id:
+            quick_match_queue[:] = [p for p in quick_match_queue if p["user_id"] != current_user_id]
+        print(f"Lobby WS error: {e}"); manager.disconnect_lobby(websocket)
 
 async def get_game(game_id: str) -> Game:
     if game_id not in games:

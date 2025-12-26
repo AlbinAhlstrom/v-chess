@@ -32,6 +32,8 @@ function Lobby() {
     const [user, setUser] = useState(null);
     const [selectedVariant, setSelectedVariant] = useState("standard");
     const [selectedColor, setSelectedColor] = useState("white");
+    const [isQuickMatching, setIsQuickMatching] = useState(false);
+    const [ratingRange, setRatingRange] = useState(200);
     
     // Match Pieces.js state structure
     const [isTimeControlEnabled, setIsTimeControlEnabled] = useState(true);
@@ -39,11 +41,15 @@ function Lobby() {
     const [increment, setIncrement] = useState(2);
     
     const socketRef = useRef(null);
+    const userRef = useRef(null);
     const navigate = useNavigate();
 
     useEffect(() => {
         getMe()
-            .then(data => setUser(data.user))
+            .then(data => {
+                setUser(data.user);
+                userRef.current = data.user;
+            })
             .catch(err => console.error("Failed to fetch user in Lobby:", err));
     }, []);
 
@@ -67,6 +73,10 @@ function Lobby() {
                 setSeeks(prev => prev.filter(s => s.id !== data.seek_id));
             } else if (data.type === "seek_accepted") {
                 navigate(`/matchmaking-game/${data.game_id}`);
+            } else if (data.type === "quick_match_found") {
+                if (data.users.includes(String(userRef.current?.id))) {
+                    navigate(`/matchmaking-game/${data.game_id}`);
+                }
             }
         };
 
@@ -106,6 +116,31 @@ function Lobby() {
                 type: "cancel_seek",
                 seek_id: seekId
             }));
+        }
+    };
+
+    const joinQuickMatch = () => {
+        if (!user) return;
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+            socketRef.current.send(JSON.stringify({
+                type: "join_quick_match",
+                variant: selectedVariant,
+                time_control: isTimeControlEnabled ? {
+                    limit: startingTime * 60,
+                    increment: increment
+                } : null,
+                range: ratingRange
+            }));
+            setIsQuickMatching(true);
+        }
+    };
+
+    const leaveQuickMatch = () => {
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+            socketRef.current.send(JSON.stringify({
+                type: "leave_quick_match"
+            }));
+            setIsQuickMatching(false);
         }
     };
 
@@ -150,14 +185,39 @@ function Lobby() {
                 />
 
                 <div className="lobby-actions">
-                    <button onClick={createSeek} className="create-button">Create Game Lobby</button>
-                    <button onClick={playVsComputer} className="computer-button">Play vs Computer</button>
-                    <button 
-                        onClick={() => navigate(selectedVariant === 'standard' ? '/otb' : `/otb/${selectedVariant}`)} 
-                        className="otb-button"
-                    >
-                        Play Over the Board
-                    </button>
+                    <div className="quick-match-section">
+                        <div className="range-selector">
+                            <label>Rating Range: ±{ratingRange}</label>
+                            <input 
+                                type="range" 
+                                min="50" 
+                                max="1000" 
+                                step="50" 
+                                value={ratingRange} 
+                                onChange={(e) => setRatingRange(parseInt(e.target.value))}
+                                disabled={isQuickMatching}
+                            />
+                        </div>
+                        {isQuickMatching ? (
+                            <button onClick={leaveQuickMatch} className="quick-match-button matching">
+                                <span className="spinner"></span> Matching... (Cancel)
+                            </button>
+                        ) : (
+                            <button onClick={joinQuickMatch} className="quick-match-button" disabled={!user}>
+                                Quick Match
+                            </button>
+                        )}
+                    </div>
+                    <div className="action-buttons-grid">
+                        <button onClick={createSeek} className="create-button">Create Game Lobby</button>
+                        <button onClick={playVsComputer} className="computer-button">Play vs Computer</button>
+                        <button 
+                            onClick={() => navigate(selectedVariant === 'standard' ? '/otb' : `/otb/${selectedVariant}`)} 
+                            className="otb-button"
+                        >
+                            Play Over the Board
+                        </button>
+                    </div>
                 </div>
             </div>
 
