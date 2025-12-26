@@ -666,6 +666,12 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
     const topPlayer = isFlipped ? whitePlayer : blackPlayer;
     const bottomPlayer = isFlipped ? blackPlayer : whitePlayer;
 
+    const whiteDiff = ratingDiffs ? ratingDiffs.white_diff : null;
+    const blackDiff = ratingDiffs ? ratingDiffs.black_diff : null;
+    
+    const topDiff = isFlipped ? whiteDiff : blackDiff;
+    const bottomDiff = isFlipped ? blackDiff : whiteDiff;
+
         return (
 
             <div
@@ -693,6 +699,8 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                     isFlipped={isFlipped}
 
                     player={topPlayer}
+
+                    ratingDiff={topDiff}
 
                     takebackOffer={takebackOffer}
 
@@ -763,8 +771,6 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
 
                     isFlipped={isFlipped}
 
-                    ratingDiffs={ratingDiffs}
-
                 />
 
     
@@ -776,6 +782,8 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                     isFlipped={isFlipped}
 
                     player={bottomPlayer}
+
+                    ratingDiff={bottomDiff}
 
                     takebackOffer={takebackOffer}
 

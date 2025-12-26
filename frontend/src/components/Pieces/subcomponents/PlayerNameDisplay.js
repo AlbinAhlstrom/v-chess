@@ -4,6 +4,7 @@ function PlayerNameDisplay({
     isOpponent, 
     isFlipped, 
     player,
+    ratingDiff,
     takebackOffer, 
     user, 
     timers, 
@@ -27,6 +28,19 @@ function PlayerNameDisplay({
             <div className="player-info">
                 <span className="name-text">{playerName}</span>
                 {rating && <span className="rating-text"> ({rating})</span>}
+                {ratingDiff !== null && ratingDiff !== undefined && (
+                    <span style={{
+                        marginLeft: '8px',
+                        backgroundColor: ratingDiff >= 0 ? '#4CAF50' : '#F44336',
+                        color: 'white',
+                        padding: '1px 5px',
+                        borderRadius: '3px',
+                        fontSize: '0.9em',
+                        fontWeight: 'bold'
+                    }}>
+                        {ratingDiff > 0 ? `+${ratingDiff}` : ratingDiff}
+                    </span>
+                )}
             </div>
             
             {isOpponent && takebackOffer && user && takebackOffer.by_user_id !== user.id && (

@@ -1,6 +1,6 @@
 import React from 'react';
 
-function GameOverIndicator({ isGameOver, position, winner, isFlipped, ratingDiffs }) {
+function GameOverIndicator({ isGameOver, position, winner, isFlipped }) {
     if (!isGameOver) return null;
 
     const getKingSquare = (color) => {
@@ -26,50 +26,26 @@ function GameOverIndicator({ isGameOver, position, winner, isFlipped, ratingDiff
     const renderIndicator = (sq, color) => {
         let displayFile = isFlipped ? 7 - sq.file : sq.file;
         let displayRank = isFlipped ? 7 - sq.rank : sq.rank;
-        
-        const diff = ratingDiffs ? (color === 'w' ? ratingDiffs.white_diff : ratingDiffs.black_diff) : null;
-
         return (
             <div key={color} style={{
                 position: 'absolute',
                 left: `calc(${displayFile} * var(--square-size) + var(--square-size) / 2 - 15px)`,
                 top: `calc(${displayRank} * var(--square-size) + var(--square-size) / 2 - 15px)`,
-                zIndex: 1000,
+                width: '30px',
+                height: '30px',
+                borderRadius: '50%',
+                backgroundColor: getStatusColor(color),
                 display: 'flex',
-                flexDirection: 'column',
+                justifyContent: 'center',
                 alignItems: 'center',
-                gap: '5px'
+                zIndex: 1000,
+                boxShadow: '0 2px 5px rgba(0,0,0,0.5)'
             }}>
-                <div style={{
-                    width: '30px',
-                    height: '30px',
-                    borderRadius: '50%',
-                    backgroundColor: getStatusColor(color),
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    boxShadow: '0 2px 5px rgba(0,0,0,0.5)'
-                }}>
-                    <img 
-                        src={`/images/pieces/${color === 'w' ? 'K' : 'k'}.png`} 
-                        style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} 
-                        alt="" 
-                    />
-                </div>
-                {diff !== null && (
-                    <div style={{
-                        backgroundColor: diff >= 0 ? '#4CAF50' : '#F44336',
-                        color: 'white',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: '700',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                        whiteSpace: 'nowrap'
-                    }}>
-                        {diff > 0 ? `+${diff}` : diff}
-                    </div>
-                )}
+                <img 
+                    src={`/images/pieces/${color === 'w' ? 'K' : 'k'}.png`} 
+                    style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} 
+                    alt="" 
+                />
             </div>
         );
     };
