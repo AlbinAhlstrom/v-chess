@@ -34,11 +34,19 @@ html,body, #root {
     display: flex;
     align-items: center;
     text-decoration: none;
+    gap: 2px;
 }
 
-.header-logo-img {
-    height: 32px;
+.header-logo-v {
+    height: 36px;
     width: auto;
+}
+
+.header-logo-text {
+    color: #081e7d;
+    font-weight: bold;
+    font-size: 1.4rem;
+    letter-spacing: -0.5px;
 }
 
 .header-link {

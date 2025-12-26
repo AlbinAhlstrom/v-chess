@@ -32,7 +32,8 @@ function Header({ user }) {
     <header className="main-header">
       <nav className="header-nav">
         <Link to="/" className="header-logo">
-          <img src="/vchess_192.png" alt="V-Chess" className="header-logo-img" />
+          <img src="/vchess_no_bg.png" alt="V" className="header-logo-v" />
+          <span className="header-logo-text">-chess.com</span>
         </Link>
         <Link to="/create-game" className="header-link header-link-create">Create Game</Link>
         <Link to="/leaderboards" className="header-link">Leaderboards</Link>
