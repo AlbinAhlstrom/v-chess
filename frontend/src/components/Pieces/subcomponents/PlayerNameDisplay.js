@@ -21,8 +21,8 @@ function PlayerNameDisplay({
     const playerId = player ? player.id : null;
     const badgeType = player ? player.supporter_badge : null;
 
-    // Show rating only in matchmaking or if it's a real user (not computer/anonymous in OTB)
-    const shouldShowRating = matchmaking || (playerId && playerId !== "computer");
+    // Show rating ONLY in matchmaking games
+    const shouldShowRating = !!matchmaking;
 
     // Logic for which timer to show
     const timerKey = isOpponent 
