@@ -41,6 +41,7 @@ class GameModel(Base):
     variant: Mapped[str] = mapped_column(String)
     fen: Mapped[str] = mapped_column(String)
     move_history: Mapped[str] = mapped_column(Text) # JSON list
+    uci_history: Mapped[Optional[str]] = mapped_column(Text) # JSON list
     time_control: Mapped[Optional[str]] = mapped_column(Text) # JSON dict
     clocks: Mapped[Optional[str]] = mapped_column(Text) # JSON dict
     last_move_at: Mapped[Optional[float]] = mapped_column(Float)

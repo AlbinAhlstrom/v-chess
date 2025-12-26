@@ -175,12 +175,12 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                 const history = message.move_history || [];
                 setMoveHistory(history);
                 
-                if (history.length > 0) {
-                    const last = history[history.length - 1];
-                    // UCI moves are typically 4 chars (e2e4) or 5 for promotions (e7e8q)
+                const uciHistory = message.uci_history || [];
+                if (uciHistory.length > 0) {
+                    const last = uciHistory[uciHistory.length - 1];
                     const from = last.substring(0, 2);
                     const to = last.substring(2, 4);
-                    console.log(`DEBUG: Last move detected: ${last} (from: ${from}, to: ${to})`);
+                    console.log(`DEBUG: Last move detected (UCI): ${last} (from: ${from}, to: ${to})`);
                     setLastMove({ from, to });
                 } else {
                     setLastMove(null);
@@ -253,11 +253,11 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
             if (data.game_id) {
                 setFen(data.fen);
                 setGameId(data.game_id);
-                const history = data.move_history || [];
-                setMoveHistory(history);
+                setMoveHistory(data.move_history || []);
                 
-                if (history.length > 0) {
-                    const last = history[history.length - 1];
+                const uciHistory = data.uci_history || [];
+                if (uciHistory.length > 0) {
+                    const last = uciHistory[uciHistory.length - 1];
                     const from = last.substring(0, 2);
                     const to = last.substring(2, 4);
                     setLastMove({ from, to });

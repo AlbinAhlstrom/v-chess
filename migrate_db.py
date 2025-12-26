@@ -75,6 +75,10 @@ def migrate(db_file):
             if "black_rating_diff" not in columns:
                 print(f"Adding black_rating_diff column to {db_file}...")
                 cursor.execute("ALTER TABLE games ADD COLUMN black_rating_diff FLOAT")
+
+            if "uci_history" not in columns:
+                print(f"Adding uci_history column to {db_file}...")
+                cursor.execute("ALTER TABLE games ADD COLUMN uci_history TEXT")
             
         # Migrate users table
         cursor.execute("PRAGMA table_info(users)")

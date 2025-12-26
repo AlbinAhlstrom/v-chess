@@ -35,7 +35,8 @@ class Game:
             self.rules.state = self.state
 
         self.history: list[GameState] = []
-        self.move_history: list[str] = []
+        self.move_history: list[str] = [] # SAN
+        self.uci_history: list[str] = [] # UCI (for highlighting)
 
         # Timing
         self.time_control = time_control # {starting_time: min, increment: sec} OR {limit: sec, increment: sec}
@@ -116,6 +117,7 @@ class Game:
              san += "+"
 
         self.move_history.append(san)
+        self.uci_history.append(move.uci)
 
     def get_current_clocks(self) -> Optional[Dict[Color, float]]:
         """Returns the clocks accounting for time passed since the last move."""
@@ -137,6 +139,8 @@ class Game:
         self.rules = self.state.rules
         if self.move_history:
             self.move_history.pop()
+        if self.uci_history:
+            self.uci_history.pop()
         print(f"Undo move. Restored FEN: {self.state.fen}")
         return self.state.fen
 

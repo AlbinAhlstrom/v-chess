@@ -78,6 +78,7 @@ async def save_game_to_db(game_id: str):
                 
                 model.fen = game.state.fen
                 model.move_history = json.dumps(game.move_history)
+                model.uci_history = json.dumps(game.uci_history)
                 model.clocks = clocks_data
                 model.last_move_at = game.last_move_at
                 model.is_over = game.is_over
@@ -88,6 +89,7 @@ async def save_game_to_db(game_id: str):
                     variant=variant,
                     fen=game.state.fen,
                     move_history=json.dumps(game.move_history),
+                    uci_history=json.dumps(game.uci_history),
                     time_control=json.dumps(game.time_control) if game.time_control else None,
                     clocks=clocks_data,
                     last_move_at=game.last_move_at,
@@ -119,6 +121,7 @@ async def timeout_monitor():
                                 "in_check": game.rules.is_check(),
                                 "winner": winner.value,
                                 "move_history": game.move_history,
+                                "uci_history": game.uci_history,
                                 "clocks": {c.value: 0 if c == color else t for c, t in current_clocks.items()},
                                 "status": "timeout",
                                 "rating_diffs": rating_diffs
@@ -141,6 +144,8 @@ async def lifespan(app: FastAPI):
             time_control = json.loads(model.time_control) if model.time_control else None
             game = Game(state=model.fen, rules=rules, time_control=time_control)
             game.move_history = json.loads(model.move_history)
+            if model.uci_history:
+                game.uci_history = json.loads(model.uci_history)
             if model.clocks:
                 clocks_dict = json.loads(model.clocks)
                 game.clocks = {Color(k): v for k, v in clocks_dict.items()}
@@ -288,7 +293,17 @@ async def lobby_websocket(websocket: WebSocket):
                         else: white_id, black_id = joiner_id, seeker_id
                     async with async_session() as session:
                         async with session.begin():
-                            model = GameModel(id=game_id, variant=variant, fen=game.state.fen, move_history=json.dumps(game.move_history), time_control=json.dumps(game.time_control) if game.time_control else None, white_player_id=white_id, black_player_id=black_id, is_over=False)
+                            model = GameModel(
+                                id=game_id, 
+                                variant=variant, 
+                                fen=game.state.fen, 
+                                move_history=json.dumps(game.move_history), 
+                                uci_history=json.dumps(game.uci_history),
+                                time_control=json.dumps(game.time_control) if game.time_control else None, 
+                                white_player_id=white_id, 
+                                black_player_id=black_id, 
+                                is_over=False
+                            )
                             session.add(model)
                     await manager.broadcast_lobby(json.dumps({"type": "seek_accepted", "seek_id": seek_id, "game_id": game_id}))
     except WebSocketDisconnect: manager.disconnect_lobby(websocket)
@@ -308,6 +323,8 @@ async def get_game(game_id: str) -> Game:
                 time_control = json.loads(model.time_control) if model.time_control else None
                 game = Game(state=model.fen, rules=rules, time_control=time_control)
                 game.move_history = json.loads(model.move_history)
+                if model.uci_history:
+                    game.uci_history = json.loads(model.uci_history)
                 if model.clocks:
                     clocks_dict = json.loads(model.clocks)
                     game.clocks = {Color(k): v for k, v in clocks_dict.items()}
@@ -557,6 +574,7 @@ async def new_game(req: NewGameRequest, request: Request):
                     variant=req.variant, 
                     fen=game.state.fen, 
                     move_history=json.dumps(game.move_history), 
+                    uci_history=json.dumps(game.uci_history),
                     time_control=json.dumps(game.time_control) if game.time_control else None, 
                     white_player_id=white_id, 
                     black_player_id=black_id, 
@@ -591,6 +609,7 @@ async def get_game_state(game_id: str):
             "turn": game.state.turn.value, 
             "is_over": game.is_over, 
             "move_history": game.move_history, 
+            "uci_history": game.uci_history,
             "winner": game.winner, 
             "variant": variant, 
             "white_player": white_player,
@@ -626,6 +645,7 @@ async def trigger_ai_move(game_id: str, game: Game):
                 "in_check": game.rules.is_check(), 
                 "winner": game.winner, 
                 "move_history": game.move_history, 
+                "uci_history": game.uci_history,
                 "clocks": {c.value: t for c, t in game.get_current_clocks().items()} if game.clocks else None, 
                 "rating_diffs": rating_diffs
             }))
@@ -657,6 +677,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
         "in_check": game.rules.is_check(), 
         "winner": game.winner, 
         "move_history": game.move_history, 
+        "uci_history": game.uci_history,
         "clocks": {c.value: t for c, t in game.clocks.items()} if game.clocks else None
     }))
 
@@ -717,6 +738,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                         "in_check": game.rules.is_check(), 
                         "winner": game.winner, 
                         "move_history": game.move_history, 
+                        "uci_history": game.uci_history,
                         "clocks": {c.value: t for c, t in game.get_current_clocks().items()} if game.clocks else None, 
                         "rating_diffs": rating_diffs
                     }))
@@ -742,6 +764,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                         "in_check": game.rules.is_check(), 
                         "winner": game.winner, 
                         "move_history": game.move_history, 
+                        "uci_history": game.uci_history,
                         "clocks": {c.value: t for c, t in game.get_current_clocks().items()} if game.clocks else None, 
                         "rating_diffs": rating_diffs
                     }))
