@@ -441,7 +441,17 @@ async def get_user_profile(user_id: str):
         user = result.scalar_one_or_none()
         
         if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+            # Fallback for anonymous or missing users instead of 404
+            return {
+                "user": {
+                    "id": user_id,
+                    "name": "Anonymous",
+                    "picture": None,
+                    "created_at": None
+                },
+                "ratings": [],
+                "overall": 1500.0
+            }
             
         stmt_ratings = select(Rating).where(Rating.user_id == user_id)
         result_ratings = await session.execute(stmt_ratings)
