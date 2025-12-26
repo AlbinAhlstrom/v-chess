@@ -31,7 +31,9 @@ function Header({ user }) {
   return (
     <header className="main-header">
       <nav className="header-nav">
-        <Link to="/" className="header-logo">V-Chess</Link>
+        <Link to="/" className="header-logo">
+          <img src="/vchess_192.png" alt="V-Chess" className="header-logo-img" />
+        </Link>
         <Link to="/create-game" className="header-link header-link-create">Create Game</Link>
         <Link to="/leaderboards" className="header-link">Leaderboards</Link>
         <Link to="/about" className="header-link">About</Link>
