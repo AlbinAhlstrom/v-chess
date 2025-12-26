@@ -75,6 +75,29 @@
 
 .mode-selector {
     margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.mode-selector .variant-select-btn {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 5px;
+}
+
+@media (max-width: 600px) {
+    .mode-selector {
+        gap: 5px;
+    }
+    
+    .mode-selector .variant-select-btn {
+        font-size: 11px;
+    }
+    
+    .mode-selector .variant-icon {
+        font-size: 18px;
+    }
 }
 
 .play-main-button {
