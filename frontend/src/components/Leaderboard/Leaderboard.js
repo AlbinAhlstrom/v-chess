@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { getLeaderboard } from '../../api';
+import SupporterBadge from '../SupporterBadge/SupporterBadge';
 import './Leaderboard.css';
 
 const VARIANTS = [
@@ -82,6 +83,7 @@ function Leaderboard() {
                                                     {player.picture && <img src={player.picture} alt="" className="mini-avatar" />}
                                                     <span className="player-name">{player.name}</span>
                                                 </Link>
+                                                <SupporterBadge badgeType={player.supporter_badge} />
                                             </td>
                                             <td className="rating-col">
                                                 <span className="rating-value">{player.rating}</span>

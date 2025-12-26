@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import SupporterBadge from '../../SupporterBadge/SupporterBadge';
 
 function PlayerNameDisplay({ 
     isOpponent, 
@@ -17,6 +18,7 @@ function PlayerNameDisplay({
     const playerName = player ? player.name : "Anonymous";
     const rating = player && player.rating ? player.rating : null;
     const playerId = player ? player.id : null;
+    const badgeType = player ? player.supporter_badge : null;
 
     // Logic for which timer to show
     const timerKey = isOpponent 
@@ -28,9 +30,12 @@ function PlayerNameDisplay({
     const renderName = () => {
         if (playerId && playerId !== "computer") {
             return (
-                <Link to={`/profile/${playerId}`} className="name-link">
-                    <span className="name-text">{playerName}</span>
-                </Link>
+                <div className="name-container" style={{ display: 'flex', alignItems: 'center' }}>
+                    <Link to={`/profile/${playerId}`} className="name-link">
+                        <span className="name-text">{playerName}</span>
+                    </Link>
+                    <SupporterBadge badgeType={badgeType} />
+                </div>
             );
         }
         return <span className="name-text">{playerName}</span>;

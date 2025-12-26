@@ -410,7 +410,8 @@ async def ensure_user_in_db(user_session):
                         google_id=google_id,
                         email=user_session.get("email", ""),
                         name=user_session.get("name", "Unknown"),
-                        picture=user_session.get("picture")
+                        picture=user_session.get("picture"),
+                        supporter_badge=user_session.get("supporter_badge")
                     )
                     session.add(db_user)
                 return db_user
@@ -423,7 +424,9 @@ async def ensure_user_in_db(user_session):
 async def me(request: Request):
     user_session = request.session.get("user")
     if user_session:
-        await ensure_user_in_db(user_session)
+        db_user = await ensure_user_in_db(user_session)
+        if db_user:
+            user_session["supporter_badge"] = db_user.supporter_badge
     return {"user": user_session}
 
 @app.get("/api/ratings/{user_id}")
@@ -457,6 +460,7 @@ async def get_user_profile(user_id: str, request: Request):
                     "id": user_id,
                     "name": "Anonymous",
                     "picture": None,
+                    "supporter_badge": None,
                     "created_at": None
                 },
                 "ratings": [],
@@ -475,6 +479,7 @@ async def get_user_profile(user_id: str, request: Request):
                 "id": user.google_id,
                 "name": user.name,
                 "picture": user.picture,
+                "supporter_badge": user.supporter_badge,
                 "created_at": user.created_at
             },
             "ratings": rating_list,
@@ -502,6 +507,7 @@ async def get_leaderboard(variant: str):
                 "user_id": user_obj.google_id,
                 "name": user_obj.name,
                 "picture": user_obj.picture,
+                "supporter_badge": user_obj.supporter_badge,
                 "rating": int(rating_obj.rating),
                 "rd": int(rating_obj.rd)
             })

@@ -20,6 +20,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True, index=True)
     name: Mapped[str] = mapped_column(String)
     picture: Mapped[Optional[str]] = mapped_column(String)
+    supporter_badge: Mapped[Optional[str]] = mapped_column(String) # e.g., 'kickstarter', 'patreon'
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, server_default=func.now())
 
 class Rating(Base):

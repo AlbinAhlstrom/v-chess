@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getMe, getUserRatings, getUserProfile } from '../../api';
+import SupporterBadge from '../SupporterBadge/SupporterBadge';
 import './Profile.css';
 
 function Profile() {
@@ -59,7 +60,10 @@ function Profile() {
                         <div className="profile-identity">
                             <div className='info-row'>
                                 <span className='label'>Name:</span>
-                                <span className='value'>{user.name}</span>
+                                <span className='value' style={{ display: 'flex', alignItems: 'center' }}>
+                                    {user.name}
+                                    <SupporterBadge badgeType={user.supporter_badge} />
+                                </span>
                             </div>
                             {isOwnProfile && (
                                 <div className='info-row'>
