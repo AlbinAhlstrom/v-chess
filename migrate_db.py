@@ -76,6 +76,15 @@ def migrate(db_file):
                 print(f"Adding black_rating_diff column to {db_file}...")
                 cursor.execute("ALTER TABLE games ADD COLUMN black_rating_diff FLOAT")
             
+        # Migrate users table
+        cursor.execute("PRAGMA table_info(users)")
+        user_table_info = cursor.fetchall()
+        user_columns = {info[1] for info in user_table_info}
+        
+        if "supporter_badge" not in user_columns:
+            print(f"Adding supporter_badge column to {db_file}...")
+            cursor.execute("ALTER TABLE users ADD COLUMN supporter_badge TEXT")
+
         conn.commit()
         print(f"Migration successful for {db_file}.")
     except Exception as e:
