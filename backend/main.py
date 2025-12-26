@@ -344,7 +344,6 @@ async def login(request: Request):
     if is_prod: 
         redirect_uri = redirect_uri.replace("http://", "https://")
     
-    print(f"[AUTH] Login attempt. is_prod={is_prod}, ENV_REDIRECT={REDIRECT_URI}, DYNAMIC={dynamic_uri}, FINAL={redirect_uri}")
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 @app.get("/auth/auth")

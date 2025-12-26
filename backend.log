@@ -1,4 +1,7 @@
-INFO:     Started server process [101381]
+Loaded GOOGLE_CLIENT_ID starting with: 22159...
+Starting server in DEVELOPMENT mode
+INFO:     Started server process [101548]
 INFO:     Waiting for application startup.
+Timeout monitor started.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
