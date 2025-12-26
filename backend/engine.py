@@ -1,6 +1,7 @@
 import asyncio
 import os
 import logging
+import traceback
 from typing import Optional, Dict
 from v_chess.game import Game
 from v_chess.move import Move
@@ -64,25 +65,38 @@ class UCIEngine:
 
     async def read_line(self) -> str:
         if self.process and self.process.stdout:
-            line = await self.process.stdout.readline()
-            decoded = line.decode().strip()
-            if decoded:
-                logger.info(f"Engine >> {decoded}")
-                print(f"Engine >> {decoded}") # Added for console visibility
-            return decoded
+            try:
+                line = await self.process.stdout.readline()
+                if not line:
+                    print("[ENGINE] EOF reached")
+                    return ""
+                decoded = line.decode().strip()
+                if decoded:
+                    logger.info(f"Engine >> {decoded}")
+                    print(f"Engine >> {decoded}") # Added for console visibility
+                return decoded
+            except Exception as e:
+                print(f"[ENGINE] Error reading line: {e}")
+                return ""
         return ""
 
     async def set_option(self, name: str, value: str):
+        print(f"[ENGINE] Setting option {name} to {value}")
         await self.send_command(f"setoption name {name} value {value}")
 
     async def is_ready(self):
+        print("[ENGINE] Sending isready")
         await self.send_command("isready")
         while True:
             line = await self.read_line()
             if line == "readyok":
+                print("[ENGINE] Received readyok")
+                break
+            if not line: # EOF or error
                 break
 
     async def go(self, fen: str, moves: list[str] = None, time_limit: float = 1.0, variant: str = "standard") -> Optional[str]:
+        print(f"[ENGINE] go() called with variant={variant}, limit={time_limit}")
         async with self.lock:
             try:
                 # Set variant if needed
@@ -99,6 +113,8 @@ class UCIEngine:
                 
                 if moves:
                     cmd += f" moves {' '.join(moves)}"
+                
+                print(f"[ENGINE] Sending position: {cmd}")
                 await self.send_command(cmd)
                 
                 await self.is_ready()
@@ -106,11 +122,14 @@ class UCIEngine:
                 # Start search
                 # movetime is in milliseconds
                 movetime = int(time_limit * 1000)
+                print(f"[ENGINE] Starting search with movetime {movetime}")
                 await self.send_command(f"go movetime {movetime}")
 
                 best_move = None
                 while True:
                     line = await self.read_line()
+                    if not line:
+                        break
                     if line.startswith("bestmove"):
                         parts = line.split()
                         if len(parts) >= 2:
@@ -119,10 +138,11 @@ class UCIEngine:
                                 best_move = None
                         break
                 
+                print(f"[ENGINE] Found best move: {best_move}")
                 return best_move
             except Exception as e:
-                logger.error(f"Engine error during 'go': {e}")
-                print(f"Engine error during 'go': {e}")
+                print(f"[ENGINE] CRITICAL ERROR during 'go': {e}")
+                traceback.print_exc()
                 return None
 
 # Singleton instance or factory could be used
