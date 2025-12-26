@@ -51,11 +51,6 @@ function Profile() {
             <div className='profile-card'>
                 <div className="profile-card-header">
                     <h1>{isOwnProfile ? "Your Profile" : `${user.name}'s Profile`}</h1>
-                    {isOwnProfile && (
-                        <Link to="/settings" className="settings-link-btn">
-                            Edit Settings
-                        </Link>
-                    )}
                 </div>
                 
                 <section className='profile-section'>
