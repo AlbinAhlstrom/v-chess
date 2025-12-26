@@ -57,6 +57,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
     const [inCheck, setInCheck] = useState(false);
     const [flashKingSquare, setFlashKingSquare] = useState(null);
     const [moveHistory, setMoveHistory] = useState([]);
+    const [lastMove, setLastMove] = useState(null); // { from: 'e2', to: 'e4' }
     const [winner, setWinner] = useState(null);
     const [isGameOver, setIsGameOver] = useState(false);
     const [ratingDiffs, setRatingDiffs] = useState(null);
@@ -171,7 +172,16 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
             if (message.type === "game_state") {
                 setFen(message.fen);
                 setInCheck(message.in_check);
-                setMoveHistory(message.move_history || []);
+                const history = message.move_history || [];
+                setMoveHistory(history);
+                
+                if (history.length > 0) {
+                    const last = history[history.length - 1];
+                    setLastMove({ from: last.slice(0, 2), to: last.slice(2, 4) });
+                } else {
+                    setLastMove(null);
+                }
+
                 setWinner(message.winner);
                 setIsGameOver(message.is_over);
                 setTurn(message.turn);
@@ -239,7 +249,16 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
             if (data.game_id) {
                 setFen(data.fen);
                 setGameId(data.game_id);
-                setMoveHistory(data.move_history || []);
+                const history = data.move_history || [];
+                setMoveHistory(history);
+                
+                if (history.length > 0) {
+                    const last = history[history.length - 1];
+                    setLastMove({ from: last.slice(0, 2), to: last.slice(2, 4) });
+                } else {
+                    setLastMove(null);
+                }
+
                 setInCheck(data.in_check);
                 setWinner(data.winner);
                 setIsGameOver(data.is_over);
@@ -407,15 +426,17 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         return <LegalMoveDot key={index} file={displayFile} rank={displayRank} />;
     };
 
-    const renderHighlight = (square) => {
+    const renderHighlight = (square, color) => {
         const { file, rank } = algebraicToCoords(square);
         let displayFile = isFlipped ? 7 - file : file;
         let displayRank = isFlipped ? 7 - rank : rank;
         const isDark = (file + rank) % 2 !== 0;
         return <HighlightSquare
+            key={`highlight-${square}`}
             file={displayFile}
             rank={displayRank}
             isDark={isDark}
+            color={color}
         />;
     };
 
@@ -756,6 +777,8 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
     
 
                 {selectedSquare && renderHighlight(selectedSquare)}
+                {lastMove && renderHighlight(lastMove.from, 'var(--last-move-highlight)')}
+                {lastMove && renderHighlight(lastMove.to, 'var(--last-move-highlight)')}
 
     
 

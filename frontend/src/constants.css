@@ -5,6 +5,7 @@
     --bg-color: #25252D;
     --highlight-light-square: #D8C86E;
     --highlight-dark-square: #D4C25E;
+    --last-move-highlight: rgba(255, 255, 100, 0.4);
     --drag-hover-light-border: #F6F3DF;
     --drag-hover-dark-border: #77AB5F;
     --legal-move-dot-color: #6CA054;
