@@ -1,6 +1,6 @@
 .rules-container {
     display: flex;
-    max-width: 1000px;
+    max-width: 850px;
     margin: 40px auto;
     padding: 30px;
     background: var(--history-bg-color);
