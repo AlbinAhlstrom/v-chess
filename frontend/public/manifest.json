@@ -3,7 +3,7 @@
   "name": "V-Chess",
   "icons": [
     {
-      "src": "vchess_icon.png",
+      "src": "vchess_32.png",
       "sizes": "32x32",
       "type": "image/png"
     },
@@ -13,7 +13,7 @@
       "sizes": "192x192"
     },
     {
-      "src": "vchess_no_bg.png",
+      "src": "vchess_512.png",
       "type": "image/png",
       "sizes": "512x512"
     }
