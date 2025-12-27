@@ -1,5 +1,6 @@
 __pycache__/
 *.py[cod]
+venv/
 clean_comments.py
 .hypothesis
 AGENTS.md
