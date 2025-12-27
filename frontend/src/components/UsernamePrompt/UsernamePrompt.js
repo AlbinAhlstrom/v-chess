@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './UsernamePrompt.css';
 import { setUsername } from '../../api';
 
@@ -6,6 +6,13 @@ function UsernamePrompt({ onComplete }) {
     const [name, setName] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'auto';
+        };
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

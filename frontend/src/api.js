@@ -109,18 +109,20 @@ export const getLeaderboard = (variant) => {
 };
 
 export const updateUserSettings = (settings) => {
-    return fetch(`${API_BASE}/user/settings`, {
+    return fetchWithLog(`${API_BASE}/user/settings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings)
+        body: JSON.stringify(settings),
+        credentials: 'include'
     }).then(res => res.json());
 };
 
 export const setUsername = (username) => {
-    return fetch(`${API_BASE}/user/set_username`, {
+    return fetchWithLog(`${API_BASE}/user/set_username`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username })
+        body: JSON.stringify({ username }),
+        credentials: 'include'
     }).then(res => res.json());
 };
 
