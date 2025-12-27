@@ -280,7 +280,7 @@ function Lobby() {
                     ))}
                 </div>
 
-                {gameMode !== 'quick' && (
+                {gameMode !== 'quick' && gameMode !== 'otb' && (
                     <div className="color-selection-container">
                         <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Play as:</label>
                         <div className="variants-grid">
