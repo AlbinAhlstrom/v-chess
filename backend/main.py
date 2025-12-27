@@ -1163,6 +1163,12 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                     rating_diffs = await save_game_to_db(game_id)
                     print(f"[WS] Human move BROADCAST: {move_uci}")
                     
+                    # Clear any pending takeback or draw offers on a new move
+                    if game_id in pending_takebacks:
+                        del pending_takebacks[game_id]
+                    await manager.broadcast(game_id, json.dumps({"type": "takeback_cleared"}))
+                    await manager.broadcast(game_id, json.dumps({"type": "draw_cleared"}))
+
                     await manager.broadcast(game_id, json.dumps({
                         "type": "game_state", 
                         "fen": game.state.fen, 
@@ -1257,6 +1263,56 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                         "is_drop": False,
                         "status": "draw_agreed"
                 }))
+            elif message["type"] == "takeback_offer":
+                if user_id in [white_id, black_id]:
+                    pending_takebacks[game_id] = user_id
+                    await manager.broadcast(game_id, json.dumps({
+                        "type": "takeback_offered",
+                        "by_user_id": user_id
+                    }))
+            elif message["type"] == "takeback_accept":
+                if user_id in [white_id, black_id]:
+                    try:
+                        offering_user_id = pending_takebacks.get(game_id)
+                        if offering_user_id is None:
+                            game.undo_move()
+                        else:
+                            offering_color = Color.WHITE if offering_user_id == white_id else Color.BLACK
+                            num_undo = 2 if game.state.turn == offering_color else 1
+                            for _ in range(num_undo):
+                                if game.history:
+                                    game.undo_move()
+                            if game_id in pending_takebacks:
+                                del pending_takebacks[game_id]
+
+                        await save_game_to_db(game_id)
+                        await manager.broadcast(game_id, json.dumps({
+                            "type": "takeback_cleared"
+                        }))
+                        await manager.broadcast(game_id, json.dumps({
+                            "type": "game_state", 
+                            "fen": game.state.fen, 
+                            "turn": game.state.turn.value, 
+                            "is_over": game.is_over, 
+                            "in_check": game.rules.is_check(), 
+                            "winner": game.winner, 
+                            "move_history": game.move_history, 
+                            "uci_history": game.uci_history,
+                            "clocks": {c.value: t for c, t in game.get_current_clocks().items()} if game.clocks else None, 
+                            "rating_diffs": None,
+                            "explosion_square": None,
+                            "is_drop": False,
+                            "status": "takeback_accepted"
+                        }))
+                    except Exception as e:
+                        await websocket.send_text(json.dumps({"type": "error", "message": str(e)}))
+            elif message["type"] == "takeback_decline":
+                if user_id in [white_id, black_id]:
+                    if game_id in pending_takebacks:
+                        del pending_takebacks[game_id]
+                    await manager.broadcast(game_id, json.dumps({
+                        "type": "takeback_cleared"
+                    }))
     except WebSocketDisconnect:
         manager.disconnect(websocket, game_id)
     except Exception as e:

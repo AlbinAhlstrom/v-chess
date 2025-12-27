@@ -106,7 +106,8 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
     const [blackPlayer, setBlackPlayer] = useState({ name: "Anonymous", rating: 1500 });
     const [whitePlayerId, setWhitePlayerId] = useState(null);
     const [blackPlayerId, setBlackPlayerId] = useState(null);
-    const [takebackOffer, setTakebackOffer] = useState(null); // { by_user_id: number }
+    const [takebackOffer, setTakebackOffer] = useState(null); // { by_user_id: string }
+    const [drawOffer, setDrawOffer] = useState(null); // { by_user_id: string }
 
     const fetchLegalMoves = useCallback((id) => {
         if (!id) return;
@@ -320,8 +321,12 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                 }
             } else if (message.type === "takeback_offered") {
                 setTakebackOffer({ by_user_id: message.by_user_id });
+            } else if (message.type === "draw_offered") {
+                setDrawOffer({ by_user_id: message.by_user_id });
             } else if (message.type === "takeback_cleared") {
                 setTakebackOffer(null);
+            } else if (message.type === "draw_cleared") {
+                setDrawOffer(null);
             } else if (message.type === "error") {
                 console.error("WebSocket error:", message.message);
                 if (message.message.toLowerCase().includes("check") && lastNotifiedFen.current) {
@@ -943,6 +948,18 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         }
     };
 
+    const handleAcceptDraw = (e) => {
+        e.stopPropagation();
+        if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+            ws.current.send(JSON.stringify({ type: "draw_accept" }));
+        }
+    };
+
+    const handleDeclineDraw = (e) => {
+        e.stopPropagation();
+        setDrawOffer(null);
+    };
+
     const handleAcceptTakeback = (e) => {
         e.stopPropagation();
         if (ws.current && ws.current.readyState === WebSocket.OPEN) {
@@ -1042,12 +1059,15 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                 handleMenuToggle={handleMenuToggle}
                 handleResign={handleResign}
                 handleOfferDraw={handleOfferDraw}
+                handleAcceptDraw={handleAcceptDraw}
+                handleDeclineDraw={handleDeclineDraw}
                 handleAcceptTakeback={handleAcceptTakeback}
                 handleDeclineTakeback={handleDeclineTakeback}
                 isMenuOpen={isMenuOpen}
                 copyFenToClipboard={copyFenToClipboard}
                 handleImportClick={handleImportClick}
                 takebackOffer={takebackOffer}
+                drawOffer={drawOffer}
                 user={user}
                 isGameOver={isGameOver}
                 handleRematch={handleRematch}
