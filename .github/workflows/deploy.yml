@@ -15,7 +15,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd projects/v_chess
+            cd v-chess
             chmod +x start_prod.sh
             ./start_prod.sh || exit 1
             echo "Deployment script finished successfully."
