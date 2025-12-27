@@ -139,7 +139,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
     const gameStartSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/game-start.mp3"));
     const promotionSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/promote.mp3"));
     const illegalSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/illegal.mp3"));
-    const explosionSound = useRef(new Audio(window.location.origin + "/sounds/atomic_explosion.mp3"));
+    const explosionSound = useRef(new Audio(process.env.PUBLIC_URL + "/sounds/atomic_explosion.mp3"));
     
     // Timer formatting helper
     const formatTime = (seconds) => {
