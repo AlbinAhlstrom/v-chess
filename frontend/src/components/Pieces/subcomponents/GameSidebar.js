@@ -71,7 +71,8 @@ const ANALYSIS_ICON = (
 function GameSidebar({ 
     matchmaking, 
     moveHistory, 
-    handleUndo, 
+    onUndo,
+    onTakeback,
     handleReset, 
     handleNewGameClick, 
     handleMenuToggle, 
@@ -141,7 +142,7 @@ function GameSidebar({
                                     </div>
                                 ) : (
                                     <button 
-                                        onClick={handleUndo}
+                                        onClick={onTakeback}
                                         title={takebackOffer ? "Takeback Offered..." : "Offer Takeback"}
                                         className={`control-button ${takebackOffer ? 'waiting' : ''}`}
                                         disabled={!!takebackOffer}
@@ -193,7 +194,7 @@ function GameSidebar({
                 ) : (
                     <>
                         <button 
-                            onClick={handleUndo}
+                            onClick={onUndo}
                             title="Undo"
                             className="control-button"
                         >

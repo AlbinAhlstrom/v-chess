@@ -911,14 +911,20 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         setIsMenuOpen(false);
     };
 
-    const handleUndo = (e) => {
-        e.stopPropagation();
-        if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-            const isComputerGame = computer || whitePlayerId === "computer" || blackPlayerId === "computer";
-            const type = (matchmaking && !isComputerGame) ? "takeback_offer" : "undo";
-            ws.current.send(JSON.stringify({ type }));
-        } else {
-            console.error("WebSocket not open. ReadyState:", ws.current?.readyState);
+    const isComputerGame = computer || whitePlayerId === "computer" || blackPlayerId === "computer";
+
+    const handleOtbUndo = (e) => {
+        e?.stopPropagation();
+        if (ws.current?.readyState === WebSocket.OPEN) {
+            ws.current.send(JSON.stringify({ type: "undo" }));
+        }
+        setIsMenuOpen(false);
+    };
+
+    const handleTakebackOffer = (e) => {
+        e?.stopPropagation();
+        if (ws.current?.readyState === WebSocket.OPEN) {
+            ws.current.send(JSON.stringify({ type: "takeback_offer" }));
         }
         setIsMenuOpen(false);
     };
@@ -1029,7 +1035,8 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
             <GameSidebar 
                 matchmaking={matchmaking}
                 moveHistory={moveHistory}
-                handleUndo={handleUndo}
+                onUndo={handleOtbUndo}
+                onTakeback={isComputerGame ? handleOtbUndo : handleTakebackOffer}
                 handleReset={handleReset}
                 handleNewGameClick={handleNewGameClick}
                 handleMenuToggle={handleMenuToggle}
