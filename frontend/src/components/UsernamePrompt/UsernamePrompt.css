@@ -1,0 +1,90 @@
+.username-prompt-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Above everything else */
+}
+
+.username-prompt-modal {
+    background: #2d2b28;
+    padding: 40px;
+    border-radius: 12px;
+    width: 400px;
+    max-width: 90%;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.username-prompt-modal h1 {
+    margin-top: 0;
+    color: white;
+    font-size: 1.8rem;
+}
+
+.username-prompt-modal p {
+    color: #aaa;
+    margin-bottom: 25px;
+}
+
+.username-prompt-modal form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.username-prompt-modal input {
+    background: #3c3934;
+    border: 1px solid #403d39;
+    color: white;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    outline: none;
+}
+
+.username-prompt-modal input:focus {
+    border-color: #95bb4a;
+}
+
+.username-prompt-modal .hint {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 0;
+    text-align: left;
+}
+
+.username-prompt-modal .error-message {
+    color: #ff6b6b;
+    font-size: 0.9rem;
+    margin: 0;
+    text-align: left;
+}
+
+.username-prompt-modal button {
+    background: #95bb4a;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 10px;
+}
+
+.username-prompt-modal button:hover:not(:disabled) {
+    background: #a9cc5d;
+}
+
+.username-prompt-modal button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

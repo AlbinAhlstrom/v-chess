@@ -119,6 +119,10 @@ html,body, #root {
         display: none;
     }
 
+    .header-username {
+        display: none;
+    }
+
     .hamburger-button {
         display: block;
         order: 1;

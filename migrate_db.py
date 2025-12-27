@@ -89,6 +89,10 @@ def migrate(db_file):
             print(f"Adding supporter_badge column to {db_file}...")
             cursor.execute("ALTER TABLE users ADD COLUMN supporter_badge TEXT")
 
+        if "username" not in user_columns:
+            print(f"Adding username column to {db_file}...")
+            cursor.execute("ALTER TABLE users ADD COLUMN username TEXT")
+
         if "default_time" not in user_columns:
             print(f"Adding default_time column to {db_file}...")
             cursor.execute("ALTER TABLE users ADD COLUMN default_time FLOAT DEFAULT 10.0")

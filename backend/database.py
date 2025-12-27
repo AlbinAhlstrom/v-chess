@@ -17,6 +17,7 @@ class User(Base):
     
     id: Mapped[int] = mapped_column(primary_key=True)
     google_id: Mapped[str] = mapped_column(String, unique=True, index=True)
+    username: Mapped[Optional[str]] = mapped_column(String, unique=True, index=True)
     email: Mapped[str] = mapped_column(String, unique=True, index=True)
     name: Mapped[str] = mapped_column(String)
     picture: Mapped[Optional[str]] = mapped_column(String)

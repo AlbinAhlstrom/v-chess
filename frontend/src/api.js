@@ -116,6 +116,14 @@ export const updateUserSettings = (settings) => {
     }).then(res => res.json());
 };
 
+export const setUsername = (username) => {
+    return fetch(`${API_BASE}/user/set_username`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+    }).then(res => res.json());
+};
+
 export const getAuthLinks = () => {
     const hostname = window.location.hostname;
     const isProd = hostname === 'v-chess.com' || hostname === 'www.v-chess.com' || hostname.endsWith('.vercel.app');

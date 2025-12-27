@@ -7,6 +7,7 @@ import Profile from './components/Profile/Profile.js';
 import About from './components/About/About.js';
 import Rules from './components/Rules/Rules.js';
 import LandingPage from './components/LandingPage/LandingPage.js';
+import UsernamePrompt from './components/UsernamePrompt/UsernamePrompt.js';
 import Settings from './components/Settings/Settings.js';
 import Leaderboard from './components/Leaderboard/Leaderboard.js';
 import { BrowserRouter, Routes, Route, Link, useParams, Navigate } from 'react-router-dom';
@@ -64,11 +65,11 @@ function Header({ user }) {
         </button>
         <div className="auth-section">
           {user ? (
-            <div className="user-profile-dropdown-container" style={{ position: 'relative' }}>
-              <div className="user-profile-trigger" onClick={toggleDropdown} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                <img src={user.picture} alt={user.name} className="header-avatar" />
-              </div>
-              
+                      <div className="user-profile-dropdown-container" style={{ position: 'relative' }}>
+                        <div className="user-profile-trigger" onClick={toggleDropdown} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                          <span className="header-username">{user.username || user.name}</span>
+                          <img src={user.picture} alt={user.name} className="header-avatar" />
+                        </div>              
               {isDropdownOpen && (
                   <div className="profile-dropdown-menu">
                       <Link to="/profile" className="dropdown-item" onClick={() => setIsDropdownOpen(false)}>
@@ -164,6 +165,10 @@ function App() {
     });
   }, []);
 
+  const handleUsernameComplete = (newUsername) => {
+    setUser(prev => ({ ...prev, username: newUsername }));
+  };
+
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
@@ -180,6 +185,7 @@ function App() {
   return (
     <BrowserRouter>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        {user && !user.username && <UsernamePrompt onComplete={handleUsernameComplete} />}
         <Header user={user} />
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Routes>

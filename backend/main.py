@@ -344,7 +344,7 @@ async def lobby_websocket(websocket: WebSocket):
                 seek_data = {
                     "id": seek_id,
                     "user_id": seek_user_id,
-                    "user_name": user.get("name") if user else "Anonymous",
+                    "user_name": user.get("username") or user.get("name") if user else "Anonymous",
                     "variant": message.get("variant", "standard"),
                     "color": message.get("color", "random"),
                     "time_control": message.get("time_control"),
@@ -463,7 +463,7 @@ async def get_player_info(session, user_id, variant, default_name="Anonymous"):
     
     return {
         "id": user_id,
-        "name": user.name,
+        "name": user.username or user.name,
         "picture": user.picture,
         "supporter_badge": user.supporter_badge,
         "rating": int(rating_obj.rating) if rating_obj else 1500
@@ -510,6 +510,7 @@ async def auth(request: Request):
                         "id": str(user.google_id), 
                         "db_id": int(user.id), 
                         "name": str(user.name), 
+                        "username": str(user.username) if user.username else None,
                         "email": str(user.email), 
                         "picture": user.picture,
                         "default_time": float(user.default_time),
@@ -547,6 +548,7 @@ async def ensure_user_in_db(user_session):
                     print(f"Resurrecting user {google_id} from session data...")
                     db_user = User(
                         google_id=google_id,
+                        username=user_session.get("username"),
                         email=user_session.get("email", ""),
                         name=user_session.get("name", "Unknown"),
                         picture=user_session.get("picture"),
@@ -569,10 +571,50 @@ async def me(request: Request):
         db_user = await ensure_user_in_db(user_session)
         if db_user:
             user_session["supporter_badge"] = db_user.supporter_badge
+            user_session["username"] = str(db_user.username) if db_user.username else None
             user_session["default_time"] = float(db_user.default_time)
             user_session["default_increment"] = float(db_user.default_increment)
             user_session["default_time_control_enabled"] = bool(db_user.default_time_control_enabled)
     return {"user": user_session}
+
+class SetUsernameRequest(BaseModel):
+    username: str
+
+@app.post("/api/user/set_username")
+async def set_username(req: SetUsernameRequest, request: Request):
+    user_session = request.session.get("user")
+    if not user_session:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    username = req.username.strip()
+    if len(username) < 3 or len(username) > 20:
+        raise HTTPException(status_code=400, detail="Username must be between 3 and 20 characters")
+    
+    import re
+    if not re.match(r"^[a-zA-Z0-9_\-]+$", username):
+        raise HTTPException(status_code=400, detail="Username can only contain letters, numbers, underscores, and hyphens")
+
+    google_id = user_session.get("id")
+    async with async_session() as session:
+        async with session.begin():
+            # Check if taken
+            stmt = select(User).where(User.username == username)
+            existing = (await session.execute(stmt)).scalar_one_or_none()
+            if existing:
+                raise HTTPException(status_code=400, detail="Username already taken")
+            
+            stmt = select(User).where(User.google_id == google_id)
+            user = (await session.execute(stmt)).scalar_one_or_none()
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+            
+            user.username = username
+            
+            # Update session
+            user_session["username"] = username
+            request.session["user"] = user_session
+            
+    return {"status": "success", "username": username}
 
 class UserSettingsRequest(BaseModel):
     default_time: float
@@ -655,7 +697,8 @@ async def get_user_profile(user_id: str, request: Request):
         return {
             "user": {
                 "id": user.google_id,
-                "name": user.name,
+                "name": user.username or user.name,
+                "username": user.username,
                 "picture": user.picture,
                 "supporter_badge": user.supporter_badge,
                 "created_at": user.created_at
@@ -683,7 +726,7 @@ async def get_leaderboard(variant: str):
         for rating_obj, user_obj in rows:
             leaderboard.append({
                 "user_id": user_obj.google_id,
-                "name": user_obj.name,
+                "name": user_obj.username or user_obj.name,
                 "picture": user_obj.picture,
                 "supporter_badge": user_obj.supporter_badge,
                 "rating": int(rating_obj.rating),
