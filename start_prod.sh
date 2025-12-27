@@ -3,6 +3,7 @@
 echo "Pulling latest changes..."
 git fetch origin
 git reset --hard origin/main
+git clean -fd
 git pull origin main
 
 # 2. Ensure Virtual Environment exists
