@@ -1,10 +1,11 @@
 import os
-import tempfile
+import uuid
 
 # Force a separate test database before importing app
-# Use a temp file to avoid locking issues in current directory
-test_db_file = tempfile.mktemp(suffix=".db", prefix="test_chess_")
-os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{test_db_file}"
+# Use a unique file in tests/ dir to avoid locking and ensure write permissions
+test_db_name = f"test_chess_{uuid.uuid4().hex}.db"
+test_db_path = os.path.join(os.path.dirname(__file__), test_db_name)
+os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{test_db_path}"
 
 from hypothesis import strategies as st
 import pytest
@@ -48,8 +49,8 @@ async def setup_test_db():
     await init_db()
     yield
     # Cleanup test db file after run
-    if os.path.exists(test_db_file):
-        try: os.remove(test_db_file)
+    if os.path.exists(test_db_path):
+        try: os.remove(test_db_path)
         except: pass
 
 @pytest.fixture(scope="module")
