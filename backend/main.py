@@ -21,7 +21,7 @@ from v_chess.rules import (
 from backend.database import init_db, async_session, GameModel, User, Rating
 from backend.rating import update_game_ratings
 from backend.engine import engine_manager
-from sqlalchemy import select, update
+from sqlalchemy import select, update, or_, and_, desc
 import json
 import os
 from starlette.middleware.sessions import SessionMiddleware
@@ -785,6 +785,111 @@ async def get_user_profile(user_id: str, request: Request):
             "ratings": rating_list,
             "overall": overall
         }
+
+@app.get("/api/user/{user_id}/games")
+async def get_user_games(
+    user_id: str, 
+    request: Request,
+    skip: int = 0, 
+    limit: int = 50, 
+    variant: Optional[str] = None, 
+    result: Optional[str] = None
+):
+    async with async_session() as session:
+        filters = [
+            or_(GameModel.white_player_id == user_id, GameModel.black_player_id == user_id),
+            GameModel.is_over == True
+        ]
+
+        if variant and variant != "all":
+            filters.append(GameModel.variant == variant)
+
+        if result:
+            if result == "win":
+                filters.append(or_(
+                    and_(GameModel.white_player_id == user_id, GameModel.winner == "white"),
+                    and_(GameModel.black_player_id == user_id, GameModel.winner == "black")
+                ))
+            elif result == "loss":
+                filters.append(or_(
+                    and_(GameModel.white_player_id == user_id, GameModel.winner == "black"),
+                    and_(GameModel.black_player_id == user_id, GameModel.winner == "white")
+                ))
+            elif result == "draw":
+                filters.append(GameModel.winner == "draw")
+
+        stmt = (
+            select(GameModel)
+            .where(*filters)
+            .order_by(desc(GameModel.created_at))
+            .offset(skip)
+            .limit(limit)
+        )
+        
+        games_result = await session.execute(stmt)
+        games_rows = games_result.scalars().all()
+        
+        # Collect opponent IDs to batch fetch (optimization)
+        opponent_ids = set()
+        for g in games_rows:
+            opp_id = g.black_player_id if g.white_player_id == user_id else g.white_player_id
+            if opp_id and opp_id != "computer":
+                opponent_ids.add(opp_id)
+        
+        # Batch fetch users
+        users_map = {}
+        if opponent_ids:
+            u_stmt = select(User).where(User.google_id.in_(opponent_ids))
+            u_res = await session.execute(u_stmt)
+            for u in u_res.scalars():
+                users_map[u.google_id] = u
+
+        history = []
+        for g in games_rows:
+            is_white = (g.white_player_id == user_id)
+            my_color = "white" if is_white else "black"
+            
+            # Determine result string
+            game_result = "draw"
+            if g.winner:
+                if g.winner == "draw":
+                    game_result = "draw"
+                elif g.winner == my_color:
+                    game_result = "win"
+                else:
+                    game_result = "loss"
+
+            # Opponent info
+            opp_id = g.black_player_id if is_white else g.white_player_id
+            opp_name = "Anonymous"
+            opp_rating = None # We assume stored in game model snapshot if we had it, but we rely on current rating or nothing for now? 
+            # Actually, we don't store snapshot rating in GameModel explicitly aside from diffs.
+            # We can use the user's current rating or just show name.
+            # Ideally we should store snapshot rating. For now, let's use the name from User table.
+            
+            if opp_id == "computer":
+                opp_name = "Stockfish AI"
+            elif opp_id in users_map:
+                u = users_map[opp_id]
+                opp_name = u.username or u.name
+            
+            # Rating diff
+            my_diff = g.white_rating_diff if is_white else g.black_rating_diff
+
+            history.append({
+                "id": g.id,
+                "variant": g.variant,
+                "created_at": g.created_at,
+                "my_color": my_color,
+                "result": game_result,
+                "opponent": {
+                    "id": opp_id,
+                    "name": opp_name
+                },
+                "rating_diff": my_diff
+            })
+
+        return {"games": history}
 
 @app.get("/api/leaderboard/{variant}")
 async def get_leaderboard(variant: str):

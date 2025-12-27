@@ -251,3 +251,147 @@ input:checked + .slider:before {
     font-size: 0.8rem;
     color: var(--text-muted);
 }
+
+/* History Section */
+.history-filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.filter-select {
+    background: #3c3934;
+    color: #bababa;
+    border: 1px solid #3c3934;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.filter-select:hover {
+    background: #4a4844;
+}
+
+.games-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.game-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #302e2c;
+    padding: 12px 15px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #bababa;
+    transition: background 0.2s;
+    border-left: 4px solid transparent;
+}
+
+.game-item:hover {
+    background: #3c3934;
+}
+
+.game-item.win {
+    border-left-color: #95bb4a;
+}
+
+.game-item.loss {
+    border-left-color: #eb5757;
+}
+
+.game-item.draw {
+    border-left-color: #bababa;
+}
+
+.game-item-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 100px;
+}
+
+.game-variant {
+    font-weight: bold;
+    color: white;
+    text-transform: capitalize;
+}
+
+.game-date {
+    font-size: 0.8rem;
+    color: #8b8987;
+}
+
+.game-item-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.game-vs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.result-indicator {
+    font-weight: bold;
+    font-size: 0.85rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.result-indicator.win {
+    color: #95bb4a;
+    background: rgba(149, 187, 74, 0.1);
+}
+
+.result-indicator.loss {
+    color: #eb5757;
+    background: rgba(235, 87, 87, 0.1);
+}
+
+.result-indicator.draw {
+    color: #bababa;
+    background: rgba(186, 186, 186, 0.1);
+}
+
+.vs-text {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.opponent-name {
+    color: white;
+    font-weight: 500;
+}
+
+.game-item-right {
+    min-width: 60px;
+    text-align: right;
+}
+
+.rating-diff {
+    font-weight: bold;
+    font-size: 0.95rem;
+}
+
+.rating-diff.positive {
+    color: #95bb4a;
+}
+
+.rating-diff.negative {
+    color: #eb5757;
+}
+
+.no-games {
+    text-align: center;
+    padding: 20px;
+    color: #8b8987;
+    background: #302e2c;
+    border-radius: 6px;
+}

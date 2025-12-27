@@ -104,6 +104,14 @@ export const getUserProfile = async (userId) => {
     return res.json();
 };
 
+export const getUserGames = async (userId, filters = {}) => {
+    const params = new URLSearchParams(filters);
+    const res = await fetchWithLog(`${API_BASE}/user/${userId}/games?${params.toString()}`, {
+        credentials: 'include'
+    });
+    return res.json();
+};
+
 export const getLeaderboard = (variant) => {
     return fetch(`${API_BASE}/leaderboard/${variant}`).then(res => res.json());
 };
