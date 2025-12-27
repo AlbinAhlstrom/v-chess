@@ -59,3 +59,26 @@ def test_full_game_ui(driver, frontend_url):
     
     history_text = driver.find_element(By.CLASS_NAME, "move-history").text
     assert "0-1" in history_text
+
+def test_resignation_ui(driver, frontend_url):
+    print(f"Navigating to {frontend_url}/otb")
+    driver.get(f"{frontend_url}/otb")
+    
+    WebDriverWait(driver, 10).until(EC.url_contains("/game/"))
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CLASS_NAME, "board"))
+    )
+    
+    # White resigns immediately
+    resign_btn = WebDriverWait(driver, 5).until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, "button[title='Surrender']"))
+    )
+    resign_btn.click()
+    
+    # Verify result in history (0-1 because White resigned)
+    WebDriverWait(driver, 5).until(
+        lambda d: "0-1" in d.find_element(By.CLASS_NAME, "move-history").text
+    )
+    
+    history_text = driver.find_element(By.CLASS_NAME, "move-history").text
+    assert "0-1" in history_text
