@@ -41,6 +41,72 @@
     .ratings-grid {
         grid-template-columns: 1fr;
     }
+
+    /* History Mobile Adjustments */
+    .history-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .result-tabs {
+        order: 2; /* Show tabs below variant select on mobile */
+    }
+
+    .tab-btn {
+        flex: 1;
+        padding: 10px 4px;
+        font-size: 0.8rem;
+        text-align: center;
+    }
+
+    .filter-select {
+        order: 1;
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .games-list-container {
+        padding: 10px;
+    }
+
+    .game-item {
+        padding: 10px 8px;
+    }
+
+    .game-item-left {
+        min-width: 65px;
+    }
+
+    .game-variant {
+        font-size: 0.8rem;
+    }
+
+    .game-date {
+        font-size: 0.65rem;
+    }
+
+    .vs-text {
+        display: none;
+    }
+
+    .opponent-name {
+        font-size: 0.85rem;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .result-indicator {
+        font-size: 0.7rem;
+        padding: 2px 4px;
+    }
+
+    .rating-diff {
+        font-size: 0.75rem;
+        min-width: 28px;
+    }
 }
 
 .profile-card {
