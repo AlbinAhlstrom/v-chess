@@ -51,12 +51,13 @@
 
     .result-tabs {
         order: 2; /* Show tabs below variant select on mobile */
+        gap: 2px;
     }
 
     .tab-btn {
         flex: 1;
-        padding: 10px 4px;
-        font-size: 0.8rem;
+        padding: 8px 2px;
+        font-size: 0.75rem;
         text-align: center;
     }
 
@@ -64,26 +65,37 @@
         order: 1;
         width: 100%;
         margin-bottom: 0;
+        font-size: 0.85rem;
     }
 
     .games-list-container {
-        padding: 10px;
+        padding: 8px;
     }
 
     .game-item {
-        padding: 10px 8px;
+        padding: 8px 6px;
+        gap: 4px;
     }
 
     .game-item-left {
-        min-width: 65px;
+        min-width: 60px;
     }
 
     .game-variant {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
     }
 
     .game-date {
-        font-size: 0.65rem;
+        font-size: 0.6rem;
+    }
+
+    .game-item-center {
+        justify-content: flex-start;
+        padding-left: 4px;
+    }
+
+    .game-vs {
+        gap: 4px;
     }
 
     .vs-text {
@@ -91,21 +103,26 @@
     }
 
     .opponent-name {
-        font-size: 0.85rem;
-        max-width: 120px;
+        font-size: 0.8rem;
+        max-width: 90px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
 
     .result-indicator {
-        font-size: 0.7rem;
-        padding: 2px 4px;
+        font-size: 0.65rem;
+        padding: 1px 4px;
+    }
+
+    .game-item-right {
+        min-width: 40px;
     }
 
     .rating-diff {
-        font-size: 0.75rem;
-        min-width: 28px;
+        font-size: 0.7rem;
+        min-width: 24px;
+        padding: 1px 4px;
     }
 }
 
