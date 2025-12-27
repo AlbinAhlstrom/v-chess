@@ -37,7 +37,9 @@ def parse_pgn_game(game_string: str) -> PGNGame:
 
 
 all_games: list[PGNGame] = []
-with open("/home/albin/projects/v_chess/tests/example_games.pgn", "r") as f:
+import os
+pgn_path = os.path.join(os.path.dirname(__file__), "example_games.pgn")
+with open(pgn_path, "r") as f:
     pgn_content = f.read()
 
 game_strings = re.split(r'\n\n(?=\[Event)', pgn_content.strip())
