@@ -495,6 +495,16 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         setViewedIndex(prev => Math.min(fenHistory.length - 1, prev + 1));
     };
 
+    // Scroll active history item into view on mobile
+    useEffect(() => {
+        if (viewedIndex !== -1) {
+            const activeItem = document.querySelector('.mobile-history-scroll .history-item.active');
+            if (activeItem) {
+                activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+        }
+    }, [viewedIndex]);
+
     useEffect(() => {
         if (viewedFen && viewedFen !== lastNotifiedFen.current) {
             if (lastNotifiedFen.current) {
