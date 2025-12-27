@@ -1,7 +1,9 @@
 #!/bin/bash
 # 1. Pull latest code
 echo "Pulling latest changes..."
-git pull
+git fetch origin
+git reset --hard origin/main
+git pull origin main
 
 # 2. Ensure Virtual Environment exists
 if [ ! -d "venv" ]; then
@@ -29,8 +31,10 @@ venv/bin/python3 migrate_db.py
 
 # 6. Start the server
 echo "Starting new server..."
+export ENV=prod
 nohup venv/bin/uvicorn backend.main:app --host 0.0.0.0 --port 8000 > backend.log 2>&1 &
 
-echo "Done! Backend is running in the background."
-sleep 2
-tail -n 10 backend.log
+echo "Done! Backend is starting in the background."
+sleep 5
+tail -n 20 backend.log
+

@@ -17,4 +17,5 @@ jobs:
           script: |
             cd projects/v_chess
             chmod +x start_prod.sh
-            ./start_prod.sh
+            ./start_prod.sh || exit 1
+            echo "Deployment script finished successfully."
