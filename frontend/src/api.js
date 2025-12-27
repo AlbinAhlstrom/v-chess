@@ -11,8 +11,8 @@ const getApiBase = () => {
         return `${protocol}//${hostname}/api`;
     }
     
-    // Production domains (Vercel)
-    if (hostname.endsWith('.vercel.app')) {
+    // Production domains (Vercel and Cloudflare Pages)
+    if (hostname.endsWith('.vercel.app') || hostname.endsWith('.pages.dev')) {
         return `https://api.v-chess.com/api`;
     }
     
@@ -31,7 +31,7 @@ export const getWsBase = () => {
         return `${protocol}//${hostname}/ws`;
     }
 
-    if (hostname.endsWith('.vercel.app')) {
+    if (hostname.endsWith('.vercel.app') || hostname.endsWith('.pages.dev')) {
         return `wss://api.v-chess.com/ws`;
     }
 
