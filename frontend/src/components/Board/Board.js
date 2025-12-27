@@ -1,7 +1,7 @@
 import './Board.css'
 import { fileIntToString } from '../../helpers.js'
 
-function Board({ children, flipped = false, showCoordinates = false }) { // Accept children prop
+function Board({ children, flipped = false, showCoordinates = false, pointerEvents = 'auto' }) { // Accept children prop
     const getSquareColor = (i, j) => {
         let c = "square";
         c += (i + j) % 2 === 0 ? " square--light" : " square--dark";
@@ -10,7 +10,7 @@ function Board({ children, flipped = false, showCoordinates = false }) { // Acce
     const ranks = Array(8).fill().map((x, i) => flipped ? i + 1 : 8 - i)
     const files = Array(8).fill().map((x, i) => flipped ? fileIntToString(7 - i) : fileIntToString(i))
 
-    return <div className="board">
+    return <div className="board" style={{ pointerEvents }}>
         {/* Rank labels (1-8) */}
         {showCoordinates && (
             <div className="coordinates coordinates--ranks">

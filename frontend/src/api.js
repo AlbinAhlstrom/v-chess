@@ -83,6 +83,13 @@ export const getGame = async (gameId) => {
     return res.json();
 };
 
+export const getGameFens = async (gameId) => {
+    const res = await fetchWithLog(`${API_BASE}/game/${gameId}/fens`, {
+        credentials: 'include'
+    });
+    return res.json();
+};
+
 export const getMe = async () => {
     const res = await fetchWithLog(`${API_BASE}/me`, {
         credentials: 'include'

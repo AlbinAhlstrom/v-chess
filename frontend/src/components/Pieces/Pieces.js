@@ -5,7 +5,7 @@ import HighlightSquare from '../HighlightSquare/HighlightSquare.js';
 import PromotionDialog from '../PromotionDialog/PromotionDialog.js';
 import ImportDialog from '../ImportDialog/ImportDialog.js';
 import { fenToPosition, coordsToAlgebraic, algebraicToCoords } from '../../helpers.js'
-import { createGame, getAllLegalMoves, getGame, getMe, login, logout, getWsBase } from '../../api.js'
+import { createGame, getAllLegalMoves, getGame, getMe, login, logout, getWsBase, getGameFens } from '../../api.js'
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 
@@ -43,7 +43,7 @@ const getAutoPromotePreference = () => {
     return saved !== null ? JSON.parse(saved) : true;
 };
 
-export function Pieces({ onFenChange, variant = "standard", matchmaking = false, computer = false, setFlipped }) {
+export function Pieces({ onFenChange, variant = "standard", matchmaking = false, computer = false, setFlipped, setIsLatest }) {
     const { gameId: urlGameId } = useParams();
     const location = useLocation();
     const gameMode = location.state?.gameMode;
@@ -56,6 +56,9 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
     // Note: I'll actually just find the function below to change it correctly.
 
     const [fen, setFen] = useState();
+    const [fenHistory, setFenHistory] = useState([]);
+    const fenHistoryRef = useRef([]);
+    const [viewedIndex, setViewedIndex] = useState(-1);
     const [gameId, setGameId] = useState(null);
     const [legalMoves, setLegalMoves] = useState([]);
     const [allPossibleMoves, setAllPossibleMoves] = useState([]);
@@ -120,6 +123,12 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         });
     }, []);
 
+    const isLatest = viewedIndex === fenHistory.length - 1 || viewedIndex === -1;
+
+    useEffect(() => {
+        if (setIsLatest) setIsLatest(isLatest);
+    }, [isLatest, setIsLatest]);
+
     // Effect to handle board flipping and player names once both user and game data are available
     useEffect(() => {
         if (matchmaking && (whitePlayerId || blackPlayerId)) {
@@ -182,6 +191,10 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         return () => clearInterval(interval);
     }, [timers, turn, isGameOver, moveHistory.length]);
 
+    useEffect(() => {
+        fenHistoryRef.current = fenHistory;
+    }, [fenHistory]);
+
     const connectWebSocket = (id) => {
         if (ws.current) {
             ws.current.close();
@@ -194,6 +207,21 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
             const message = JSON.parse(event.data);
             if (message.type === "game_state") {
                 setFen(message.fen);
+                setFenHistory(prev => {
+                    const newHistory = [...prev];
+                    if (newHistory.length === 0 || newHistory[newHistory.length - 1] !== message.fen) {
+                        newHistory.push(message.fen);
+                    }
+                    return newHistory;
+                });
+                setViewedIndex(prev => {
+                    const currentLen = fenHistoryRef.current.length;
+                    // If we were at the end, jump to the newly added move
+                    if (prev === currentLen - 1 || prev === -1) {
+                        return currentLen; 
+                    }
+                    return prev;
+                });
                 setInCheck(message.in_check);
                 const history = message.move_history || [];
                 setMoveHistory(history);
@@ -363,7 +391,10 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         const timeControl = tc || (isTimeControlEnabled ? { starting_time: startingTime, increment: increment } : null);
         console.log("Initializing game with TC:", timeControl);
         try {
-            const { game_id: newGameId } = await createGame(variantToLoad || variant, fenToLoad, timeControl, "white", computer);
+            const { game_id: newGameId, fen: initialFen } = await createGame(variantToLoad || variant, fenToLoad, timeControl, "white", computer);
+            setFen(initialFen);
+            setFenHistory([initialFen]);
+            setViewedIndex(0);
             gameStartSound.current.play().catch(e => console.error("Error playing game start sound:", e));
             const route = computer ? `/computer-game/${newGameId}` : `/game/${newGameId}`;
             navigate(route, { replace: true });
@@ -379,6 +410,14 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                 setFen(data.fen);
                 setGameId(data.game_id);
                 setMoveHistory(data.move_history || []);
+                
+                // Fetch FEN history
+                getGameFens(id).then(histData => {
+                    if (histData.fens) {
+                        setFenHistory(histData.fens);
+                        setViewedIndex(histData.fens.length - 1);
+                    }
+                }).catch(console.error);
                 
                 const uciHistory = data.uci_history || [];
                 if (uciHistory.length > 0) {
@@ -441,8 +480,23 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         };
     }, [variant, urlGameId]);
 
+    const isLatest = viewedIndex === fenHistory.length - 1 || viewedIndex === -1;
+    const viewedFen = viewedIndex >= 0 && fenHistory[viewedIndex] ? fenHistory[viewedIndex] : fen;
+
+    const handleJumpToMove = (index) => {
+        setViewedIndex(index);
+    };
+
+    const handleStepBackward = () => {
+        setViewedIndex(prev => Math.max(0, prev - 1));
+    };
+
+    const handleStepForward = () => {
+        setViewedIndex(prev => Math.min(fenHistory.length - 1, prev + 1));
+    };
+
     useEffect(() => {
-        if (fen && fen !== lastNotifiedFen.current) {
+        if (viewedFen && viewedFen !== lastNotifiedFen.current) {
             if (lastNotifiedFen.current) {
                 const countPieces = (fenString) => {
                     return fenString.split(' ')[0].split('').filter(c => /[pnbrqkPNBRQK]/.test(c)).length;
@@ -482,15 +536,15 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                      moveSound.current.play().catch(e => console.error("Error playing move sound:", e));
                 }
             }
-            onFenChange(fen);
-            lastNotifiedFen.current = fen;
-            
-            // Log all legal moves when turn switches
-            fetchLegalMoves(gameId);
+            onFenChange(viewedFen);
+            lastNotifiedFen.current = viewedFen;
         }
-    }, [fen, onFenChange, inCheck, gameId, fetchLegalMoves]);
+    }, [viewedFen, onFenChange, inCheck]);
 
-    const position = useMemo(() => fen ? fenToPosition(fen) : [], [fen]);
+    const position = useMemo(() => {
+        if (!viewedFen) return [];
+        return fenToPosition(viewedFen);
+    }, [viewedFen]);
 
     const calculateSquare = useCallback(e => {
         const {width,left,top} = ref.current.getBoundingClientRect()
@@ -815,7 +869,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
     }, [gameId, fetchLegalMoves]);
 
     const handlePieceDragStart = useCallback(async ({ file, rank, piece }) => {
-        if (!gameId || isGameOver) return;
+        if (!gameId || isGameOver || !isLatest) return;
         
         const pieceColor = piece === piece.toUpperCase() ? 'w' : 'b';
         if (!canMovePiece(pieceColor)) return;
@@ -1072,8 +1126,12 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                 isGameOver={isGameOver}
                 handleRematch={handleRematch}
                 handleNewOpponent={handleNewOpponent}
-                gameId={urlGameId}
+                gameId={gameId}
                 isQuickMatch={isQuickMatch}
+                onJumpToMove={handleJumpToMove}
+                onStepForward={handleStepForward}
+                onStepBackward={handleStepBackward}
+                viewedIndex={viewedIndex}
             />
 
             {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}

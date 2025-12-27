@@ -385,11 +385,113 @@
     margin-bottom: 5px;
 }
 
-.takeback-prompt {
+.control-button.waiting {
     color: #ffd700;
-    font-weight: 700;
-    font-size: 13px;
     animation: pulse 1.5s infinite;
+}
+
+/* Mobile History Bar */
+.mobile-history-bar {
+    display: none;
+    background: #262421;
+    border-bottom: 1px solid #3c3934;
+    height: 40px;
+    align-items: center;
+    padding: 0 5px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.mobile-history-scroll {
+    flex: 1;
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    gap: 8px;
+    padding: 0 10px;
+    scrollbar-width: none; /* Firefox */
+}
+
+.mobile-history-scroll::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+.history-item {
+    font-size: 0.9rem;
+    color: #bababa;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 3px;
+    transition: all 0.2s;
+}
+
+.history-item:hover {
+    background: #3c3934;
+    color: white;
+}
+
+.history-item.active {
+    background: #4a4844;
+    color: #95bb4a;
+    font-weight: bold;
+}
+
+.history-nav-controls {
+    display: flex;
+    gap: 5px;
+    padding-left: 10px;
+    border-left: 1px solid #3c3934;
+}
+
+.nav-btn {
+    background: #3c3934;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%; /* Play button style */
+    width: 28px;
+    height: 28px;
+    transition: all 0.2s;
+}
+
+.nav-btn:hover:not(:disabled) {
+    background: #4a4844;
+}
+
+.nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.nav-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+@media (max-width: 800px) {
+    .mobile-history-bar {
+        display: flex;
+    }
+
+    .game-sidebar {
+        flex-direction: column;
+        height: auto;
+        border-top: 1px solid #3c3934;
+    }
+
+    .move-history {
+        display: none;
+    }
+
+    .game-controls {
+        order: -1; /* Actions on top */
+        padding: 10px;
+        border-top: none;
+    }
 }
 
 @keyframes pulse {

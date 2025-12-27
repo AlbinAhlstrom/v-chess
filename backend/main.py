@@ -975,6 +975,13 @@ async def new_game(req: NewGameRequest, request: Request):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.get("/api/game/{game_id}/fens")
+async def get_game_fens(game_id: str):
+    game = await get_game(game_id)
+    # game.history contains all previous states. game.state is the current one.
+    fens = [s.fen for s in game.history] + [game.state.fen]
+    return {"fens": fens}
+
 @app.get("/api/game/{game_id}")
 async def get_game_state(game_id: str):
     game = await get_game(game_id)
