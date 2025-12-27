@@ -3,20 +3,13 @@ const getApiBase = () => {
     if (process.env.REACT_APP_API_URL) return process.env.REACT_APP_API_URL;
     
     const hostname = window.location.hostname;
-    const protocol = window.location.protocol;
-    
-    // If we are running on the production server (v-chess.com or the EC2 IP)
-    // and serving from the same host as the API
-    if (hostname === 'v-chess.com' || hostname === 'www.v-chess.com' || hostname === '51.21.197.139') {
-        return `${protocol}//${hostname}/api`;
-    }
-    
-    // Production domains (Vercel and Cloudflare Pages)
-    if (hostname.endsWith('.vercel.app') || hostname.endsWith('.pages.dev')) {
+    // Production domains
+    if (hostname === 'v-chess.com' || hostname === 'www.v-chess.com' || hostname.endsWith('.vercel.app')) {
         return `https://api.v-chess.com/api`;
     }
     
-    // Local development
+    // If we are on a LAN IP or anything else that isn't localhost,
+    // assume backend is on the same host, port 8000
     return `http://${hostname}:8000/api`;
 };
 
@@ -25,13 +18,7 @@ export const getWsBase = () => {
     if (process.env.REACT_APP_WS_URL) return process.env.REACT_APP_WS_URL;
     
     const hostname = window.location.hostname;
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-
-    if (hostname === 'v-chess.com' || hostname === 'www.v-chess.com' || hostname === '51.21.197.139') {
-        return `${protocol}//${hostname}/ws`;
-    }
-
-    if (hostname.endsWith('.vercel.app') || hostname.endsWith('.pages.dev')) {
+    if (hostname === 'v-chess.com' || hostname === 'www.v-chess.com' || hostname.endsWith('.vercel.app')) {
         return `wss://api.v-chess.com/ws`;
     }
 

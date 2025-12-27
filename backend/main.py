@@ -1,9 +1,7 @@
 from uuid import uuid4
 from typing import Optional
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.exception_handlers import http_exception_handler
 from pydantic import BaseModel
 import json
 import asyncio
@@ -358,8 +356,7 @@ origins = [
 ]
 
 if not is_prod:
-    # origins.append("*") # Wildcard * is incompatible with allow_credentials=True
-    pass
+    origins.append("*")
 
 app.add_middleware(
     CORSMiddleware,
@@ -369,22 +366,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# ... rest of your code ...
-
-# Serving Frontend Static Files
-# Only do this if the build directory exists
-if os.path.exists("frontend/build"):
-    app.mount("/", StaticFiles(directory="frontend/build", html=True), name="frontend")
-
-    # Catch-all route for SPA routing
-    @app.exception_handler(404)
-    async def spa_catch_all(request: Request, exc: HTTPException):
-        if not request.url.path.startswith("/api") and not request.url.path.startswith("/ws") and not request.url.path.startswith("/auth"):
-            return HTMLResponse(content=open("frontend/build/index.html").read())
-        return await http_exception_handler(request, exc)
-else:
-    print("WARNING: frontend/build directory not found. Frontend will not be served by backend.")
 
 class ConnectionManager:
     def __init__(self):
