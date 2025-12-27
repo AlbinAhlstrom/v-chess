@@ -69,6 +69,15 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
     const [ratingDiffs, setRatingDiffs] = useState(null);
     const [explosionSquare, setExplosionSquare] = useState(null);
     const [showExplosion, setShowExplosion] = useState(false);
+    const [dropSquare, setDropSquare] = useState(null);
+    const [showDropWarp, setShowDropWarp] = useState(false);
+    const [checkCounts, setCheckCounts] = useState([0, 0]);
+    const [strikeSquare, setStrikeSquare] = useState(null);
+    const [showStrike, setShowStrike] = useState(false);
+    const [turboSquare, setTurboSquare] = useState(null);
+    const [showTurbo, setShowTurbo] = useState(false);
+    const [shatterSquare, setShatterSquare] = useState(null);
+    const [showShatter, setShowShatter] = useState(false);
     const ws = useRef(null);
     const [isPromotionDialogOpen, setPromotionDialogOpen] = useState(false);
     const [isImportDialogOpen, setImportDialogOpen] = useState(false);
@@ -201,6 +210,72 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                 if (message.clocks) setTimers(message.clocks);
                 if (message.rating_diffs) setRatingDiffs(message.rating_diffs);
                 
+                // Detect Racing Kings Turbo
+                if (currentVariant === 'racingkings' && uciHistory.length > 0) {
+                    const lastUCI = uciHistory[uciHistory.length - 1];
+                    const fromSq = lastUCI.substring(0, 2);
+                    const toSq = lastUCI.substring(2, 4);
+                    const gridBefore = fenToPosition(fen || ''); // Approximated
+                    const { file: fF, rank: fR } = algebraicToCoords(fromSq);
+                    const pieceMoved = gridBefore[fR] ? gridBefore[fR][fF] : null;
+                    if (pieceMoved?.toLowerCase() === 'k') {
+                        setTurboSquare(toSq);
+                        setShowTurbo(true);
+                        setTimeout(() => setShowTurbo(false), 600);
+                    }
+                }
+
+                // Detect Antichess Shatter
+                if (currentVariant === 'antichess' && history.length > 0) {
+                    const lastSAN = history[history.length - 1];
+                    if (lastSAN.includes('x')) {
+                        const cleanSAN = lastSAN.replace(/[+#]/g, '');
+                        setShatterSquare(cleanSAN.slice(-2));
+                        setShowShatter(true);
+                        setTimeout(() => setShowShatter(false), 800);
+                    }
+                }
+
+                // Detect Drop Warp
+                if (message.is_drop && uciHistory.length > 0) {
+                    const lastMoveUCI = uciHistory[uciHistory.length - 1];
+                    const targetSq = lastMoveUCI.split('@')[1];
+                    setDropSquare(targetSq);
+                    setShowDropWarp(true);
+                    setTimeout(() => {
+                        setShowDropWarp(false);
+                        setDropSquare(null);
+                    }, 800);
+                }
+
+                // Detect Three-Check Strike
+                if (currentVariant === 'threecheck' && message.fen) {
+                    const fenParts = message.fen.split(' ');
+                    if (fenParts.length >= 7 && fenParts[6].includes('+')) {
+                        const counts = fenParts[6].split('+').slice(1).map(Number);
+                        const prevCounts = checkCounts;
+                        if (counts[0] > prevCounts[0] || counts[1] > prevCounts[1]) {
+                            // Find checked king
+                            const grid = fenToPosition(message.fen);
+                            const kingChar = counts[0] > prevCounts[0] ? 'k' : 'K'; // White checked -> black king affected? No, counts[0] is white checks.
+                            // counts[0] = checks by White (against black king). 
+                            // So if counts[0] increased, black king was struck.
+                            
+                            for (let r = 0; r < 8; r++) {
+                                for (let c = 0; c < 8; c++) {
+                                    if (grid[r][c] === kingChar) {
+                                        setStrikeSquare(coordsToAlgebraic(c, r));
+                                        setShowStrike(true);
+                                        setTimeout(() => setShowStrike(false), 800);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        setCheckCounts(counts);
+                    }
+                }
+
                 // Detect explosion via server field OR by checking if it's an Atomic capture
                 let explosionSq = message.explosion_square;
                 if (!explosionSq && currentVariant === 'atomic' && history.length > 0) {
@@ -545,6 +620,84 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                 />
             );
         });
+    };
+
+    const renderDropWarp = () => {
+        if (!showDropWarp || !dropSquare) return null;
+        const { file, rank } = algebraicToCoords(dropSquare);
+        let displayFile = isFlipped ? 7 - file : file;
+        let displayRank = isFlipped ? 7 - rank : rank;
+
+        return (
+            <div 
+                className="drop-warp"
+                style={{
+                    left: `calc(${displayFile} * var(--square-size))`,
+                    top: `calc(${displayRank} * var(--square-size))`,
+                }}
+            />
+        );
+    };
+
+    const renderCheckStrike = () => {
+        if (!showStrike || !strikeSquare) return null;
+        const { file, rank } = algebraicToCoords(strikeSquare);
+        let displayFile = isFlipped ? 7 - file : file;
+        let displayRank = isFlipped ? 7 - rank : rank;
+
+        return (
+            <div 
+                className="check-strike"
+                style={{
+                    left: `calc(${displayFile} * var(--square-size))`,
+                    top: `calc(${displayRank} * var(--square-size))`,
+                }}
+            >
+                <div className="strike-slash"></div>
+            </div>
+        );
+    };
+
+    const renderTurboEffect = () => {
+        if (!showTurbo || !turboSquare) return null;
+        const { file, rank } = algebraicToCoords(turboSquare);
+        let displayFile = isFlipped ? 7 - file : file;
+        let displayRank = isFlipped ? 7 - rank : rank;
+
+        return (
+            <div 
+                className="turbo-trail"
+                style={{
+                    left: `calc(${displayFile} * var(--square-size))`,
+                    top: `calc(${displayRank} * var(--square-size))`,
+                }}
+            >
+                <div className="turbo-line"></div>
+                <div className="turbo-line"></div>
+                <div className="turbo-line"></div>
+            </div>
+        );
+    };
+
+    const renderShatterEffect = () => {
+        if (!showShatter || !shatterSquare) return null;
+        const { file, rank } = algebraicToCoords(shatterSquare);
+        let displayFile = isFlipped ? 7 - file : file;
+        let displayRank = isFlipped ? 7 - rank : rank;
+
+        return (
+            <div 
+                className="shatter-container"
+                style={{
+                    left: `calc(${displayFile} * var(--square-size))`,
+                    top: `calc(${displayRank} * var(--square-size))`,
+                }}
+            >
+                {[...Array(8)].map((_, i) => (
+                    <div key={i} className="shard" style={{ '--i': i }}></div>
+                ))}
+            </div>
+        );
     };
 
     const handleManualDrop = useCallback(({ clientX, clientY, piece, file, rank }) => {
@@ -893,6 +1046,10 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
 
             {showExplosion && renderExplosion()}
             {renderKothAura()}
+            {showDropWarp && renderDropWarp()}
+            {showStrike && renderCheckStrike()}
+            {showTurbo && renderTurboEffect()}
+            {showShatter && renderShatterEffect()}
 
             {position.map((rankArray, rankIndex) =>
                 rankArray.map((pieceType, fileIndex) => 

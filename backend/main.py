@@ -953,7 +953,8 @@ async def trigger_ai_move(game_id: str, game: Game):
                 await asyncio.sleep(delay)
 
             print(f"[AI] APPLYING move {best_move_uci} to game {game_id}")
-            game.take_turn(Move(best_move_uci, player_to_move=game.state.turn))
+            move_obj = Move(best_move_uci, player_to_move=game.state.turn)
+            game.take_turn(move_obj)
             rating_diffs = await save_game_to_db(game_id)
             print(f"[AI] BROADCASTING move {best_move_uci}")
             await manager.broadcast(game_id, json.dumps({
@@ -967,7 +968,8 @@ async def trigger_ai_move(game_id: str, game: Game):
                                 "uci_history": game.uci_history,
                                 "clocks": {c.value: t for c, t in game.get_current_clocks().items()} if game.clocks else None, 
                                 "rating_diffs": rating_diffs,
-                                "explosion_square": str(game.state.explosion_square) if getattr(game.state, 'explosion_square', None) else None
+                                "explosion_square": str(game.state.explosion_square) if getattr(game.state, 'explosion_square', None) else None,
+                                "is_drop": move_obj.is_drop
                             }))
         else:
             print(f"[AI] WARNING: Engine returned no move!")
@@ -1050,7 +1052,8 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                             move_uci += "q"
                     
                     print(f"[WS] Applying human move: {move_uci} for game {game_id}")
-                    game.take_turn(Move(move_uci, player_to_move=game.state.turn))
+                    move_obj = Move(move_uci, player_to_move=game.state.turn)
+                    game.take_turn(move_obj)
                     rating_diffs = await save_game_to_db(game_id)
                     print(f"[WS] Human move BROADCAST: {move_uci}")
                     
@@ -1065,7 +1068,8 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                         "uci_history": game.uci_history,
                         "clocks": {c.value: t for c, t in game.get_current_clocks().items()} if game.clocks else None, 
                         "rating_diffs": rating_diffs,
-                        "explosion_square": str(game.state.explosion_square) if getattr(game.state, 'explosion_square', None) else None
+                        "explosion_square": str(game.state.explosion_square) if getattr(game.state, 'explosion_square', None) else None,
+                        "is_drop": move_obj.is_drop
                     }))
                     # Trigger AI move
                     if not game.is_over:
