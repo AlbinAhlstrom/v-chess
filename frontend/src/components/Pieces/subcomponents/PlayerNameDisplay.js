@@ -50,7 +50,7 @@ function PlayerNameDisplay({
             <div className="player-info">
                 {renderName()}
                 {shouldShowRating && rating && <span className="rating-text"> ({rating})</span>}
-                {ratingDiff !== null && ratingDiff !== undefined && (
+                {playerId !== "computer" && ratingDiff !== null && ratingDiff !== undefined && (
                     <span className={`rating-diff ${ratingDiff >= 0 ? 'positive' : 'negative'}`}>
                         {ratingDiff > 0 ? `+${ratingDiff}` : ratingDiff}
                     </span>
