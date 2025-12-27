@@ -52,15 +52,23 @@ function Profile() {
         <div className='profile-container'>
             <div className='profile-card'>
                 <div className="profile-card-header">
-                    <h1>{isOwnProfile ? "Your Profile" : `${user.name}'s Profile`}</h1>
+                    <h1>{isOwnProfile ? "Your Profile" : `${user.username || user.name}'s Profile`}</h1>
                 </div>
                 
                 <section className='profile-section'>
                     <div className="profile-header">
                         {user.picture && <img src={user.picture} alt={user.name} className="profile-picture" />}
                         <div className="profile-identity">
+                            {user.username && (
+                                <div className='info-row'>
+                                    <span className='label'>Username:</span>
+                                    <span className='value' style={{ fontWeight: 'bold', color: '#95bb4a' }}>
+                                        @{user.username}
+                                    </span>
+                                </div>
+                            )}
                             <div className='info-row'>
-                                <span className='label'>Name:</span>
+                                <span className='label'>Display Name:</span>
                                 <span className='value' style={{ display: 'flex', alignItems: 'center' }}>
                                     {user.name}
                                     <SupporterBadge badgeType={user.supporter_badge} />
