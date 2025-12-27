@@ -207,6 +207,12 @@ function Lobby() {
     };
 
     const handlePlay = () => {
+        if (!user && (gameMode === 'quick' || gameMode === 'lobby')) {
+            const { loginLink } = getAuthLinks();
+            window.location.href = loginLink;
+            return;
+        }
+
         if (gameMode === 'quick') {
             if (isQuickMatching) leaveQuickMatch();
             else joinQuickMatch();
@@ -217,30 +223,6 @@ function Lobby() {
         } else if (gameMode === 'otb') {
             navigate(selectedVariant === 'standard' ? '/otb' : `/otb/${selectedVariant}`);
         }
-    };
-
-    const switchToRandom = () => {
-        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-            // First leave current
-            socketRef.current.send(JSON.stringify({ type: "leave_quick_match" }));
-            // Then join with random
-            setSelectedVariant('random');
-            socketRef.current.send(JSON.stringify({
-                type: "join_quick_match",
-                variant: 'random',
-                time_control: isTimeControlEnabled ? {
-                    limit: startingTime * 60,
-                    increment: increment
-                } : null,
-                range: ratingRange
-            }));
-            setElapsedTime(0);
-        }
-    };
-
-    const playBotInstead = async () => {
-        leaveQuickMatch();
-        await playVsComputer();
     };
 
     const formatDuration = (seconds) => {
@@ -423,17 +405,29 @@ function Lobby() {
                         </div>
                     )}
                     
-                    <button 
-                        onClick={handlePlay} 
-                        className={`play-main-button ${isQuickMatching ? 'matching' : ''}`}
-                        disabled={!user && gameMode !== 'otb' && gameMode !== 'computer'}
-                    >
-                                                {isQuickMatching ? (
-                                                    <><span className="spinner"></span> Cancel Matching</>
-                                                ) : (
-                                                    <>{gameMode === 'lobby' ? 'Create Lobby' : `Play ${GAME_MODES.find(m => m.id === gameMode).title.replace('\n', ' ')}`}</>
-                                                )}
-                                            </button>                                    </div>
+                                        <button 
+                    
+                                            onClick={handlePlay} 
+                    
+                                            className={`play-main-button ${isQuickMatching ? 'matching' : ''}`}
+                    
+                                        >
+                    
+                                            {isQuickMatching ? (
+                    
+                                                <><span className="spinner"></span> Cancel Matching</>
+                    
+                                            ) : (
+                    
+                                                <>{(!user && (gameMode === 'quick' || gameMode === 'lobby')) 
+                    
+                                                    ? 'Login to Play' 
+                    
+                                                    : (gameMode === 'lobby' ? 'Create Lobby' : `Play ${GAME_MODES.find(m => m.id === gameMode).title.replace('\n', ' ')}`)}</>
+                    
+                                            )}
+                    
+                                        </button>                                    </div>
                                 </div>
                             </div>
                         );
