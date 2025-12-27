@@ -27,7 +27,7 @@ function GameConfig({
                         onClick={() => setSelectedVariant(v.id)}
                     >
                         <span className="variant-icon">{v.icon}</span>
-                        <span>{(gameMode === 'quick' && v.id === 'random') ? 'Any' : v.title}</span>
+                        <span>{v.title}</span>
                     </button>
                 ))}
             </div>
