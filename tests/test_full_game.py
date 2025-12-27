@@ -36,9 +36,11 @@ def parse_pgn_game(game_string: str) -> PGNGame:
     return PGNGame(moves=san_moves, date=date, white=white, black=black, result=result)
 
 
-all_games: list[PGNGame] = []
 import os
-pgn_path = os.path.join(os.path.dirname(__file__), "example_games.pgn")
+current_dir = os.path.dirname(os.path.abspath(__file__))
+pgn_path = os.path.join(current_dir, "example_games.pgn")
+
+all_games: list[PGNGame] = []
 with open(pgn_path, "r") as f:
     pgn_content = f.read()
 
