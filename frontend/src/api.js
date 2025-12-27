@@ -104,11 +104,16 @@ export const getUserProfile = async (userId) => {
     return res.json();
 };
 
-export const getLeaderboard = async (variant) => {
-    const res = await fetchWithLog(`${API_BASE}/leaderboard/${variant}`, {
-        credentials: 'include'
-    });
-    return res.json();
+export const getLeaderboard = (variant) => {
+    return fetch(`${API_BASE}/leaderboard/${variant}`).then(res => res.json());
+};
+
+export const updateUserSettings = (settings) => {
+    return fetch(`${API_BASE}/user/settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
+    }).then(res => res.json());
 };
 
 export const getAuthLinks = () => {
