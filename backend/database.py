@@ -21,6 +21,9 @@ class User(Base):
     name: Mapped[str] = mapped_column(String)
     picture: Mapped[Optional[str]] = mapped_column(String)
     supporter_badge: Mapped[Optional[str]] = mapped_column(String) # e.g., 'kickstarter', 'patreon'
+    default_time: Mapped[float] = mapped_column(Float, default=10.0)
+    default_increment: Mapped[float] = mapped_column(Float, default=0.0)
+    default_time_control_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, server_default=func.now())
 
 class Rating(Base):

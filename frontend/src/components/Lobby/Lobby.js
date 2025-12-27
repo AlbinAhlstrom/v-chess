@@ -46,7 +46,7 @@ function Lobby() {
     // Match Pieces.js state structure
     const [isTimeControlEnabled, setIsTimeControlEnabled] = useState(true);
     const [startingTime, setStartingTime] = useState(10);
-    const [increment, setIncrement] = useState(2);
+    const [increment, setIncrement] = useState(0);
     
     const socketRef = useRef(null);
     const userRef = useRef(null);
@@ -57,6 +57,11 @@ function Lobby() {
             .then(data => {
                 setUser(data.user);
                 userRef.current = data.user;
+                if (data.user) {
+                    if (data.user.default_time !== undefined) setStartingTime(data.user.default_time);
+                    if (data.user.default_increment !== undefined) setIncrement(data.user.default_increment);
+                    if (data.user.default_time_control_enabled !== undefined) setIsTimeControlEnabled(data.user.default_time_control_enabled);
+                }
             })
             .catch(err => console.error("Failed to fetch user in Lobby:", err));
     }, []);
@@ -288,7 +293,9 @@ function Lobby() {
             {gameMode === 'lobby' && (
                 <div className="seeks-list">
                     <h2>Open Lobbies</h2>
-                    {seeks.length === 0 ? <p>No open lobbies found. Create one!</p> : (
+                    {seeks.filter(s => s.variant === selectedVariant).length === 0 ? (
+                        <p>No open {selectedVariant} lobbies found. Create one!</p>
+                    ) : (
                         <table>
                             <thead>
                                 <tr>
@@ -299,8 +306,10 @@ function Lobby() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {seeks.map(seek => {
-                                    const isMySeek = user && String(seek.user_id) === String(user.id);
+                                {seeks
+                                    .filter(s => s.variant === selectedVariant)
+                                    .map(seek => {
+                                        const isMySeek = user && String(seek.user_id) === String(user.id);
                                     if (user) {
                                         console.log(`Lobby Check: MyID=${user.id} (${typeof user.id}) vs SeekOwnerID=${seek.user_id} (${typeof seek.user_id}) -> Match? ${isMySeek}`);
                                     }

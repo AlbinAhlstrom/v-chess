@@ -502,7 +502,16 @@ async def auth(request: Request):
                     else:
                         user.name, user.picture = user_info["name"], user_info.get("picture")
                     await session.flush()
-                    request.session["user"] = {"id": str(user.google_id), "db_id": int(user.id), "name": str(user.name), "email": str(user.email), "picture": user.picture}
+                    request.session["user"] = {
+                        "id": str(user.google_id), 
+                        "db_id": int(user.id), 
+                        "name": str(user.name), 
+                        "email": str(user.email), 
+                        "picture": user.picture,
+                        "default_time": float(user.default_time),
+                        "default_increment": float(user.default_increment),
+                        "default_time_control_enabled": bool(user.default_time_control_enabled)
+                    }
         except Exception as e:
             print("Error saving user to DB:")
             traceback.print_exc()
@@ -537,7 +546,10 @@ async def ensure_user_in_db(user_session):
                         email=user_session.get("email", ""),
                         name=user_session.get("name", "Unknown"),
                         picture=user_session.get("picture"),
-                        supporter_badge=user_session.get("supporter_badge")
+                        supporter_badge=user_session.get("supporter_badge"),
+                        default_time=user_session.get("default_time", 10.0),
+                        default_increment=user_session.get("default_increment", 0.0),
+                        default_time_control_enabled=user_session.get("default_time_control_enabled", True)
                     )
                     session.add(db_user)
                 return db_user
@@ -553,7 +565,42 @@ async def me(request: Request):
         db_user = await ensure_user_in_db(user_session)
         if db_user:
             user_session["supporter_badge"] = db_user.supporter_badge
+            user_session["default_time"] = float(db_user.default_time)
+            user_session["default_increment"] = float(db_user.default_increment)
+            user_session["default_time_control_enabled"] = bool(db_user.default_time_control_enabled)
     return {"user": user_session}
+
+class UserSettingsRequest(BaseModel):
+    default_time: float
+    default_increment: float
+    default_time_control_enabled: bool
+
+@app.post("/api/user/settings")
+async def update_user_settings(req: UserSettingsRequest, request: Request):
+    user_session = request.session.get("user")
+    if not user_session:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    google_id = user_session.get("id")
+    async with async_session() as session:
+        async with session.begin():
+            stmt = select(User).where(User.google_id == google_id)
+            result = await session.execute(stmt)
+            user = result.scalar_one_or_none()
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+            
+            user.default_time = req.default_time
+            user.default_increment = req.default_increment
+            user.default_time_control_enabled = req.default_time_control_enabled
+            
+            # Update session
+            user_session["default_time"] = float(user.default_time)
+            user_session["default_increment"] = float(user.default_increment)
+            user_session["default_time_control_enabled"] = bool(user.default_time_control_enabled)
+            request.session["user"] = user_session
+            
+    return {"status": "success"}
 
 @app.get("/api/ratings/{user_id}")
 async def get_user_ratings(user_id: str):

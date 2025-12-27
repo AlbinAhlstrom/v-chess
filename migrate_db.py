@@ -89,6 +89,18 @@ def migrate(db_file):
             print(f"Adding supporter_badge column to {db_file}...")
             cursor.execute("ALTER TABLE users ADD COLUMN supporter_badge TEXT")
 
+        if "default_time" not in user_columns:
+            print(f"Adding default_time column to {db_file}...")
+            cursor.execute("ALTER TABLE users ADD COLUMN default_time FLOAT DEFAULT 10.0")
+        
+        if "default_increment" not in user_columns:
+            print(f"Adding default_increment column to {db_file}...")
+            cursor.execute("ALTER TABLE users ADD COLUMN default_increment FLOAT DEFAULT 0.0")
+
+        if "default_time_control_enabled" not in user_columns:
+            print(f"Adding default_time_control_enabled column to {db_file}...")
+            cursor.execute("ALTER TABLE users ADD COLUMN default_time_control_enabled BOOLEAN DEFAULT 1")
+
         # Data Migration: Give all current users the kickstarter badge
         print(f"Ensuring all users have kickstarter badges in {db_file}...")
         cursor.execute("UPDATE users SET supporter_badge = 'kickstarter' WHERE supporter_badge IS NULL")

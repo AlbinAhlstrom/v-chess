@@ -82,7 +82,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
     // Time Control State
     const [isTimeControlEnabled, setIsTimeControlEnabled] = useState(true);
     const [startingTime, setStartingTime] = useState(10);
-    const [increment, setIncrement] = useState(2);
+    const [increment, setIncrement] = useState(0);
 
     // Player Names State
     const [whitePlayer, setWhitePlayer] = useState({ name: "Anonymous", rating: 1500 });
@@ -293,6 +293,9 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         getMe().then(data => {
             if (data.user) {
                 setUser(data.user);
+                if (data.user.default_time !== undefined) setStartingTime(data.user.default_time);
+                if (data.user.default_increment !== undefined) setIncrement(data.user.default_increment);
+                if (data.user.default_time_control_enabled !== undefined) setIsTimeControlEnabled(data.user.default_time_control_enabled);
             }
         }).catch(e => console.error("Failed to fetch user:", e));
     }, []);
