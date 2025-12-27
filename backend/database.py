@@ -6,6 +6,7 @@ import datetime
 from typing import Optional
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite+aiosqlite:///./chess.db")
+print(f"DEBUG: backend.database using DATABASE_URL={DATABASE_URL}")
 
 engine = create_async_engine(DATABASE_URL, echo=False)
 async_session = async_sessionmaker(engine, expire_on_commit=False)

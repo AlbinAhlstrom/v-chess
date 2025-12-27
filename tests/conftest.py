@@ -5,6 +5,7 @@ import uuid
 # Use a unique file in tests/ dir to avoid locking and ensure write permissions
 test_db_name = f"test_chess_{uuid.uuid4().hex}.db"
 test_db_path = os.path.join(os.path.dirname(__file__), test_db_name)
+print(f"DEBUG: tests/conftest.py setting DATABASE_URL to sqlite+aiosqlite:///{test_db_path}")
 os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{test_db_path}"
 
 from hypothesis import strategies as st
