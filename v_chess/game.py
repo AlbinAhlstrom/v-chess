@@ -77,7 +77,7 @@ class Game:
 
         move_status = self.rules.validate_move(move)
         if move_status != MoveLegalityReason.LEGAL:
-            raise IllegalMoveException(f"Illegal move: {move_status.value}")
+            raise IllegalMoveException(f"Illegal move: {move_status.value} (attempted: {move.uci})")
 
         san = move.get_san(self)
 
