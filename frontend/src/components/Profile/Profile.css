@@ -1,6 +1,6 @@
 .profile-container {
     max-width: 600px;
-    margin: 80px auto;
+    margin: 0 auto 80px auto;
     padding: 20px;
     color: #bababa;
     font-family: var(--main-font-family);
