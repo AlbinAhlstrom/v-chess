@@ -139,6 +139,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
     const gameStartSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/game-start.mp3"));
     const promotionSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/promote.mp3"));
     const illegalSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/illegal.mp3"));
+    const explosionSound = useRef(new Audio("/sounds/atomic_explosion.mp3"));
     
     // Timer formatting helper
     const formatTime = (seconds) => {
@@ -202,6 +203,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                 if (message.explosion_square) {
                     setExplosionSquare(message.explosion_square);
                     setShowExplosion(true);
+                    explosionSound.current.play().catch(e => console.error("Error playing explosion sound:", e));
                     setTimeout(() => {
                         setShowExplosion(false);
                         setExplosionSquare(null);
