@@ -531,7 +531,7 @@ async def get_player_info(session, user_id, variant, default_name="Anonymous", f
     if user_id == "computer":
         # Match player to the closest increment of 50
         rounded_rating = round(fallback_rating / 50) * 50
-        return {"id": "computer", "name": f"Stockfish AI ({rounded_rating})", "rating": rounded_rating}
+        return {"id": "computer", "name": "Stockfish AI", "rating": rounded_rating}
     
     user = (await session.execute(select(User).where(User.google_id == user_id))).scalar_one_or_none()
     if not user:
