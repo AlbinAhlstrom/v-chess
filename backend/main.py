@@ -30,7 +30,7 @@ from fastapi import Request
 from fastapi.responses import RedirectResponse, HTMLResponse
 from dotenv import load_dotenv, find_dotenv
 
-load_dotenv(find_dotenv())
+# load_dotenv(find_dotenv()) # Removed to avoid interfering with tests
 
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip()
