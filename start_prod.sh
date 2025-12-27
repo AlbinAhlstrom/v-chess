@@ -7,10 +7,9 @@ git clean -fd
 git pull origin main
 
 # 2. Ensure Virtual Environment exists and is healthy
-if [ ! -f "venv/bin/python" ]; then
+if [ ! -d "venv/bin" ]; then
     echo "Creating or repairing virtual environment..."
     rm -rf venv
-    sudo apt update && sudo apt install -y python3-venv
     python3 -m venv venv
 fi
 
