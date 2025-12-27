@@ -1081,46 +1081,47 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                 except Exception as e: 
                     print(f"[WS] Move error: {e}")
                     await websocket.send_text(json.dumps({"type": "error", "message": str(e)}))
-                        elif message["type"] == "undo":
-                            if not matchmaking or (user_id in [white_id, black_id]):
-                                try:
-                                    game.undo_move()
-                                    await save_game_to_db(game_id)
-                                    await manager.broadcast(game_id, json.dumps({
-                                        "type": "game_state", 
-                                        "fen": game.state.fen, 
-                                        "turn": game.state.turn.value, 
-                                        "is_over": game.is_over, 
-                                        "in_check": game.rules.is_check(), 
-                                        "winner": game.winner, 
-                                        "move_history": game.move_history, 
-                                        "uci_history": game.uci_history,
-                                        "clocks": {c.value: t for c, t in game.get_current_clocks().items()} if game.clocks else None, 
-                                        "rating_diffs": None,
-                                        "explosion_square": None,
-                                        "is_drop": False
-                                    }))
-                                except Exception as e:
-                                    print(f"[WS] Undo error: {e}")
-                                    await websocket.send_text(json.dumps({"type": "error", "message": str(e)}))
-                        elif message["type"] == "resign":
-                            if user_id in [white_id, black_id] or (not white_id and not black_id): # Allow anyone in anonymous games
-                                game.game_over_reason_override, game.winner_override = GameOverReason.SURRENDER, (Color.BLACK.value if user_id == white_id else Color.WHITE.value)
-                                rating_diffs = await save_game_to_db(game_id)
-                                await manager.broadcast(game_id, json.dumps({
-                                    "type": "game_state", 
-                                    "fen": game.state.fen, 
-                                    "turn": game.state.turn.value, 
-                                    "is_over": game.is_over, 
-                                    "in_check": game.rules.is_check(), 
-                                    "winner": game.winner, 
-                                    "move_history": game.move_history, 
-                                    "uci_history": game.uci_history,
-                                    "clocks": {c.value: t for c, t in game.get_current_clocks().items()} if game.clocks else None, 
-                                    "rating_diffs": rating_diffs,
-                                    "explosion_square": str(game.state.explosion_square) if getattr(game.state, 'explosion_square', None) else None,
-                                    "is_drop": False
-                                }))    except WebSocketDisconnect:
+            elif message["type"] == "undo":
+                if not matchmaking or (user_id in [white_id, black_id]):
+                    try:
+                        game.undo_move()
+                        await save_game_to_db(game_id)
+                        await manager.broadcast(game_id, json.dumps({
+                            "type": "game_state", 
+                            "fen": game.state.fen, 
+                            "turn": game.state.turn.value, 
+                            "is_over": game.is_over, 
+                            "in_check": game.rules.is_check(), 
+                            "winner": game.winner, 
+                            "move_history": game.move_history, 
+                            "uci_history": game.uci_history,
+                            "clocks": {c.value: t for c, t in game.get_current_clocks().items()} if game.clocks else None, 
+                            "rating_diffs": None,
+                            "explosion_square": None,
+                            "is_drop": False
+                        }))
+                    except Exception as e:
+                        print(f"[WS] Undo error: {e}")
+                        await websocket.send_text(json.dumps({"type": "error", "message": str(e)}))
+            elif message["type"] == "resign":
+                if user_id in [white_id, black_id] or (not white_id and not black_id): # Allow anyone in anonymous games
+                    game.game_over_reason_override, game.winner_override = GameOverReason.SURRENDER, (Color.BLACK.value if user_id == white_id else Color.WHITE.value)
+                    rating_diffs = await save_game_to_db(game_id)
+                    await manager.broadcast(game_id, json.dumps({
+                        "type": "game_state", 
+                        "fen": game.state.fen, 
+                        "turn": game.state.turn.value, 
+                        "is_over": game.is_over, 
+                        "in_check": game.rules.is_check(), 
+                        "winner": game.winner, 
+                        "move_history": game.move_history, 
+                        "uci_history": game.uci_history,
+                        "clocks": {c.value: t for c, t in game.get_current_clocks().items()} if game.clocks else None, 
+                        "rating_diffs": rating_diffs,
+                        "explosion_square": str(game.state.explosion_square) if getattr(game.state, 'explosion_square', None) else None,
+                        "is_drop": False
+                    }))
+    except WebSocketDisconnect:
         manager.disconnect(websocket, game_id)
     except Exception as e:
         print(f"[WS] CRITICAL ERROR in websocket loop: {e}")
