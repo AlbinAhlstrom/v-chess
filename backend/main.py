@@ -907,14 +907,41 @@ async def trigger_ai_move(game_id: str, game: Game):
     print(f"[AI] START: Triggering AI move for game {game_id}. Turn: {game.state.turn}")
     variant = game_variants.get(game_id, "standard")
     fen = game.state.fen
-    print(f"[AI] Calling engine for FEN: {fen}, variant: {variant}")
+    
+    # Calculate difficulty based on human opponent's rating
+    user_rating = 1500
+    try:
+        async with async_session() as session:
+            model = (await session.execute(select(GameModel).where(GameModel.id == game_id))).scalar_one_or_none()
+            if model:
+                # Find the human player's ID
+                human_id = model.white_player_id if model.black_player_id == "computer" else model.black_player_id
+                if human_id and human_id != "computer":
+                    rating_info = await get_player_info(session, human_id, variant)
+                    user_rating = rating_info["rating"]
+    except Exception as e:
+        print(f"[AI] Error fetching rating for difficulty: {e}")
+
+    # Scaling Logic:
+    # 1. Use UCI_Elo for a base level
+    # 2. Use Nodes limit to simulate tactical blindness
+    # Rating 800 -> 1000 nodes; Rating 2000 -> 100,000 nodes
+    node_limit = max(500, (user_rating ** 2) // 40)
+    elo_target = user_rating
+
+    print(f"[AI] Calling engine for FEN: {fen}, variant: {variant}, elo={elo_target}, nodes={node_limit}")
     
     try:
         # best_move is UCI string
-        best_move_uci = await engine_manager.get_best_move(fen, variant=variant)
+        best_move_uci = await engine_manager.get_best_move(fen, variant=variant, elo=elo_target, nodes=node_limit)
         print(f"[AI] Engine returned best move: {best_move_uci}")
         
         if best_move_uci:
+            # Add a small 'thinking' delay for lower ratings to feel more human
+            if user_rating < 1800:
+                delay = random.uniform(0.5, 2.0)
+                await asyncio.sleep(delay)
+
             print(f"[AI] APPLYING move {best_move_uci} to game {game_id}")
             game.take_turn(Move(best_move_uci, player_to_move=game.state.turn))
             rating_diffs = await save_game_to_db(game_id)

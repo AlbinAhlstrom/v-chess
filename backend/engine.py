@@ -95,14 +95,21 @@ class UCIEngine:
             if not line: # EOF or error
                 break
 
-    async def go(self, fen: str, moves: list[str] = None, time_limit: float = 1.0, variant: str = "standard") -> Optional[str]:
-        print(f"[ENGINE] go() called with variant={variant}, limit={time_limit}")
+    async def go(self, fen: str, moves: list[str] = None, time_limit: float = 1.0, variant: str = "standard", elo: Optional[int] = None, nodes: Optional[int] = None) -> Optional[str]:
+        print(f"[ENGINE] go() called with variant={variant}, limit={time_limit}, elo={elo}, nodes={nodes}")
         async with self.lock:
             try:
                 # Set variant if needed
                 fairy_variant = VARIANT_MAP.get(variant, "chess")
                 await self.set_option("UCI_Variant", fairy_variant)
                 
+                # Strength settings
+                if elo is not None:
+                    await self.set_option("UCI_LimitStrength", "true")
+                    await self.set_option("UCI_Elo", str(elo))
+                else:
+                    await self.set_option("UCI_LimitStrength", "false")
+
                 await self.is_ready()
 
                 # Setup position
@@ -120,16 +127,20 @@ class UCIEngine:
                 await self.is_ready()
 
                 # Start search
-                # movetime is in milliseconds
-                movetime = int(time_limit * 1000)
-                print(f"[ENGINE] Starting search with movetime {movetime}")
-                await self.send_command(f"go movetime {movetime}")
+                if nodes is not None:
+                    print(f"[ENGINE] Starting search with nodes {nodes}")
+                    await self.send_command(f"go nodes {nodes}")
+                else:
+                    movetime = int(time_limit * 1000)
+                    print(f"[ENGINE] Starting search with movetime {movetime}")
+                    await self.send_command(f"go movetime {movetime}")
 
                 best_move = None
                 try:
-                    # Give it slightly more than the movetime to respond
+                    # Give it slightly more than the time_limit or a default for nodes
+                    wait_time = time_limit + 2.0 if nodes is None else 5.0
                     while True:
-                        line = await asyncio.wait_for(self.read_line(), timeout=time_limit + 2.0)
+                        line = await asyncio.wait_for(self.read_line(), timeout=wait_time)
                         if not line:
                             break
                         if line.startswith("bestmove"):
@@ -164,9 +175,9 @@ class EngineManager:
             await self.engine.start()
             self.started = True
 
-    async def get_best_move(self, fen: str, variant: str = "standard", time_limit: float = 1.0) -> Optional[str]:
+    async def get_best_move(self, fen: str, variant: str = "standard", time_limit: float = 1.0, elo: Optional[int] = None, nodes: Optional[int] = None) -> Optional[str]:
         await self.ensure_started()
-        return await self.engine.go(fen=fen, variant=variant, time_limit=time_limit)
+        return await self.engine.go(fen=fen, variant=variant, time_limit=time_limit, elo=elo, nodes=nodes)
 
 # Global engine manager
 engine_manager = EngineManager()
