@@ -1,7 +1,7 @@
 .lobby-container {
     max-width: 800px;
     margin: 40px auto;
-    padding: 20px;
+    padding: 30px 20px 20px 20px;
     background: #262421;
     color: #bababa;
     border-radius: 8px;
@@ -9,6 +9,12 @@
     touch-action: pan-y;
     user-select: auto;
     -webkit-user-select: auto;
+}
+
+@media (min-width: 850px) {
+    .lobby-container {
+        padding-top: 60px;
+    }
 }
 
 .create-seek-panel {
