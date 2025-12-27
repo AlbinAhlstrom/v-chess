@@ -37,17 +37,30 @@ fi
 # Always install local package in editable mode (fast)
 venv/bin/pip install -e .
 
-# 5. Run Database Migrations (nice for safety)
+# 5. Build the Frontend
+echo "Building frontend..."
+cd frontend
+if [ ! -d "node_modules" ]; then
+    echo "Installing frontend dependencies..."
+    nice -n 10 npm install --no-audit --no-fund
+fi
+# Set the correct API URL for production build if needed, 
+# though my recent api.js changes handle dynamic detection.
+nice -n 10 npm run build
+cd ..
+
+# 6. Run Database Migrations (nice for safety)
 echo "Running database migrations..."
 nice -n 10 venv/bin/python3 migrate_db.py
 
-# 6. Start the server
+# 7. Start the server
 echo "Starting new server..."
 export ENV=prod
 # Run uvicorn with a slightly lower priority so SSH remains responsive
-nohup nice -n 5 venv/bin/uvicorn backend.main:app --host 0.0.0.0 --port 8000 > backend.log 2>&1 &
+# Run on port 80 to serve both frontend and backend
+nohup nice -n 5 venv/bin/uvicorn backend.main:app --host 0.0.0.0 --port 80 > backend.log 2>&1 &
 
-echo "Done! Backend is starting in the background."
+echo "Done! Server is starting in the background on port 80."
 sleep 2
 tail -n 5 backend.log
 
