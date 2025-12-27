@@ -483,6 +483,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         }
         
         console.log("[RENDER] Rendering explosion at:", explosionSquare);
+        const { file, rank } = algebraicToCoords(explosionSquare);
         let displayFile = isFlipped ? 7 - file : file;
         let displayRank = isFlipped ? 7 - rank : rank;
 
