@@ -66,7 +66,7 @@ class Game:
         """Print the board."""
         self.state.board.print()
 
-    def take_turn(self, move: Move):
+    def take_turn(self, move: Move, offer_draw: bool = False):
         """Make a move by finding the corresponding legal move."""
         if self.is_over:
              raise IllegalMoveException("Game is over.")
@@ -108,16 +108,29 @@ class Game:
         self.state.rules.state = self.state
         self.rules = self.state.rules
 
-        is_check = self.rules.is_check()
         is_game_over = self.rules.is_game_over()
+        is_check = self.rules.is_check()
 
-        if is_game_over and is_check:
-             san += "#"
+        if is_game_over:
+            if self.rules.get_game_over_reason() == GameOverReason.CHECKMATE:
+                 san += "#"
         elif is_check:
              san += "+"
 
+        if offer_draw:
+             san += "="
+
         self.move_history.append(san)
         self.uci_history.append(move.uci)
+
+        if is_game_over:
+             result = "1/2-1/2"
+             winner_color = self.rules.get_winner()
+             if winner_color == Color.WHITE:
+                 result = "1-0"
+             elif winner_color == Color.BLACK:
+                 result = "0-1"
+             self.move_history.append(result)
 
     def get_current_clocks(self) -> Optional[Dict[Color, float]]:
         """Returns the clocks accounting for time passed since the last move."""
@@ -135,6 +148,10 @@ class Game:
         if not self.history:
             raise ValueError("No moves to undo.")
 
+        # Check if last element is a result string and remove it
+        if self.move_history and self.move_history[-1] in ["1-0", "0-1", "1/2-1/2"]:
+            self.move_history.pop()
+
         self.state = self.history.pop()
         self.rules = self.state.rules
         if self.move_history:
@@ -144,6 +161,10 @@ class Game:
         
         if not self.uci_history:
             self.last_move_at = None
+        
+        # Reset overrides if any
+        self.game_over_reason_override = None
+        self.winner_override = None
             
         print(f"Undo move. Restored FEN: {self.state.fen}")
         return self.state.fen
@@ -176,12 +197,23 @@ class Game:
     def game_over_reason(self) -> GameOverReason:
         if self.game_over_reason_override:
             return self.game_over_reason_override
+        if self.is_over_by_timeout:
+             return GameOverReason.TIMEOUT
         return self.rules.get_game_over_reason()
 
     @property
     def winner(self) -> Optional[str]:
         if self.winner_override:
             return self.winner_override
+        
+        # Timeout handling
+        if self.is_over_by_timeout:
+             # If timeout, the winner is the one NOT on turn (simplification)
+             # Ideally we check if opponent has mating material, but let's stick to simple flagging for now.
+             # Wait, timeout is detected externally usually, or via get_current_clocks check.
+             # If is_over_by_timeout is set, we assume the CURRENT turn player ran out of time.
+             return self.state.turn.opposite.value
+
         color = self.rules.get_winner()
         return color.value if color else None
 

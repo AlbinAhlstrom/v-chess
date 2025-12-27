@@ -1148,6 +1148,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                     continue
 
                 move_uci = message["uci"]
+                offer_draw = message.get("offer_draw", False)
                 try:
                     # Handle automatic promotion for pawns if not specified
                     if "@" not in move_uci:
@@ -1158,7 +1159,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                     
                     print(f"[WS] Applying human move: {move_uci} for game {game_id}")
                     move_obj = Move(move_uci, player_to_move=game.state.turn)
-                    game.take_turn(move_obj)
+                    game.take_turn(move_obj, offer_draw=offer_draw)
                     rating_diffs = await save_game_to_db(game_id)
                     print(f"[WS] Human move BROADCAST: {move_uci}")
                     
