@@ -101,18 +101,53 @@ async def save_game_to_db(game_id: str):
             return rating_diffs
 
 async def match_players():
-    global quick_match_queue
-    if len(quick_match_queue) < 2:
+    global quick_match_queue, seeks
+    if not quick_match_queue:
         return
 
-    # Try to find a match
-    to_remove = set()
+    to_remove_qm = set()
+    to_remove_seeks = set()
     matches = []
 
+    # 1. Match QM users against Lobby seeks
+    for i, p1 in enumerate(quick_match_queue):
+        for seek_id, s in seeks.items():
+            if seek_id in to_remove_seeks: continue
+            
+            # Prevent matching with self
+            if p1["user_id"] == s["user_id"]: continue
+            
+            # Check criteria
+            if p1["variant"] == s["variant"] and p1["time_control"] == s["time_control"]:
+                # For seeks, we need to know the rating of the creator
+                # Seeks don't currently store rating, so we'll fetch it or assume 1500
+                async with async_session() as session:
+                    s_rating_info = await get_player_info(session, s["user_id"], s["variant"])
+                    s_rating = s_rating_info["rating"]
+                
+                rating_diff = abs(p1["rating"] - s_rating)
+                # QM user has a range, Lobby user accepts anyone (for now)
+                if rating_diff <= p1["range"]:
+                    matches.append({
+                        "p1": p1,
+                        "p2": {
+                            "user_id": s["user_id"],
+                            "color": s.get("color", "random")
+                        },
+                        "is_seek": True,
+                        "seek_id": seek_id,
+                        "variant": s["variant"],
+                        "time_control": s["time_control"]
+                    })
+                    to_remove_qm.add(i)
+                    to_remove_seeks.add(seek_id)
+                    break
+
+    # 2. Match QM users against other QM users
     for i in range(len(quick_match_queue)):
-        if i in to_remove: continue
+        if i in to_remove_qm: continue
         for j in range(i + 1, len(quick_match_queue)):
-            if j in to_remove: continue
+            if j in to_remove_qm: continue
             
             p1 = quick_match_queue[i]
             p2 = quick_match_queue[j]
@@ -120,27 +155,43 @@ async def match_players():
             if p1["variant"] == p2["variant"] and p1["time_control"] == p2["time_control"]:
                 rating_diff = abs(p1["rating"] - p2["rating"])
                 if rating_diff <= p1["range"] and rating_diff <= p2["range"]:
-                    matches.append((p1, p2))
-                    to_remove.add(i)
-                    to_remove.add(j)
+                    matches.append({
+                        "p1": p1,
+                        "p2": p2,
+                        "is_seek": False,
+                        "variant": p1["variant"],
+                        "time_control": p1["time_control"]
+                    })
+                    to_remove_qm.add(i)
+                    to_remove_qm.add(j)
                     break
     
-    # Process matches
-    for p1, p2 in matches:
+    # Process all matches
+    for m in matches:
         try:
+            p1, p2 = m["p1"], m["p2"]
             game_id = str(uuid4())
-            variant = p1["variant"]
+            variant = m["variant"]
             rules_cls = RULES_MAP.get(variant.lower(), StandardRules)
             rules = rules_cls()
-            game = Game(rules=rules, time_control=p1["time_control"])
+            game = Game(rules=rules, time_control=m["time_control"])
             games[game_id] = game
             game_variants[game_id] = variant
             
-            # Randomize colors
-            if random.choice([True, False]):
-                white_id, black_id = p1["user_id"], p2["user_id"]
+            # Color logic
+            white_id, black_id = None, None
+            if m.get("is_seek"):
+                # p2 is the seeker, p1 is the QM joiner
+                seeker_color = p2.get("color", "random")
+                if seeker_color == "white": white_id, black_id = p2["user_id"], p1["user_id"]
+                elif seeker_color == "black": white_id, black_id = p1["user_id"], p2["user_id"]
+                else:
+                    if random.choice([True, False]): white_id, black_id = p1["user_id"], p2["user_id"]
+                    else: white_id, black_id = p2["user_id"], p1["user_id"]
             else:
-                white_id, black_id = p2["user_id"], p1["user_id"]
+                # Both QM, randomize
+                if random.choice([True, False]): white_id, black_id = p1["user_id"], p2["user_id"]
+                else: white_id, black_id = p2["user_id"], p1["user_id"]
                 
             async with async_session() as session:
                 async with session.begin():
@@ -158,6 +209,11 @@ async def match_players():
                     session.add(model)
             
             # Notify players
+            # If it was a seek, remove it from lobby UI for everyone
+            if m.get("is_seek"):
+                del seeks[m["seek_id"]]
+                await manager.broadcast_lobby(json.dumps({"type": "seek_removed", "seek_id": m["seek_id"]}))
+
             await manager.broadcast_lobby(json.dumps({
                 "type": "quick_match_found",
                 "game_id": game_id,
@@ -167,8 +223,8 @@ async def match_players():
             print(f"ERROR in match_players processing match: {e}")
             traceback.print_exc()
 
-    # Update queue
-    quick_match_queue[:] = [p for idx, p in enumerate(quick_match_queue) if idx not in to_remove]
+    # Update QM queue
+    quick_match_queue[:] = [p for idx, p in enumerate(quick_match_queue) if idx not in to_remove_qm]
 
 async def quick_match_monitor():
     print("Quick match monitor started.")
