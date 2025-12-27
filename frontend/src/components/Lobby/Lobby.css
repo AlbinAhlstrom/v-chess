@@ -41,7 +41,52 @@
 .elapsed-time {
     color: #bababa;
     font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+.matching-alternatives {
     margin-bottom: 30px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.matching-alternatives p {
+    font-size: 0.9rem;
+    color: #888;
+    margin-bottom: 15px;
+    margin-top: 0;
+}
+
+.alternative-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.alt-button {
+    background: #373743;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.alt-button:hover {
+    background: #454552;
+    transform: translateY(-1px);
+}
+
+.alt-button.bot {
+    border-left: 4px solid #4a82bb;
+}
+
+.alt-button.any {
+    border-left: 4px solid #95bb4a;
 }
 
 .cancel-match-button {

@@ -219,6 +219,30 @@ function Lobby() {
         }
     };
 
+    const switchToRandom = () => {
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+            // First leave current
+            socketRef.current.send(JSON.stringify({ type: "leave_quick_match" }));
+            // Then join with random
+            setSelectedVariant('random');
+            socketRef.current.send(JSON.stringify({
+                type: "join_quick_match",
+                variant: 'random',
+                time_control: isTimeControlEnabled ? {
+                    limit: startingTime * 60,
+                    increment: increment
+                } : null,
+                range: ratingRange
+            }));
+            setElapsedTime(0);
+        }
+    };
+
+    const playBotInstead = async () => {
+        leaveQuickMatch();
+        await playVsComputer();
+    };
+
     const formatDuration = (seconds) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -233,6 +257,21 @@ function Lobby() {
                         <div className="spinner-large"></div>
                         <h2>Searching for Game...</h2>
                         <p className="elapsed-time">Time Elapsed: {formatDuration(elapsedTime)}</p>
+                        
+                        <div className="matching-alternatives">
+                            <p>Is matchmaking taking a long time?</p>
+                            <div className="alternative-buttons">
+                                <button onClick={playBotInstead} className="alt-button bot">
+                                    🤖 Play against a Bot
+                                </button>
+                                {selectedVariant !== 'random' && (
+                                    <button onClick={switchToRandom} className="alt-button any">
+                                        ❓ Search any Variant
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
                         <button onClick={leaveQuickMatch} className="cancel-match-button">
                             Cancel Search
                         </button>
