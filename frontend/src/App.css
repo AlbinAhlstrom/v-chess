@@ -20,7 +20,7 @@ html,body, #root {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(0, 0, 0, 0.5);
+    background: #1a1a1d;
     backdrop-filter: blur(5px);
     height: 70px;
     box-sizing: border-box;
