@@ -139,7 +139,7 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
     const gameStartSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/game-start.mp3"));
     const promotionSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/promote.mp3"));
     const illegalSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/illegal.mp3"));
-    const explosionSound = useRef(new Audio("/sounds/atomic_explosion.mp3"));
+    const explosionSound = useRef(new Audio(window.location.origin + "/sounds/atomic_explosion.mp3"));
     
     // Timer formatting helper
     const formatTime = (seconds) => {
@@ -200,14 +200,22 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                 if (message.clocks) setTimers(message.clocks);
                 if (message.rating_diffs) setRatingDiffs(message.rating_diffs);
                 
+                console.log("[WS] Received game_state. explosion_square:", message.explosion_square);
                 if (message.explosion_square) {
+                    console.log("[WS] Triggering explosion at:", message.explosion_square);
                     setExplosionSquare(message.explosion_square);
                     setShowExplosion(true);
-                    explosionSound.current.play().catch(e => console.error("Error playing explosion sound:", e));
+                    if (explosionSound.current) {
+                        console.log("[WS] Playing explosion sound...");
+                        explosionSound.current.currentTime = 0;
+                        explosionSound.current.play().catch(e => console.error("Error playing explosion sound:", e));
+                    } else {
+                        console.error("[WS] explosionSound.current is NULL!");
+                    }
                     setTimeout(() => {
                         setShowExplosion(false);
                         setExplosionSquare(null);
-                    }, 1000); // Animation duration
+                    }, 1000); 
                 }
 
                 setSelectedSquare(null);
@@ -469,9 +477,12 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
     };
 
     const renderExplosion = () => {
-        if (!showExplosion || !explosionSquare) return null;
+        if (!showExplosion || !explosionSquare) {
+            if (showExplosion) console.log("[RENDER] showExplosion is true but explosionSquare is missing!");
+            return null;
+        }
         
-        const { file, rank } = algebraicToCoords(explosionSquare);
+        console.log("[RENDER] Rendering explosion at:", explosionSquare);
         let displayFile = isFlipped ? 7 - file : file;
         let displayRank = isFlipped ? 7 - rank : rank;
 
@@ -820,145 +831,90 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
     const topDiff = isFlipped ? whiteDiff : blackDiff;
     const bottomDiff = isFlipped ? blackDiff : whiteDiff;
 
-        return (
+    return (
+        <div
+            className="pieces"
+            ref={ref}
+            onClick={(e) => {
+                handleSquareClick(e);
+                if (isMenuOpen) setIsMenuOpen(false);
+            }}
+        >
+            <PlayerNameDisplay 
+                isOpponent={true}
+                isFlipped={isFlipped}
+                player={topPlayer}
+                ratingDiff={topDiff}
+                takebackOffer={takebackOffer}
+                user={user}
+                timers={timers}
+                turn={turn}
+                formatTime={formatTime}
+                matchmaking={matchmaking}
+            />
 
-            <div
+            <GameSidebar 
+                matchmaking={matchmaking}
+                moveHistory={moveHistory}
+                handleUndo={handleUndo}
+                handleReset={handleReset}
+                handleNewGameClick={handleNewGameClick}
+                handleMenuToggle={handleMenuToggle}
+                handleResign={handleResign}
+                handleOfferDraw={handleOfferDraw}
+                handleAcceptTakeback={handleAcceptTakeback}
+                handleDeclineTakeback={handleDeclineTakeback}
+                isMenuOpen={isMenuOpen}
+                copyFenToClipboard={copyFenToClipboard}
+                handleImportClick={handleImportClick}
+                takebackOffer={takebackOffer}
+                user={user}
+                isGameOver={isGameOver}
+                handleRematch={handleRematch}
+                handleNewOpponent={handleNewOpponent}
+                gameId={urlGameId}
+                isQuickMatch={isQuickMatch}
+            />
 
-                className="pieces"
+            {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
+            {isImportDialogOpen && <ImportDialog onImport={handleImport} onCancel={handleCancelImport} />}
 
-                ref={ref}
+            {selectedSquare && renderHighlight(selectedSquare, 'var(--selection-highlight)', 'selected')}
+            {lastMove && renderHighlight(lastMove.from, 'var(--last-move-highlight)', 'last-from')}
+            {lastMove && renderHighlight(lastMove.to, 'var(--last-move-highlight)', 'last-to')}
 
-                onClick={(e) => {
+            {showExplosion && renderExplosion()}
+            {renderKothAura()}
 
-                    handleSquareClick(e);
+            {position.map((rankArray, rankIndex) =>
+                rankArray.map((pieceType, fileIndex) => 
+                    pieceType ? renderPiece(pieceType, fileIndex, rankIndex) : null
+                )
+            )}
 
-                    if (isMenuOpen) setIsMenuOpen(false);
+            {!isGameOver && legalMoves.map((moveUci, index) => renderLegalMove(moveUci, index))}
 
-                }}
+            <GameOverIndicator 
+                isGameOver={isGameOver}
+                position={position}
+                winner={winner}
+                isFlipped={isFlipped}
+            />
 
-                >
-
-                
-
-                <PlayerNameDisplay 
-                    isOpponent={true}
-                    isFlipped={isFlipped}
-                    player={topPlayer}
-                    ratingDiff={topDiff}
-                    takebackOffer={takebackOffer}
-                    user={user}
-                    timers={timers}
-                    turn={turn}
-                    formatTime={formatTime}
-                    matchmaking={matchmaking}
-                />
-
-    
-
-                <GameSidebar 
-                    matchmaking={matchmaking}
-                    moveHistory={moveHistory}
-                    handleUndo={handleUndo}
-                    handleReset={handleReset}
-                    handleNewGameClick={handleNewGameClick}
-                    handleMenuToggle={handleMenuToggle}
-                    handleResign={handleResign}
-                    handleOfferDraw={handleOfferDraw}
-                    handleAcceptTakeback={handleAcceptTakeback}
-                    handleDeclineTakeback={handleDeclineTakeback}
-                    isMenuOpen={isMenuOpen}
-                    copyFenToClipboard={copyFenToClipboard}
-                    handleImportClick={handleImportClick}
-                    takebackOffer={takebackOffer}
-                    user={user}
-                    isGameOver={isGameOver}
-                    handleRematch={handleRematch}
-                    handleNewOpponent={handleNewOpponent}
-                    gameId={urlGameId}
-                    isQuickMatch={isQuickMatch}
-                />
-
-                {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
-
-                {isImportDialogOpen && <ImportDialog onImport={handleImport} onCancel={handleCancelImport} />}
-
-    
-
-                                {selectedSquare && renderHighlight(selectedSquare, 'var(--selection-highlight)', 'selected')}
-
-    
-
-                                {lastMove && renderHighlight(lastMove.from, 'var(--last-move-highlight)', 'last-from')}
-
-    
-
-                                                {lastMove && renderHighlight(lastMove.to, 'var(--last-move-highlight)', 'last-to')}
-
-    
-
-                                
-
-    
-
-                                                {renderExplosion()}
-
-    
-
-                                                {renderKothAura()}
-
-    
-
-                                
-
-    
-
-                                                {position.map((rankArray, rankIndex) =>
-
-                    rankArray.map((pieceType, fileIndex) => 
-
-                        pieceType ? renderPiece(pieceType, fileIndex, rankIndex) : null
-
-                    )
-
-                )}
-
-    
-
-                {!isGameOver && legalMoves.map((moveUci, index) => renderLegalMove(moveUci, index))}
-
-    
-
-                <GameOverIndicator 
-
-                    isGameOver={isGameOver}
-
-                    position={position}
-
-                    winner={winner}
-
-                    isFlipped={isFlipped}
-
-                />
-
-    
-
-                <PlayerNameDisplay 
-                    isOpponent={false}
-                    isFlipped={isFlipped}
-                    player={bottomPlayer}
-                    ratingDiff={bottomDiff}
-                    takebackOffer={takebackOffer}
-                    user={user}
-                    timers={timers}
-                    turn={turn}
-                    formatTime={formatTime}
-                    matchmaking={matchmaking}
-                />
-
-            </div>
-
-        );
-
-    }
+            <PlayerNameDisplay 
+                isOpponent={false}
+                isFlipped={isFlipped}
+                player={bottomPlayer}
+                ratingDiff={bottomDiff}
+                takebackOffer={takebackOffer}
+                user={user}
+                timers={timers}
+                turn={turn}
+                formatTime={formatTime}
+                matchmaking={matchmaking}
+            />
+        </div>
+    );
+}
 
     
