@@ -1,6 +1,10 @@
 import os
+import tempfile
+
 # Force a separate test database before importing app
-os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./test_chess.db"
+# Use a temp file to avoid locking issues in current directory
+test_db_file = tempfile.mktemp(suffix=".db", prefix="test_chess_")
+os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{test_db_file}"
 
 from hypothesis import strategies as st
 import pytest
@@ -43,9 +47,9 @@ def random_square_str(draw):
 async def setup_test_db():
     await init_db()
     yield
-    # Optional: cleanup test db file after run
-    if os.path.exists("test_chess.db"):
-        try: os.remove("test_chess.db")
+    # Cleanup test db file after run
+    if os.path.exists(test_db_file):
+        try: os.remove(test_db_file)
         except: pass
 
 @pytest.fixture(scope="module")
