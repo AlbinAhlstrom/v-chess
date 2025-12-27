@@ -253,20 +253,73 @@ input:checked + .slider:before {
 }
 
 /* History Section */
-.history-filters {
+.history-controls {
     display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 0; /* Tabs sit on the container border */
+}
+
+.result-tabs {
+    display: flex;
+    gap: 4px;
+}
+
+.tab-btn {
+    background: #302e2c;
+    color: #8b8987;
+    border: none;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: 6px 6px 0 0;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.tab-btn:hover {
+    background: #3c3934;
+    color: #bababa;
+}
+
+.tab-btn.active {
+    background: #262421; /* Match container background if needed, or slightly lighter */
+    background: #3c3934;
+    color: white;
+    border-bottom: 2px solid transparent; /* Or specific color */
+}
+
+.tab-btn.active.win {
+    border-bottom-color: #95bb4a;
+    color: #95bb4a;
+}
+
+.tab-btn.active.loss {
+    border-bottom-color: #eb5757;
+    color: #eb5757;
+}
+
+.tab-btn.active.draw {
+    border-bottom-color: #bababa;
+    color: #bababa;
+}
+
+.games-list-container {
+    background: #3c3934;
+    padding: 15px;
+    border-radius: 0 6px 6px 6px;
+    border-top-left-radius: 0; /* Align with tabs */
 }
 
 .filter-select {
     background: #3c3934;
     color: #bababa;
-    border: 1px solid #3c3934;
-    padding: 8px 12px;
+    border: 1px solid #4a4844;
+    padding: 6px 12px;
     border-radius: 4px;
     font-size: 0.9rem;
     cursor: pointer;
+    margin-bottom: 5px;
 }
 
 .filter-select:hover {
@@ -276,24 +329,24 @@ input:checked + .slider:before {
 .games-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .game-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #302e2c;
-    padding: 12px 15px;
-    border-radius: 6px;
+    background: #262421;
+    padding: 10px 15px;
+    border-radius: 4px;
     text-decoration: none;
     color: #bababa;
     transition: background 0.2s;
-    border-left: 4px solid transparent;
+    border-left: 3px solid transparent;
 }
 
 .game-item:hover {
-    background: #3c3934;
+    background: #302e2c;
 }
 
 .game-item.win {
@@ -311,18 +364,19 @@ input:checked + .slider:before {
 .game-item-left {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    min-width: 100px;
+    gap: 2px;
+    min-width: 90px;
 }
 
 .game-variant {
     font-weight: bold;
     color: white;
     text-transform: capitalize;
+    font-size: 0.95rem;
 }
 
 .game-date {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: #8b8987;
 }
 
@@ -340,9 +394,10 @@ input:checked + .slider:before {
 
 .result-indicator {
     font-weight: bold;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     padding: 2px 6px;
     border-radius: 4px;
+    text-transform: uppercase;
 }
 
 .result-indicator.win {
@@ -361,7 +416,7 @@ input:checked + .slider:before {
 }
 
 .vs-text {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: #666;
 }
 
@@ -371,13 +426,13 @@ input:checked + .slider:before {
 }
 
 .game-item-right {
-    min-width: 60px;
+    min-width: 50px;
     text-align: right;
 }
 
 .rating-diff {
     font-weight: bold;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
 }
 
 .rating-diff.positive {
@@ -391,7 +446,7 @@ input:checked + .slider:before {
 .no-games {
     text-align: center;
     padding: 20px;
-    color: #8b8987;
-    background: #302e2c;
-    border-radius: 6px;
+    color: #bababa;
+    background: #262421;
+    border-radius: 4px;
 }

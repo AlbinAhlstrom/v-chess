@@ -128,7 +128,33 @@ function Profile() {
 
                 <section className='profile-section'>
                     <h2>Game History</h2>
-                    <div className='history-filters'>
+                    <div className='history-controls'>
+                        <div className='result-tabs'>
+                            <button 
+                                className={`tab-btn ${filterResult === 'all' ? 'active' : ''}`}
+                                onClick={() => setFilterResult('all')}
+                            >
+                                Games
+                            </button>
+                            <button 
+                                className={`tab-btn win ${filterResult === 'win' ? 'active' : ''}`}
+                                onClick={() => setFilterResult('win')}
+                            >
+                                Wins
+                            </button>
+                            <button 
+                                className={`tab-btn draw ${filterResult === 'draw' ? 'active' : ''}`}
+                                onClick={() => setFilterResult('draw')}
+                            >
+                                Draws
+                            </button>
+                            <button 
+                                className={`tab-btn loss ${filterResult === 'loss' ? 'active' : ''}`}
+                                onClick={() => setFilterResult('loss')}
+                            >
+                                Losses
+                            </button>
+                        </div>
                         <select 
                             value={filterVariant} 
                             onChange={e => setFilterVariant(e.target.value)}
@@ -139,40 +165,32 @@ function Profile() {
                                  <option key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</option>
                              ))}
                         </select>
-                        <select 
-                            value={filterResult} 
-                            onChange={e => setFilterResult(e.target.value)}
-                            className='filter-select'
-                        >
-                             <option value="all">All Results</option>
-                             <option value="win">Win</option>
-                             <option value="loss">Loss</option>
-                             <option value="draw">Draw</option>
-                        </select>
                     </div>
-                    <div className='games-list'>
-                        {games.length > 0 ? games.map(game => (
-                            <Link to={`/game/${game.id}`} key={game.id} className={`game-item ${game.result}`}>
-                                <div className='game-item-left'>
-                                    <div className='game-variant'>{game.variant}</div>
-                                    <div className='game-date'>{new Date(game.created_at).toLocaleDateString()}</div>
-                                </div>
-                                <div className='game-item-center'>
-                                    <div className='game-vs'>
-                                        <span className={`result-indicator ${game.result}`}>{game.result.toUpperCase()}</span>
-                                        <span className='vs-text'>vs</span>
-                                        <span className='opponent-name'>{game.opponent.name}</span>
+                    <div className='games-list-container'>
+                        <div className='games-list'>
+                            {games.length > 0 ? games.map(game => (
+                                <Link to={`/game/${game.id}`} key={game.id} className={`game-item ${game.result}`}>
+                                    <div className='game-item-left'>
+                                        <div className='game-variant'>{game.variant}</div>
+                                        <div className='game-date'>{new Date(game.created_at).toLocaleDateString()}</div>
                                     </div>
-                                </div>
-                                <div className='game-item-right'>
-                                    {game.rating_diff !== null && (
-                                        <span className={`rating-diff ${game.rating_diff >= 0 ? 'positive' : 'negative'}`}>
-                                            {game.rating_diff > 0 ? '+' : ''}{Math.round(game.rating_diff)}
-                                        </span>
-                                    )}
-                                </div>
-                            </Link>
-                        )) : <div className='no-games'>No games found matching criteria.</div>}
+                                    <div className='game-item-center'>
+                                        <div className='game-vs'>
+                                            <span className={`result-indicator ${game.result}`}>{game.result.toUpperCase()}</span>
+                                            <span className='vs-text'>vs</span>
+                                            <span className='opponent-name'>{game.opponent.name}</span>
+                                        </div>
+                                    </div>
+                                    <div className='game-item-right'>
+                                        {game.rating_diff !== null && (
+                                            <span className={`rating-diff ${game.rating_diff >= 0 ? 'positive' : 'negative'}`}>
+                                                {game.rating_diff > 0 ? '+' : ''}{Math.round(game.rating_diff)}
+                                            </span>
+                                        )}
+                                    </div>
+                                </Link>
+                            )) : <div className='no-games'>No games found matching criteria.</div>}
+                        </div>
                     </div>
                 </section>
             </div>
