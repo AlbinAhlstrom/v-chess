@@ -42,6 +42,8 @@ function Lobby() {
     const [gameMode, setGameMode] = useState("quick"); // 'lobby', 'quick', 'otb', 'computer'
     const [isQuickMatching, setIsQuickMatching] = useState(false);
     const [ratingRange, setRatingRange] = useState(200);
+    const [matchStartTime, setMatchStartTime] = useState(null);
+    const [elapsedTime, setElapsedTime] = useState(0);
     
     // Match Pieces.js state structure
     const [isTimeControlEnabled, setIsTimeControlEnabled] = useState(true);
@@ -65,6 +67,21 @@ function Lobby() {
             })
             .catch(err => console.error("Failed to fetch user in Lobby:", err));
     }, []);
+
+    useEffect(() => {
+        let interval;
+        if (isQuickMatching) {
+            setMatchStartTime(Date.now());
+            setElapsedTime(0);
+            interval = setInterval(() => {
+                setElapsedTime(prev => prev + 1);
+            }, 1000);
+        } else {
+            setMatchStartTime(null);
+            setElapsedTime(0);
+        }
+        return () => clearInterval(interval);
+    }, [isQuickMatching]);
 
     useEffect(() => {
         const wsUrl = `${getWsBase()}/lobby`;
@@ -187,8 +204,26 @@ function Lobby() {
         }
     };
 
+    const formatDuration = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
     return (
         <div className="lobby-container">
+            {isQuickMatching && (
+                <div className="matching-overlay">
+                    <div className="matching-modal">
+                        <div className="spinner-large"></div>
+                        <h2>Searching for Game...</h2>
+                        <p className="elapsed-time">Time Elapsed: {formatDuration(elapsedTime)}</p>
+                        <button onClick={leaveQuickMatch} className="cancel-match-button">
+                            Cancel Search
+                        </button>
+                    </div>
+                </div>
+            )}
             
             <div className="create-seek-panel">
                 <h2>Variant</h2>
