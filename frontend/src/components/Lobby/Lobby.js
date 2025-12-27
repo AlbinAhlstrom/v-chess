@@ -71,16 +71,21 @@ function Lobby() {
     useEffect(() => {
         let interval;
         if (isQuickMatching) {
+            document.body.style.overflow = 'hidden';
             setMatchStartTime(Date.now());
             setElapsedTime(0);
             interval = setInterval(() => {
                 setElapsedTime(prev => prev + 1);
             }, 1000);
         } else {
+            document.body.style.overflow = 'auto';
             setMatchStartTime(null);
             setElapsedTime(0);
         }
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval);
+            document.body.style.overflow = 'auto';
+        };
     }, [isQuickMatching]);
 
     useEffect(() => {
