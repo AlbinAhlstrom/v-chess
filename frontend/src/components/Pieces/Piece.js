@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import './Pieces.css';
 
-function Piece({ piece, file, rank, actualFile, actualRank, onDragStartCallback, onDragEndCallback, onDropCallback, onDragHoverCallback }) {
+function Piece({ piece, file, rank, actualFile, actualRank, onDragStartCallback, onDragEndCallback, onDropCallback, onDragHoverCallback, className = '' }) {
     const ghostRef = useRef(null);
     
     // Fallback to display coords if actual coords not provided
@@ -144,7 +144,7 @@ function Piece({ piece, file, rank, actualFile, actualRank, onDragStartCallback,
 
     return (
         <div
-            className="piece"
+            className={`piece ${className}`}
             style={{...pieceStyle, touchAction: 'none'}}
             onMouseDown={startDrag}
             onTouchStart={startDrag}

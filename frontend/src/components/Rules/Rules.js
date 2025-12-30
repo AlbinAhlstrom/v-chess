@@ -109,6 +109,7 @@ function AtomicTutorialBoard() {
     const [completed, setCompleted] = useState(false);
     const [selected, setSelected] = useState(null); // { file, rank }
     const [legalMoves, setLegalMoves] = useState([]);
+    const [isFlying, setIsFlying] = useState(false);
     const boardRef = useRef(null);
 
     const getSquareFromCoords = (clientX, clientY) => {
@@ -160,32 +161,42 @@ function AtomicTutorialBoard() {
          const targetPiece = pieces.find(p => p.file === targetFile && p.rank === targetRank);
          
          if (targetPiece && targetPiece.color === 'b') {
-            setMessage("BOOM! The capture caused an explosion!");
+            setMessage("Incoming atom bomb!");
             
-            setExplosion({ file: targetFile, rank: targetRank });
+            setIsFlying(true);
             setSelected(null);
             setLegalMoves([]);
+            
+            // 1. Move the knight in state to trigger CSS transition
+            setPieces(prev => prev.map(p => p.id === 'wk' ? { ...p, file: targetFile, rank: targetRank } : p));
 
-            // Remove pieces immediately
-            setPieces(prev => prev.filter(p => {
-                const pdx = Math.abs(p.file - targetFile);
-                const pdy = Math.abs(p.rank - targetRank);
-                
-                if (p.id === 'wk') return false; 
-                if (p.file === targetFile && p.rank === targetRank) return false;
-                
-                if (pdx <= 1 && pdy <= 1) {
-                    if (p.type === 'p') return true; 
-                    return false; 
-                }
-                return true;
-            }));
-
+            // 2. Wait for flight animation to finish (0.5s)
             setTimeout(() => {
-                setExplosion(null);
-                setCompleted(true);
-                setMessage("Notice: The Knight, King, and other pieces exploded. The side Pawns survived!");
-            }, 800);
+                setIsFlying(false);
+                setExplosion({ file: targetFile, rank: targetRank });
+
+                // Remove pieces immediately after impact
+                setPieces(prev => prev.filter(p => {
+                    const pdx = Math.abs(p.file - targetFile);
+                    const pdy = Math.abs(p.rank - targetRank);
+                    
+                    if (p.id === 'wk') return false; 
+                    if (p.file === targetFile && p.rank === targetRank) return false;
+                    
+                    if (pdx <= 1 && pdy <= 1) {
+                        if (p.type === 'p') return true; 
+                        return false; 
+                    }
+                    return true;
+                }));
+
+                // Clear explosion after its animation (0.8s)
+                setTimeout(() => {
+                    setExplosion(null);
+                    setCompleted(true);
+                    setMessage("Notice: The Knight, King, and other pieces exploded. The side Pawns survived!");
+                }, 800);
+            }, 500);
          } else {
              setMessage("Move to capture the middle Black Pawn to see the explosion!");
              setPieces(prev => prev.map(p => p.id === 'wk' ? { ...p, file: targetFile, rank: targetRank } : p));
@@ -195,7 +206,7 @@ function AtomicTutorialBoard() {
     };
 
     const handleBoardClick = (e) => {
-        if (completed || explosion) return;
+        if (completed || explosion || isFlying) return;
         const sq = getSquareFromCoords(e.clientX, e.clientY);
         if (!sq) return;
 
@@ -222,7 +233,7 @@ function AtomicTutorialBoard() {
     };
 
     const handlePieceDragStart = ({ file, rank, piece }) => {
-        if (completed || explosion) return;
+        if (completed || explosion || isFlying) return;
         // piece is "N" (White Knight type)
         if (piece !== 'N') return; 
 
@@ -231,7 +242,7 @@ function AtomicTutorialBoard() {
     };
 
     const handlePieceDrop = ({ clientX, clientY }) => {
-        if (completed || explosion) return;
+        if (completed || explosion || isFlying) return;
         const sq = getSquareFromCoords(clientX, clientY);
         
         if (sq && selected) {
@@ -256,7 +267,8 @@ function AtomicTutorialBoard() {
         setCompleted(false);
         setSelected(null);
         setLegalMoves([]);
-        setMessage("Drag or click the middle Black Pawn!");
+        setIsFlying(false);
+        setMessage("Drag or click the White Knight to capture the middle Black Pawn!");
     };
 
     return (
@@ -302,6 +314,7 @@ function AtomicTutorialBoard() {
                         rank={p.rank}
                         onDragStartCallback={handlePieceDragStart}
                         onDropCallback={handlePieceDrop}
+                        className={p.id === 'wk' && isFlying ? 'flying-knight' : ''}
                     />
                 ))}
 

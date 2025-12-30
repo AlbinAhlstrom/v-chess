@@ -176,3 +176,10 @@
         --square-size: 60px;
     }
 }
+
+.piece.flying-knight {
+    transition: all 0.5s cubic-bezier(0.47, 0, 0.745, 0.715) !important;
+    transform: scale(1.5) rotate(45deg);
+    z-index: 1000 !important;
+    filter: drop-shadow(0 0 10px rgba(255, 165, 0, 0.8));
+}
