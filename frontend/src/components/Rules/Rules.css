@@ -168,3 +168,11 @@
 .tutorial-board .legal-move-dot {
     z-index: 20;
 }
+
+@media (max-width: 400px) {
+    .tutorial-board {
+        width: 240px;
+        height: 240px;
+        --square-size: 60px;
+    }
+}
