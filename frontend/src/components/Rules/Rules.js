@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import './Rules.css';
 
@@ -91,6 +91,135 @@ const VARIANT_RULES = {
     }
 };
 
+function AtomicTutorialBoard() {
+    const [pieces, setPieces] = useState([
+        { id: 'wk', type: 'N', color: 'w', file: 1, rank: 3 }, // Knight at b1 (relative to 4x4)
+        { id: 'bp', type: 'p', color: 'b', file: 2, rank: 1 }, // Pawn at c3 (relative to 4x4)
+        { id: 'br', type: 'r', color: 'b', file: 1, rank: 0 }, // Rook at b4 - will explode
+        { id: 'bq', type: 'q', color: 'b', file: 3, rank: 0 }, // Queen at d4 - will explode
+        { id: 'bk', type: 'k', color: 'b', file: 0, rank: 0 }, // King at a4 - safe
+    ]);
+    const [explosion, setExplosion] = useState(null);
+    const [message, setMessage] = useState("Move the White Knight to capture the Black Pawn!");
+    const [completed, setCompleted] = useState(false);
+
+    const handleSquareClick = (file, rank) => {
+        if (completed || explosion) return;
+
+        const knight = pieces.find(p => p.id === 'wk');
+        const target = pieces.find(p => p.file === file && p.rank === rank);
+
+        // Check for valid knight move to target
+        const dx = Math.abs(file - knight.file);
+        const dy = Math.abs(rank - knight.rank);
+        const isKnightMove = (dx === 1 && dy === 2) || (dx === 2 && dy === 1);
+
+        if (isKnightMove && target && target.color === 'b') {
+            // Valid capture
+            setMessage("BOOM! The capture caused an explosion!");
+            
+            // 1. Move knight visually first
+            setPieces(prev => prev.map(p => p.id === 'wk' ? { ...p, file, rank } : p));
+
+            // 2. Trigger explosion animation
+            setExplosion({ file, rank });
+
+            // 3. Remove pieces after delay
+            setTimeout(() => {
+                setPieces(prev => prev.filter(p => {
+                    const pdx = Math.abs(p.file - file);
+                    const pdy = Math.abs(p.rank - rank);
+                    // Remove if in 1 square radius (King is immune to explosion normally but in atomic only pawns survive surrounding explosions? 
+                    // Rules: "The explosion removes the capturing piece, the captured piece, and all non-pawn pieces in the surrounding 3x3 area."
+                    // Pawns only removed if directly involved.
+                    
+                    if (p.id === 'wk') return false; // Capturing piece dies
+                    if (p.file === file && p.rank === rank) return false; // Captured piece dies
+                    
+                    if (pdx <= 1 && pdy <= 1) {
+                        if (p.type === 'p') return true; // Pawns survive surrounding
+                        return false; // Others die
+                    }
+                    return true;
+                }));
+                setExplosion(null);
+                setCompleted(true);
+                setMessage("Notice: The Knight, Pawn, and surrounding pieces exploded. The King survived!");
+            }, 800);
+        } else if (isKnightMove) {
+            setMessage("Move to capture the Black Pawn to see the explosion!");
+        }
+    };
+
+    const reset = () => {
+        setPieces([
+            { id: 'wk', type: 'N', color: 'w', file: 1, rank: 3 },
+            { id: 'bp', type: 'p', color: 'b', file: 2, rank: 1 },
+            { id: 'br', type: 'r', color: 'b', file: 1, rank: 0 },
+            { id: 'bq', type: 'q', color: 'b', file: 3, rank: 0 },
+            { id: 'bk', type: 'k', color: 'b', file: 0, rank: 0 },
+        ]);
+        setExplosion(null);
+        setCompleted(false);
+        setMessage("Move the White Knight to capture the Black Pawn!");
+    };
+
+    return (
+        <div className="atomic-tutorial">
+            <div className="tutorial-board">
+                {[0, 1, 2, 3].map(rank => (
+                    [0, 1, 2, 3].map(file => {
+                        const isBlack = (rank + file) % 2 === 1;
+                        return (
+                            <div 
+                                key={`${file}-${rank}`}
+                                className={`tutorial-square ${isBlack ? 'black-square' : 'white-square'}`}
+                                onClick={() => handleSquareClick(file, rank)}
+                            />
+                        );
+                    })
+                ))}
+                
+                {pieces.map(p => (
+                    <div
+                        key={p.id}
+                        className="tutorial-piece"
+                        style={{
+                            left: `${p.file * 25}%`,
+                            top: `${p.rank * 25}%`,
+                            backgroundImage: `url("/images/pieces/${p.color}${p.type}.png")`
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleSquareClick(p.file, p.rank);
+                        }}
+                    />
+                ))}
+
+                {explosion && (
+                    <div 
+                        className="explosion-container"
+                        style={{
+                            left: `${explosion.file * 25}%`,
+                            top: `${explosion.rank * 25}%`,
+                            width: '25%',
+                            height: '25%'
+                        }}
+                    >
+                        <div className="explosion-ring"></div>
+                        <div className="explosion-ring"></div>
+                        <div className="explosion-ring"></div>
+                    </div>
+                )}
+            </div>
+            <div className="tutorial-controls">
+                <p>{message}</p>
+                {completed && <button onClick={reset}>Reset Tutorial</button>}
+            </div>
+        </div>
+    );
+}
+
 function Rules() {
     const { variant } = useParams();
     const currentVariant = variant || 'standard';
@@ -129,6 +258,9 @@ function Rules() {
             <div className="rules-content">
                 <h1>{variantData.title}</h1>
                 <p className="variant-description">{variantData.description}</p>
+                
+                {currentVariant === 'atomic' && <AtomicTutorialBoard />}
+
                 <ul className="rules-list">
                     {variantData.rules.map((rule, index) => (
                         <li key={index}>{rule}</li>
