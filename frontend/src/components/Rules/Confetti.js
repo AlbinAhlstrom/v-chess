@@ -1,131 +1,42 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
+import confetti from 'canvas-confetti';
 
 const Confetti = ({ trigger }) => {
-    const canvasRef = useRef(null);
-    const requestRef = useRef();
-    const piecesRef = useRef([]);
-
     useEffect(() => {
-        if (!trigger) {
-            piecesRef.current = [];
-            return;
-        }
+        if (trigger) {
+            // High-performance burst from the bottom center
+            const duration = 3 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 45, spread: 70, ticks: 100, zIndex: 99999, gravity: 1.2, scalar: 1.2 };
 
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext("2d", { alpha: true });
-        
-        let w = window.innerWidth;
-        let h = window.innerHeight;
-        let dpr = Math.min(2, window.devicePixelRatio || 1);
+            const randomInRange = (min, max) => Math.random() * (max - min) + min;
 
-        const resize = () => {
-            w = window.innerWidth;
-            h = window.innerHeight;
-            canvas.width = Math.floor(w * dpr);
-            canvas.height = Math.floor(h * dpr);
-            canvas.style.width = w + "px";
-            canvas.style.height = h + "px";
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        };
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
 
-        window.addEventListener("resize", resize);
-        resize();
-
-        const palette = [
-            'rgb(255, 214, 102)', 
-            'rgb(255, 107, 107)', 
-            'rgb(116, 185, 255)', 
-            'rgb(120, 224, 143)', 
-            'rgb(235, 235, 235)'
-        ];
-        const COUNT = 500; // Balanced count for performance and density
-        const GRAVITY = 0.35;
-
-        const makePiece = () => {
-            const angle = (Math.random() * 0.4 - 0.7) * Math.PI; // Upward cone (-0.5 is straight up)
-            const power = Math.sqrt(h) * (Math.random() * 0.6 + 0.9) * 1.2;
-            
-            return {
-                x: w / 2,
-                y: h + 20,
-                vx: Math.cos(angle) * power,
-                vy: Math.sin(angle) * power,
-                size: Math.random() * 8 + 4,
-                color: palette[Math.floor(Math.random() * palette.length)],
-                rotation: Math.random() * Math.PI * 2,
-                vrot: (Math.random() - 0.5) * 0.3,
-                flip: Math.random() * Math.PI * 2,
-                vflip: Math.random() * 0.3 + 0.1,
-                dead: false
-            };
-        };
-
-        // Trigger a single massive burst
-        piecesRef.current = Array.from({ length: COUNT }, makePiece);
-
-        const loop = () => {
-            ctx.clearRect(0, 0, w, h);
-            let alive = 0;
-
-            for (let i = 0; i < piecesRef.current.length; i++) {
-                const p = piecesRef.current[i];
-                if (p.dead) continue;
-                alive++;
-
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vy += GRAVITY;
-                p.rotation += p.vrot;
-                p.flip += p.vflip;
-
-                // Simple drag/friction
-                p.vx *= 0.99;
-                p.vy *= 0.99;
-
-                if (p.y > h + 100 && p.vy > 0) {
-                    p.dead = true;
-                    continue;
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
                 }
 
-                ctx.save();
-                ctx.translate(p.x, p.y);
-                ctx.rotate(p.rotation);
-                ctx.scale(Math.abs(Math.sin(p.flip)), 1);
-                ctx.fillStyle = p.color;
-                // Draw a simple rectangle (confetti piece)
-                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.5);
-                ctx.restore();
-            }
+                const particleCount = 50 * (timeLeft / duration);
+                
+                // Fountain burst from bottom center
+                confetti({
+                    ...defaults,
+                    particleCount,
+                    origin: { x: 0.5, y: 1.1 },
+                    angle: randomInRange(75, 105), // Narrower upward cone
+                    spread: randomInRange(40, 80),
+                    gravity: 1.5,
+                    startVelocity: randomInRange(45, 75)
+                });
+            }, 250);
 
-            if (alive > 0) {
-                requestRef.current = requestAnimationFrame(loop);
-            }
-        };
-
-        requestRef.current = requestAnimationFrame(loop);
-
-        return () => {
-            window.removeEventListener("resize", resize);
-            cancelAnimationFrame(requestRef.current);
-        };
+            return () => clearInterval(interval);
+        }
     }, [trigger]);
 
-    return (
-        <canvas
-            ref={canvasRef}
-            style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                width: '100vw',
-                height: '100vh',
-                pointerEvents: 'none',
-                zIndex: 99999,
-                opacity: trigger ? 1 : 0,
-                transition: 'opacity 0.5s'
-            }}
-        />
-    );
+    return null; // canvas-confetti creates its own global canvas
 };
 
 export default Confetti;
