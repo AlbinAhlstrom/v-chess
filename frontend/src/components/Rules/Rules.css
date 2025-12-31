@@ -492,8 +492,8 @@
 
 /* Target Square Flash */
 @keyframes target-flash-anim {
-    from { background-color: rgba(255, 0, 0, 0); }
-    to { background-color: rgba(255, 0, 0, 0.5); }
+    from { background-color: rgba(255, 100, 0, 0); }
+    to { background-color: rgba(255, 100, 0, 0.5); }
 }
 
 .tutorial-square.target-flash {
