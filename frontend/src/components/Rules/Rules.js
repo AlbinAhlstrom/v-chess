@@ -1441,7 +1441,10 @@ function ThreeCheckTutorialBoard() {
     const [selected, setSelected] = useState(null);
     const [legalMoves, setLegalMoves] = useState([]);
     const [checkFlash, setCheckFlash] = useState(false);
+    const [strikeSquare, setStrikeSquare] = useState(null); // { file, rank }
     const boardRef = useRef(null);
+    const strikeSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-check.mp3"));
+    const finalSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/game-end.mp3"));
 
     const getSquareFromCoords = (clientX, clientY) => {
         if (!boardRef.current) return null;
@@ -1500,16 +1503,23 @@ function ThreeCheckTutorialBoard() {
                     const nextChecks = checks + 1;
                     setChecks(nextChecks);
                     setCheckFlash(true);
-                    setTimeout(() => setCheckFlash(false), 600);
+                    setStrikeSquare({ file: king.file, rank: king.rank });
+                    strikeSound.current.play().catch(() => {});
+                    
+                    setTimeout(() => {
+                        setCheckFlash(false);
+                        setStrikeSquare(null);
+                    }, 600);
 
                     if (nextChecks >= 3) {
                         setCompleted(true);
-                        setMessage("3 Checks delivered! You win by Three-Check rules.");
+                        finalSound.current.play().catch(() => {});
+                        setMessage("3RD CHECK DELIVERED! Absolute victory by Three-Check rules.");
                     } else {
-                        setMessage(`CHECK! That's ${nextChecks}/3 checks. Keep going!`);
+                        setMessage(`CHECK! Strike ${nextChecks}/3 landed. Finish him!`);
                     }
                 } else {
-                    setMessage("Move delivered, but it wasn't a check. Try again!");
+                    setMessage("Move delivered, but it wasn't a check. Aim for the King!");
                 }
             } else {
                 setSelected(null);
@@ -1556,16 +1566,23 @@ function ThreeCheckTutorialBoard() {
                     const nextChecks = checks + 1;
                     setChecks(nextChecks);
                     setCheckFlash(true);
-                    setTimeout(() => setCheckFlash(false), 600);
+                    setStrikeSquare({ file: king.file, rank: king.rank });
+                    strikeSound.current.play().catch(() => {});
+                    
+                    setTimeout(() => {
+                        setCheckFlash(false);
+                        setStrikeSquare(null);
+                    }, 600);
 
                     if (nextChecks >= 3) {
                         setCompleted(true);
-                        setMessage("3 Checks delivered! You win by Three-Check rules.");
+                        finalSound.current.play().catch(() => {});
+                        setMessage("3RD CHECK DELIVERED! Absolute victory by Three-Check rules.");
                     } else {
-                        setMessage(`CHECK! That's ${nextChecks}/3 checks. Keep going!`);
+                        setMessage(`CHECK! Strike ${nextChecks}/3 landed. Finish him!`);
                     }
                 } else {
-                    setMessage("Move delivered, but it wasn't a check. Try again!");
+                    setMessage("Move delivered, but it wasn't a check. Aim for the King!");
                 }
             }
         }
@@ -1581,13 +1598,20 @@ function ThreeCheckTutorialBoard() {
         setSelected(null);
         setLegalMoves([]);
         setCheckFlash(false);
+        setStrikeSquare(null);
         setMessage("Three-Check: Deliver 3 checks to the Black King to win!");
     };
 
     return (
         <div className="three-check-tutorial">
-            <div className="check-counter">Checks: {checks} / 3</div>
-            <div className="tutorial-board" ref={boardRef} onClick={handleBoardClick}>
+            <div className="health-gauge-container">
+                <div className="health-label">KING HEALTH</div>
+                <div className="health-bar-bg">
+                    <div className="health-bar-fill" style={{ width: `${(3 - checks) * 33.33}%` }}></div>
+                </div>
+                <div className="checks-label">Checks: {checks} / 3</div>
+            </div>
+            <div className={`tutorial-board ${checkFlash && checks === 3 ? 'extreme-shake' : ''}`} ref={boardRef} onClick={handleBoardClick}>
                 {[0, 1, 2, 3].map(rank => [0, 1, 2, 3].map(file => (
                     <div key={`${file}-${rank}`} className={`tutorial-square ${(rank + file) % 2 === 1 ? 'black-square' : 'white-square'}`} />
                 )))}
@@ -1598,6 +1622,13 @@ function ThreeCheckTutorialBoard() {
                            onDragStartCallback={handlePieceDragStart} onDropCallback={handlePieceDrop}
                            className={p.id === 'bk' && checkFlash ? 'check-pulse' : ''} />
                 ))}
+                
+                {strikeSquare && (
+                    <div className="check-strike-visceral" 
+                         style={{ left: `${strikeSquare.file * 25}%`, top: `${strikeSquare.rank * 25}%` }}>
+                        <div className="strike-line"></div>
+                    </div>
+                )}
             </div>
             <div className="tutorial-controls">
                 <p>{message}</p>

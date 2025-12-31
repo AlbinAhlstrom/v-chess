@@ -609,6 +609,86 @@
     animation: streak-fade 0.5s ease-out forwards;
 }
 
+/* Three-Check Visceral Effects */
+.health-gauge-container {
+    width: 300px;
+    margin-bottom: 15px;
+    background: #1a1a1d;
+    padding: 10px;
+    border-radius: 8px;
+    border: 2px solid #3c3934;
+}
+
+.health-label {
+    font-size: 0.7rem;
+    color: #888;
+    text-align: left;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+}
+
+.health-bar-bg {
+    width: 100%;
+    height: 12px;
+    background: #000;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+
+.health-bar-fill {
+    height: 100%;
+    background: linear-gradient(to right, #f00, #ff0);
+    transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 0 10px #f00;
+}
+
+.checks-label {
+    font-size: 0.9rem;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+@keyframes strike-slash-visceral {
+    0% { transform: rotate(-45deg) scaleX(0); opacity: 1; }
+    50% { transform: rotate(-45deg) scaleX(1.5); opacity: 1; }
+    100% { transform: rotate(-45deg) scaleX(1.5); opacity: 0; }
+}
+
+.check-strike-visceral {
+    position: absolute;
+    width: 25%;
+    height: 25%;
+    pointer-events: none;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.strike-line {
+    width: 120%;
+    height: 6px;
+    background: #fff;
+    box-shadow: 0 0 20px #f00, 0 0 40px #fff;
+    transform: rotate(-45deg);
+    animation: strike-slash-visceral 0.4s ease-out forwards;
+}
+
+@keyframes board-extreme-shake {
+    0% { transform: translate(0,0); }
+    10% { transform: translate(-10px, 10px); }
+    30% { transform: translate(10px, -10px); }
+    50% { transform: translate(-10px, -10px); }
+    70% { transform: translate(10px, 10px); }
+    100% { transform: translate(0,0); }
+}
+
+.tutorial-board.extreme-shake {
+    animation: board-extreme-shake 0.5s infinite;
+}
+
 /* Combined Atomic Explosion Styles */
 .mushroom-cloud-container {
     position: absolute;
