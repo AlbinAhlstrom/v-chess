@@ -338,7 +338,12 @@ function AtomicTutorialBoard() {
             setSelected(null);
             setLegalMoves([]);
 
-            // Phase 1: Tilt in place (250ms)
+            // Rapid beep sequence
+            SoundManager.play('caution');
+            setTimeout(() => SoundManager.play('caution'), 200);
+            setTimeout(() => SoundManager.play('caution'), 400);
+
+            // Phase 1: Tilt in place (600ms)
             setTimeout(() => {
                 setIsPreparing(false);
                 setIsIgnition(false);
@@ -346,15 +351,6 @@ function AtomicTutorialBoard() {
                 setAnimatingKnight({ file: targetFile, rank: targetRank }); // Set destination for CSS transition
                 SoundManager.play('whoosh');
                 
-                // Triple beep sequence
-                const playBeep = () => {
-                    SoundManager.play('strike');
-                };
-                
-                setTimeout(playBeep, 50);
-                setTimeout(playBeep, 150);
-                setTimeout(playBeep, 250);
-
                 setMessage("Incoming atom bomb!");
                 
                 // Clear puff after 1s
@@ -392,7 +388,7 @@ function AtomicTutorialBoard() {
                         setMessage("Notice: The Knight, King, and other pieces exploded. The side Pawns survived!");
                     }, 800);
                 }, 400);
-            }, 250);
+            }, 600);
          } else {
              setMessage("Move to capture the middle Black Pawn to see the explosion!");
              setPieces(prev => prev.map(p => p.id === 'wk' ? { ...p, file: targetFile, rank: targetRank } : p));

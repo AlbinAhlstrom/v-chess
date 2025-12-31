@@ -19,6 +19,11 @@ const sounds = {
         src: ['/sounds/atomic_explosion.mp3'], 
         volume: 1.0 
     }),
+
+    caution: new Howl({ 
+        src: ['/sounds/caution.wav'], 
+        volume: 0.8 
+    }),
     
     // Antichess: Heavy crystalline glass shatter
     shatter: new Howl({ 
