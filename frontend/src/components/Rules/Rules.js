@@ -604,13 +604,12 @@ function AtomicTutorialBoard() {
 function AntichessTutorialBoard() {
     const [pieces, setPieces] = useState([
         { id: 'bq', type: 'q', color: 'b', file: 0, rank: 0 }, // Black Queen at a4
-        { id: 'wp1', type: 'P', color: 'w', file: 0, rank: 2 }, // White Pawn at a2
-        { id: 'wp2', type: 'P', color: 'w', file: 1, rank: 2 }, // White Pawn at b2
+        { id: 'wp', type: 'P', color: 'w', file: 0, rank: 2 }, // White Pawn at a2
         { id: 'wk', type: 'K', color: 'w', file: 2, rank: 2 },  // White King at c2
         { id: 'wr', type: 'R', color: 'w', file: 3, rank: 2 },  // White Rook at d2
     ]);
-    const [step, setStep] = useState(0); // 0: Pawn1, 1: Pawn2, 2: King, 3: Rook
-    const [message, setMessage] = useState("Antichess: To win, you must lose all your pieces! Sacrifice your first Pawn.");
+    const [step, setStep] = useState(0); // 0: Pawn, 1: King, 2: Rook
+    const [message, setMessage] = useState("Antichess: To win, you must lose all your pieces! Sacrifice your Pawn.");
     const [completed, setCompleted] = useState(false);
     const [selected, setSelected] = useState(null);
     const [legalMoves, setLegalMoves] = useState([]);
@@ -711,11 +710,9 @@ function AntichessTutorialBoard() {
 
     const triggerOpponentCapture = (targetFile, targetRank, nextStep) => {
         setIsProcessing(true);
-        // Wait for user move to finish
         setTimeout(() => {
             setPieces(prev => {
                 const queen = prev.find(p => p.id === 'bq');
-                // Move queen to captured square and remove white piece
                 return prev
                     .filter(p => !(p.file === targetFile && p.rank === targetRank))
                     .map(p => p.id === 'bq' ? { ...p, file: targetFile, rank: targetRank } : p);
@@ -725,14 +722,13 @@ function AntichessTutorialBoard() {
             setTimeout(() => setIsShaking(false), 300);
             
             const messages = [
-                "Now sacrifice the second Pawn!",
-                "Great! Offer your King to the Queen.",
-                "Last piece! Move your Rook into the path.",
+                "Now offer your King to the Queen!",
+                "Last piece! Force the Queen to take your Rook.",
                 "VICTORY! You lost everything. That's how you win Antichess!"
             ];
             setMessage(messages[nextStep - 1]);
             setStep(nextStep);
-            if (nextStep === 4) setCompleted(true);
+            if (nextStep === 3) setCompleted(true);
             setIsProcessing(false);
         }, 400);
     };
@@ -744,15 +740,16 @@ function AntichessTutorialBoard() {
 
         const clickedPiece = pieces.find(p => p.file === sq.file && p.rank === sq.rank);
 
-        // Selection logic based on step
-        const activeIds = ['wp1', 'wp2', 'wk', 'wr'];
+        const activeIds = ['wp', 'wk', 'wr'];
+        const targetPositions = [{file: 0, rank: 1}, {file: 1, rank: 1}, {file: 3, rank: 1}];
+
         if (clickedPiece && clickedPiece.id === activeIds[step]) {
             setSelected(sq);
-            setLegalMoves([{ file: step, rank: 1 }]); // All pieces move to rank 1 for sacrifice
+            setLegalMoves([targetPositions[step]]);
             return;
         }
 
-        if (selected && sq.file === step && sq.rank === 1) {
+        if (selected && sq.file === targetPositions[step].file && sq.rank === targetPositions[step].rank) {
             setPieces(prev => prev.map(p => 
                 (p.file === selected.file && p.rank === selected.rank) ? { ...p, file: sq.file, rank: sq.rank } : p
             ));
@@ -769,16 +766,18 @@ function AntichessTutorialBoard() {
 
     const handlePieceDragStart = ({ file, rank, piece }) => {
         if (completed || shatter || isShaking || isProcessing) return;
-        const activeTypes = ['P', 'P', 'K', 'R'];
+        const activeTypes = ['P', 'K', 'R'];
+        const targetPositions = [{file: 0, rank: 1}, {file: 1, rank: 1}, {file: 3, rank: 1}];
         if (piece !== activeTypes[step]) return;
         setSelected({ file, rank });
-        setLegalMoves([{ file: step, rank: 1 }]);
+        setLegalMoves([targetPositions[step]]);
     };
 
     const handlePieceDrop = ({ clientX, clientY }) => {
         if (completed || shatter || isShaking || isProcessing) return;
         const sq = getSquareFromCoords(clientX, clientY);
-        if (sq && selected && sq.file === step && sq.rank === 1) {
+        const targetPositions = [{file: 0, rank: 1}, {file: 1, rank: 1}, {file: 3, rank: 1}];
+        if (sq && selected && sq.file === targetPositions[step].file && sq.rank === targetPositions[step].rank) {
             setPieces(prev => prev.map(p => 
                 (p.file === selected.file && p.rank === selected.rank) ? { ...p, file: sq.file, rank: sq.rank } : p
             ));
@@ -791,8 +790,7 @@ function AntichessTutorialBoard() {
     const reset = () => {
         setPieces([
             { id: 'bq', type: 'q', color: 'b', file: 0, rank: 0 },
-            { id: 'wp1', type: 'P', color: 'w', file: 0, rank: 2 },
-            { id: 'wp2', type: 'P', color: 'w', file: 1, rank: 2 },
+            { id: 'wp', type: 'P', color: 'w', file: 0, rank: 2 },
             { id: 'wk', type: 'K', color: 'w', file: 2, rank: 2 },
             { id: 'wr', type: 'R', color: 'w', file: 3, rank: 2 },
         ]);
@@ -802,7 +800,7 @@ function AntichessTutorialBoard() {
         setLegalMoves([]);
         setShatter(null);
         setIsShaking(false);
-        setMessage("Antichess: To win, you must lose all your pieces! Sacrifice your first Pawn.");
+        setMessage("Antichess: To win, you must lose all your pieces! Sacrifice your Pawn.");
     };
 
     return (
@@ -814,7 +812,7 @@ function AntichessTutorialBoard() {
                 {selected && <HighlightSquare file={selected.file} rank={selected.rank} color="rgba(255, 255, 0, 0.5)" />}
                 {legalMoves.map((m, i) => <LegalMoveDot key={i} file={m.file} rank={m.rank} />)}
                 {pieces.map(p => {
-                    const activeIds = ['wp1', 'wp2', 'wk', 'wr'];
+                    const activeIds = ['wp', 'wk', 'wr'];
                     const isForced = !completed && !shatter && p.id === activeIds[step];
                     return (
                         <Piece 
