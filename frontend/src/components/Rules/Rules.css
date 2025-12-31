@@ -490,14 +490,14 @@
     animation: turbo-trail 0.5s ease-out forwards;
 }
 
-/* Target Square Flash */
-@keyframes target-flash-anim {
+/* Target Square Warning Fade */
+@keyframes target-fade-anim {
     from { background-color: rgba(255, 200, 0, 0); }
     to { background-color: rgba(255, 200, 0, 0.5); }
 }
 
 .tutorial-square.target-flash {
-    animation: target-flash-anim 0.15s 3;
+    animation: target-fade-anim 0.65s ease-in forwards;
     z-index: 2;
 }
 
