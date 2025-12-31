@@ -985,7 +985,10 @@ function KOTHTutorialBoard() {
     const [selected, setSelected] = useState(null);
     const [legalMoves, setLegalMoves] = useState([]);
     const [victoryAura, setVictoryAura] = useState(false);
+    const [isShaking, setIsShaking] = useState(false);
     const boardRef = useRef(null);
+    const moveSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-check.mp3"));
+    const victorySound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/game-end.mp3"));
 
     const centerSquares = [
         { file: 1, rank: 1 }, { file: 2, rank: 1 },
@@ -1005,7 +1008,7 @@ function KOTHTutorialBoard() {
     };
 
     const handleBoardClick = (e) => {
-        if (completed) return;
+        if (completed || isShaking) return;
         const sq = getSquareFromCoords(e.clientX, e.clientY);
         if (!sq) return;
 
@@ -1013,13 +1016,12 @@ function KOTHTutorialBoard() {
 
         if (clickedPiece && clickedPiece.color === 'w') {
             setSelected(sq);
-            // Simple King moves
             const moves = [];
             for (let df = -1; df <= 1; df++) {
                 for (let dr = -1; dr <= 1; dr++) {
                     if (df === 0 && dr === 0) continue;
                     const nf = sq.file + df, nr = sq.rank + dr;
-                    if (nf >= 0 && nf < 4 && nr >= 0 && nr < 4) moves.push({ file: nf, nr });
+                    if (nf >= 0 && nf < 4 && nr >= 0 && nr < 4) moves.push({ file: nf, rank: nr });
                 }
             }
             setLegalMoves(moves);
@@ -1033,12 +1035,17 @@ function KOTHTutorialBoard() {
                 setPieces(prev => prev.map(p => p.id === 'wk' ? { ...p, file: sq.file, rank: sq.rank } : p));
                 setSelected(null);
                 setLegalMoves([]);
+                
                 if (isCenter) {
                     setCompleted(true);
                     setVictoryAura(true);
-                    setMessage("You reached the center! In King of the Hill, this is an instant victory.");
+                    setIsShaking(true);
+                    victorySound.current.play().catch(() => {});
+                    setTimeout(() => setIsShaking(false), 500);
+                    setMessage("THE SUMMIT REACHED! In King of the Hill, the center is an instant victory.");
                 } else {
-                    setMessage("Good move! Now keep heading for the center squares.");
+                    moveSound.current.play().catch(() => {});
+                    setMessage("Good move! Keep climbing toward the center summit.");
                 }
             } else {
                 setSelected(null);
@@ -1046,14 +1053,15 @@ function KOTHTutorialBoard() {
             }
         } else if (clickedPiece && clickedPiece.color === 'b') {
             return;
-        } else {
+        }
+        else {
             setSelected(null);
             setLegalMoves([]);
         }
     };
 
     const handlePieceDragStart = ({ file, rank, piece }) => {
-        if (completed) return;
+        if (completed || isShaking) return;
         if (piece !== 'K') return;
         setSelected({ file, rank });
         const moves = [];
@@ -1068,7 +1076,7 @@ function KOTHTutorialBoard() {
     };
 
     const handlePieceDrop = ({ clientX, clientY }) => {
-        if (completed) return;
+        if (completed || isShaking) return;
         const sq = getSquareFromCoords(clientX, clientY);
         if (sq && selected) {
             const isLegal = legalMoves.some(m => m.file === sq.file && m.rank === sq.rank);
@@ -1080,9 +1088,13 @@ function KOTHTutorialBoard() {
                 if (isCenter) {
                     setCompleted(true);
                     setVictoryAura(true);
-                    setMessage("You reached the center! In King of the Hill, this is an instant victory.");
+                    setIsShaking(true);
+                    victorySound.current.play().catch(() => {});
+                    setTimeout(() => setIsShaking(false), 500);
+                    setMessage("THE SUMMIT REACHED! In King of the Hill, the center is an instant victory.");
                 } else {
-                    setMessage("Good move! Now keep heading for the center squares.");
+                    moveSound.current.play().catch(() => {});
+                    setMessage("Good move! Keep climbing toward the center summit.");
                 }
             }
         }
@@ -1095,6 +1107,7 @@ function KOTHTutorialBoard() {
         ]);
         setCompleted(false);
         setVictoryAura(false);
+        setIsShaking(false);
         setSelected(null);
         setLegalMoves([]);
         setMessage("King of the Hill: Race your King to the center squares!");
@@ -1102,13 +1115,16 @@ function KOTHTutorialBoard() {
 
     return (
         <div className="koth-tutorial">
-            <div className="tutorial-board" ref={boardRef} onClick={handleBoardClick}>
-                {[0, 1, 2, 3].map(rank => [0, 1, 2, 3].map(file => (
-                    <div key={`${file}-${rank}`} className={`tutorial-square ${(rank + file) % 2 === 1 ? 'black-square' : 'white-square'}`} />
-                )))}
-                {centerSquares.map((c, i) => (
-                    <HighlightSquare key={i} file={c.file} rank={c.rank} color="rgba(255, 215, 0, 0.3)" />
-                ))}
+            <div className={`tutorial-board ${isShaking ? 'shaking' : ''}`} ref={boardRef} onClick={handleBoardClick}>
+                {[0, 1, 2, 3].map(rank => [0, 1, 2, 3].map(file => {
+                    const isSummit = centerSquares.some(c => c.file === file && c.rank === rank);
+                    const isBlack = (rank + file) % 2 === 1;
+                    return (
+                        <div key={`${file}-${rank}`} 
+                             className={`tutorial-square ${isBlack ? 'black-square' : 'white-square'} ${isSummit ? 'summit-square' : ''}`} 
+                        />
+                    );
+                }))}
                 {selected && <HighlightSquare file={selected.file} rank={selected.rank} color="rgba(255, 255, 0, 0.5)" />}
                 {legalMoves.map((m, i) => <LegalMoveDot key={i} file={m.file} rank={m.rank} />)}
                 {pieces.map(p => (
@@ -1116,6 +1132,12 @@ function KOTHTutorialBoard() {
                            onDragStartCallback={handlePieceDragStart} onDropCallback={handlePieceDrop}
                            className={p.id === 'wk' && victoryAura ? 'koth-aura' : ''} />
                 ))}
+                
+                {victoryAura && (
+                    <div className="victory-pillar-container">
+                        <div className="victory-pillar"></div>
+                    </div>
+                )}
             </div>
             <div className="tutorial-controls">
                 <p>{message}</p>
