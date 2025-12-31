@@ -1092,7 +1092,6 @@ function KOTHTutorialBoard() {
                     setCompleted(true);
                     setVictoryAura(true);
                     setIsShaking(true);
-                    victorySound.current.play().catch(() => {});
                     setTimeout(() => setIsShaking(false), 500);
                     setMessage("THE SUMMIT REACHED! In King of the Hill, the center is an instant victory.");
                 } else {
@@ -1264,7 +1263,6 @@ function RacingKingsTutorialBoard() {
 
                 if (sq.rank === 0) {
                     setCompleted(true);
-                    victorySound.current.play().catch(() => {});
                     setMessage("FINISH LINE CROSSED! You win the race. Remember, checks are never allowed!");
                 } else {
                     setMessage("Great zoom! Keep climbing, but stay out of the Rook's line of fire.");
@@ -1423,7 +1421,6 @@ function HordeTutorialBoard() {
             setSelected(null);
             setLegalMoves([]);
             setCompleted(true);
-            victorySound.current.play().catch(() => {});
             setMessage("CHECKMATE! The King is overrun by the horde. White wins!");
         } else if (clickedPiece && clickedPiece.color === 'b') {
             return;
@@ -1579,7 +1576,6 @@ function ThreeCheckTutorialBoard() {
 
                     if (nextChecks >= 3) {
                         setCompleted(true);
-                        finalSound.current.play().catch(() => {});
                         setMessage("3RD CHECK DELIVERED! Absolute victory by Three-Check rules.");
                     } else {
                         setMessage(`CHECK! Strike ${nextChecks}/3 landed. Finish him!`);
@@ -1642,7 +1638,6 @@ function ThreeCheckTutorialBoard() {
 
                     if (nextChecks >= 3) {
                         setCompleted(true);
-                        finalSound.current.play().catch(() => {});
                         setMessage("3RD CHECK DELIVERED! Absolute victory by Three-Check rules.");
                     } else {
                         setMessage(`CHECK! Strike ${nextChecks}/3 landed. Finish him!`);
@@ -1770,7 +1765,6 @@ function StandardTutorialBoard() {
                 
                 if (sq.file === 2 && sq.rank === 0) {
                     setCompleted(true);
-                    victorySound.current.play().catch(() => {});
                     setMessage("CHECKMATE! The Rook delivers the final blow. Victory!");
                 } else {
                     moveSound.current.play().catch(() => {});
@@ -1822,7 +1816,6 @@ function StandardTutorialBoard() {
                 setLegalMoves([]);
                 if (sq.file === 2 && sq.rank === 0) {
                     setCompleted(true);
-                    victorySound.current.play().catch(() => {});
                     setMessage("CHECKMATE! The Rook delivers the final blow. Victory!");
                 }
             }
