@@ -603,18 +603,23 @@ function AtomicTutorialBoard() {
 
 function AntichessTutorialBoard() {
     const [pieces, setPieces] = useState([
-        { id: 'wp', type: 'P', color: 'w', file: 1, rank: 2 }, // White Pawn at b2
-        { id: 'bn', type: 'n', color: 'b', file: 2, rank: 1 }, // Black Knight at c3
+        { id: 'bq', type: 'q', color: 'b', file: 0, rank: 0 }, // Black Queen at a4
+        { id: 'wp1', type: 'P', color: 'w', file: 0, rank: 2 }, // White Pawn at a2
+        { id: 'wp2', type: 'P', color: 'w', file: 1, rank: 2 }, // White Pawn at b2
+        { id: 'wk', type: 'K', color: 'w', file: 2, rank: 2 },  // White King at c2
+        { id: 'wr', type: 'R', color: 'w', file: 3, rank: 2 },  // White Rook at d2
     ]);
-    const [message, setMessage] = useState("In Antichess, captures are mandatory! Try to move or capture.");
+    const [step, setStep] = useState(0); // 0: Pawn1, 1: Pawn2, 2: King, 3: Rook
+    const [message, setMessage] = useState("Antichess: To win, you must lose all your pieces! Sacrifice your first Pawn.");
     const [completed, setCompleted] = useState(false);
     const [selected, setSelected] = useState(null);
     const [legalMoves, setLegalMoves] = useState([]);
     const [shatter, setShatter] = useState(null); // { file, rank }
     const [isShaking, setIsShaking] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
     const boardRef = useRef(null);
     const canvasRef = useRef(null);
-    const shatterSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3")); // We'll find a better shatter sound or stick to this crisp one
+    const shatterSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3"));
 
     useEffect(() => {
         if (!shatter || !canvasRef.current || !boardRef.current) return;
@@ -639,7 +644,6 @@ function AntichessTutorialBoard() {
                 this.d = Math.random() * Math.PI * 2;
                 this.rot = Math.random() * Math.PI * 2;
                 this.rotS = (Math.random() - 0.5) * 0.3;
-                // Crystalline colors (light blue/white tint)
                 const colors = ['#ffffff', '#e0f7fa', '#b2ebf2', '#81d4fa'];
                 this.color = colors[Math.floor(Math.random() * colors.length)];
                 this.opacity = 0.8;
@@ -660,25 +664,20 @@ function AntichessTutorialBoard() {
                 ctx.fillStyle = this.color;
                 ctx.shadowBlur = 5;
                 ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
-                
-                // Random shard shapes (triangles/polygons)
                 ctx.beginPath();
                 ctx.moveTo(0, -this.size / 2);
                 ctx.lineTo(this.size / 2, this.size / 4);
                 ctx.lineTo(-this.size / 3, this.size / 2);
                 ctx.closePath();
                 ctx.fill();
-                
-                // Add a "shine" highlight
                 ctx.strokeStyle = '#fff';
                 ctx.lineWidth = 1;
                 ctx.stroke();
-                
                 ctx.restore();
             }
         }
 
-        const shards = Array.from({ length: 20 }, () => new Shard(centerX, centerY));
+        const shards = Array.from({ length: 25 }, () => new Shard(centerX, centerY));
 
         let animationFrame;
         const animate = () => {
@@ -710,30 +709,56 @@ function AntichessTutorialBoard() {
         return null;
     };
 
+    const triggerOpponentCapture = (targetFile, targetRank, nextStep) => {
+        setIsProcessing(true);
+        // Wait for user move to finish
+        setTimeout(() => {
+            setPieces(prev => {
+                const queen = prev.find(p => p.id === 'bq');
+                // Move queen to captured square and remove white piece
+                return prev
+                    .filter(p => !(p.file === targetFile && p.rank === targetRank))
+                    .map(p => p.id === 'bq' ? { ...p, file: targetFile, rank: targetRank } : p);
+            });
+            setShatter({ file: targetFile, rank: targetRank });
+            setIsShaking(true);
+            setTimeout(() => setIsShaking(false), 300);
+            
+            const messages = [
+                "Now sacrifice the second Pawn!",
+                "Great! Offer your King to the Queen.",
+                "Last piece! Move your Rook into the path.",
+                "VICTORY! You lost everything. That's how you win Antichess!"
+            ];
+            setMessage(messages[nextStep - 1]);
+            setStep(nextStep);
+            if (nextStep === 4) setCompleted(true);
+            setIsProcessing(false);
+        }, 400);
+    };
+
     const handleBoardClick = (e) => {
-        if (completed || shatter || isShaking) return;
+        if (completed || shatter || isShaking || isProcessing) return;
         const sq = getSquareFromCoords(e.clientX, e.clientY);
         if (!sq) return;
 
         const clickedPiece = pieces.find(p => p.file === sq.file && p.rank === sq.rank);
 
-        if (clickedPiece && clickedPiece.color === 'w') {
+        // Selection logic based on step
+        const activeIds = ['wp1', 'wp2', 'wk', 'wr'];
+        if (clickedPiece && clickedPiece.id === activeIds[step]) {
             setSelected(sq);
-            // In this setup, only capture is legal
-            setLegalMoves([{ file: 2, rank: 1 }]); 
-            setMessage("You MUST capture the Knight! Moving forward is illegal here.");
+            setLegalMoves([{ file: step, rank: 1 }]); // All pieces move to rank 1 for sacrifice
             return;
         }
 
-        if (selected && sq.file === 2 && sq.rank === 1) {
-            setPieces([{ id: 'wp', type: 'P', color: 'w', file: 2, rank: 1 }]);
-            setShatter({ file: 2, rank: 1 });
-            setIsShaking(true);
-            setTimeout(() => setIsShaking(false), 300);
+        if (selected && sq.file === step && sq.rank === 1) {
+            setPieces(prev => prev.map(p => 
+                (p.file === selected.file && p.rank === selected.rank) ? { ...p, file: sq.file, rank: sq.rank } : p
+            ));
             setSelected(null);
             setLegalMoves([]);
-            setCompleted(true);
-            setMessage("Great! You made the mandatory capture. Lose all your pieces to win!");
+            triggerOpponentCapture(sq.file, sq.rank, step + 1);
         } else if (clickedPiece && clickedPiece.color === 'b') {
             return;
         } else {
@@ -743,38 +768,41 @@ function AntichessTutorialBoard() {
     };
 
     const handlePieceDragStart = ({ file, rank, piece }) => {
-        if (completed || shatter || isShaking) return;
-        if (piece !== 'P') return;
+        if (completed || shatter || isShaking || isProcessing) return;
+        const activeTypes = ['P', 'P', 'K', 'R'];
+        if (piece !== activeTypes[step]) return;
         setSelected({ file, rank });
-        setLegalMoves([{ file: 2, rank: 1 }]);
+        setLegalMoves([{ file: step, rank: 1 }]);
     };
 
     const handlePieceDrop = ({ clientX, clientY }) => {
-        if (completed || shatter || isShaking) return;
+        if (completed || shatter || isShaking || isProcessing) return;
         const sq = getSquareFromCoords(clientX, clientY);
-        if (sq && sq.file === 2 && sq.rank === 1) {
-            setPieces([{ id: 'wp', type: 'P', color: 'w', file: 2, rank: 1 }]);
-            setShatter({ file: 2, rank: 1 });
-            setIsShaking(true);
-            setTimeout(() => setIsShaking(false), 300);
+        if (sq && selected && sq.file === step && sq.rank === 1) {
+            setPieces(prev => prev.map(p => 
+                (p.file === selected.file && p.rank === selected.rank) ? { ...p, file: sq.file, rank: sq.rank } : p
+            ));
             setSelected(null);
             setLegalMoves([]);
-            setCompleted(true);
-            setMessage("Great! You made the mandatory capture. Lose all your pieces to win!");
+            triggerOpponentCapture(sq.file, sq.rank, step + 1);
         }
     };
 
     const reset = () => {
         setPieces([
-            { id: 'wp', type: 'P', color: 'w', file: 1, rank: 2 },
-            { id: 'bn', type: 'n', color: 'b', file: 2, rank: 1 },
+            { id: 'bq', type: 'q', color: 'b', file: 0, rank: 0 },
+            { id: 'wp1', type: 'P', color: 'w', file: 0, rank: 2 },
+            { id: 'wp2', type: 'P', color: 'w', file: 1, rank: 2 },
+            { id: 'wk', type: 'K', color: 'w', file: 2, rank: 2 },
+            { id: 'wr', type: 'R', color: 'w', file: 3, rank: 2 },
         ]);
+        setStep(0);
         setCompleted(false);
         setSelected(null);
         setLegalMoves([]);
         setShatter(null);
         setIsShaking(false);
-        setMessage("In Antichess, captures are mandatory! Try to move or capture.");
+        setMessage("Antichess: To win, you must lose all your pieces! Sacrifice your first Pawn.");
     };
 
     return (
@@ -784,8 +812,10 @@ function AntichessTutorialBoard() {
                     <div key={`${file}-${rank}`} className={`tutorial-square ${(rank + file) % 2 === 1 ? 'black-square' : 'white-square'}`} />
                 )))}
                 {selected && <HighlightSquare file={selected.file} rank={selected.rank} color="rgba(255, 255, 0, 0.5)" />}
+                {legalMoves.map((m, i) => <LegalMoveDot key={i} file={m.file} rank={m.rank} />)}
                 {pieces.map(p => {
-                    const isForced = !completed && !shatter && p.color === 'w' && p.type === 'P'; // In this tutorial setup, the pawn is forced
+                    const activeIds = ['wp1', 'wp2', 'wk', 'wr'];
+                    const isForced = !completed && !shatter && p.id === activeIds[step];
                     return (
                         <Piece 
                             key={p.id} 
