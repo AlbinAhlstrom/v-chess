@@ -139,6 +139,8 @@ function AtomicTutorialBoard() {
     const [isFlying, setIsFlying] = useState(false);
     const [isPreparing, setIsPreparing] = useState(false);
     const [isShaking, setIsShaking] = useState(false);
+    const [isFlashing, setIsFlashing] = useState(false);
+    const [isIgnition, setIsIgnition] = useState(false);
     const [scorchMark, setScorchMark] = useState(null); // { file, rank }
     const [animatingKnight, setAnimatingKnight] = useState(null); // { file, rank }
     const [launchPuff, setLaunchPuff] = useState(null); // { file, rank }
@@ -150,7 +152,7 @@ function AtomicTutorialBoard() {
 
     // Particle System based on requested snippet
     useEffect(() => {
-        if (!explosion || !canvasRef.current || !boardRef.current) return;
+        if ((!explosion && !isIgnition) || !canvasRef.current || !boardRef.current) return;
 
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
@@ -161,22 +163,37 @@ function AtomicTutorialBoard() {
         canvas.height = rect.height;
 
         const squareSize = rect.width / 4;
-        const centerX = (explosion.file + 0.5) * squareSize;
-        const centerY = (explosion.rank + 0.5) * squareSize;
+        
+        // Setup for either explosion or ignition
+        const originX = explosion 
+            ? (explosion.file + 0.5) * squareSize 
+            : (animatingKnight ? (animatingKnight.file + 0.5) * squareSize : 0);
+        const originY = explosion 
+            ? (explosion.rank + 0.5) * squareSize 
+            : (animatingKnight ? (animatingKnight.rank + 0.5) * squareSize : 0);
 
-        const config = {
+        const config = explosion ? {
             particleNumber: 300,
-            maxParticleSize: 6,
-            maxSpeed: 12, // Half speed for half distance
+            maxParticleSize: 5, // Reduced from 6 (-20%)
+            maxSpeed: 10, // Reduced from 12 (-20%)
             colorVariation: 50
+        } : {
+            particleNumber: 100,
+            maxParticleSize: 3,
+            maxSpeed: 8,
+            colorVariation: 30
         };
 
         const colorPalette = {
-            matter: [
+            matter: explosion ? [
                 {r:36,g:18,b:42},   // darkPRPL
                 {r:78,g:36,b:42},   // rockDust
                 {r:252,g:178,b:96}, // solarFlare
                 {r:253,g:238,b:152} // totesASun
+            ] : [
+                {r:255,g:200,b:0},  // fire
+                {r:255,g:100,b:0},  // orange
+                {r:255,g:255,b:255} // white spark
             ]
         };
 
@@ -189,8 +206,9 @@ function AtomicTutorialBoard() {
 
         class Particle {
             constructor(x, y) {
-                this.x = x;
-                this.y = y;
+                // Add vibration to origin for ignition
+                this.x = explosion ? x : x + (Math.random() - 0.5) * 10;
+                this.y = explosion ? y : y + (Math.random() - 0.5) * 10;
                 this.r = Math.ceil(Math.random() * config.maxParticleSize);
                 const baseColor = getColor(colorPalette.matter[Math.floor(Math.random() * colorPalette.matter.length)]);
                 this.colorBase = `${baseColor.r},${baseColor.g},${baseColor.b}`;
@@ -201,8 +219,8 @@ function AtomicTutorialBoard() {
             update() {
                 this.x += Math.cos(this.d) * this.s;
                 this.y += Math.sin(this.d) * this.s;
-                this.s *= 0.96;
-                this.alpha -= 0.015; // Fade out
+                this.s *= explosion ? 0.96 : 0.92;
+                this.alpha -= explosion ? 0.015 : 0.04;
             }
             draw() {
                 if (this.alpha <= 0) return;
@@ -218,8 +236,8 @@ function AtomicTutorialBoard() {
             constructor(x, y) {
                 this.x = x;
                 this.y = y;
-                this.size = Math.random() * 15 + 5;
-                this.s = Math.random() * 3 + 1;
+                this.size = Math.random() * 12 + 4; // Reduced from 15+5 (-20%)
+                this.s = Math.random() * 2.4 + 0.8; // Reduced from 3+1 (-20%)
                 this.d = Math.random() * Math.PI * 2;
                 this.alpha = 0.6;
             }
@@ -228,7 +246,7 @@ function AtomicTutorialBoard() {
                 this.y += Math.sin(this.d) * this.s;
                 this.s *= 0.98;
                 this.alpha -= 0.008;
-                this.size += 0.2;
+                this.size += 0.16;
             }
             draw() {
                 if (this.alpha <= 0) return;
@@ -240,8 +258,8 @@ function AtomicTutorialBoard() {
             }
         }
 
-        const particles = Array.from({ length: config.particleNumber }, () => new Particle(centerX, centerY));
-        const smoke = Array.from({ length: 40 }, () => new Debris(centerX, centerY));
+        const particles = Array.from({ length: config.particleNumber }, () => new Particle(originX, originY));
+        const smoke = explosion ? Array.from({ length: 40 }, () => new Debris(originX, originY)) : [];
 
         let animationFrame;
         const animate = () => {
@@ -259,7 +277,7 @@ function AtomicTutorialBoard() {
 
         animate();
         return () => cancelAnimationFrame(animationFrame);
-    }, [explosion]);
+    }, [explosion, isIgnition, animatingKnight]);
 
     const getSquareFromCoords = (clientX, clientY) => {
         if (!boardRef.current) return null;
@@ -469,10 +487,11 @@ function AtomicTutorialBoard() {
                 {[0, 1, 2, 3].map(rank => (
                     [0, 1, 2, 3].map(file => {
                         const isBlack = (rank + file) % 2 === 1;
+                        const isTarget = file === 2 && rank === 1;
                         return (
                             <div 
                                 key={`${file}-${rank}`}
-                                className={`tutorial-square ${isBlack ? 'black-square' : 'white-square'}`}
+                                className={`tutorial-square ${isBlack ? 'black-square' : 'white-square'} ${isTarget && isFlashing ? 'target-flash' : ''}`}
                             />
                         );
                     })
@@ -512,27 +531,6 @@ function AtomicTutorialBoard() {
                             top: `${launchPuff.rank * 25}%`,
                         }}
                     />
-                )}
-
-                {/* Targeting Crosshair */}
-                {(isPreparing || isFlying) && animatingKnight && (
-                    <div 
-                        className="target-crosshair"
-                        style={{
-                            left: '50%',
-                            top: '25%',
-                            width: '25%',
-                            height: '25%',
-                            position: 'absolute',
-                            zIndex: 5
-                        }}
-                    >
-                        <div className="crosshair-ring"></div>
-                        <div className="crosshair-ring ring-2"></div>
-                        <div className="crosshair-line h"></div>
-                        <div className="crosshair-line v"></div>
-                        <div className="crosshair-text">TARGET LOCKED</div>
-                    </div>
                 )}
 
                 {/* Static Pieces */}
