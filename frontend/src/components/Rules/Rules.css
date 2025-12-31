@@ -102,6 +102,74 @@
     border-radius: 8px;
 }
 
+.tutorial-board {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    display: flex;
+    flex-wrap: wrap;
+    border: 5px solid #3c3934;
+    user-select: none;
+    --square-size: 75px; /* For animations */
+}
+
+.tutorial-square {
+    width: 25%;
+    height: 25%;
+}
+
+.white-square {
+    background-color: var(--light-square);
+}
+
+.black-square {
+    background-color: var(--dark-square);
+}
+
+.tutorial-piece {
+    position: absolute;
+    width: 25%;
+    height: 25%;
+    background-size: 100%;
+    cursor: pointer;
+    transition: all 0.2s ease-out;
+    z-index: 10;
+}
+
+.tutorial-controls {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.tutorial-controls p {
+    font-size: 1.1rem;
+    color: #e0e0e0;
+    margin-bottom: 10px;
+}
+
+.tutorial-controls button {
+    background: var(--button-bg-color);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.tutorial-controls button:hover {
+    background: #454552;
+}
+
+.tutorial-board .legal-move-dot {
+    z-index: 20;
+}
+
+.selected-square {
+    background-color: rgba(255, 255, 0, 0.5) !important;
+}
+
 @keyframes ballistic-flight {
     0% { 
         transform: scale(1) rotate(0deg);
@@ -121,4 +189,12 @@
     transition: left 0.5s linear, top 0.5s linear !important;
     animation: ballistic-flight 0.5s ease-in-out forwards;
     z-index: 1000 !important;
+}
+
+@media (max-width: 400px) {
+    .tutorial-board {
+        width: 240px;
+        height: 240px;
+        --square-size: 60px;
+    }
 }
