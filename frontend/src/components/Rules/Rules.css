@@ -497,7 +497,7 @@
 }
 
 .tutorial-square.target-flash {
-    animation: target-fade-anim 0.65s ease-in forwards;
+    animation: target-fade-anim 0.3s ease-in forwards;
     z-index: 2;
     background-blend-mode: overlay;
 }
