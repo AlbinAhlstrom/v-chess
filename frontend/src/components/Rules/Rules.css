@@ -327,3 +327,34 @@
     background: rgba(0,0,0,0.2);
     border-radius: 8px;
 }
+
+/* Racing Kings Tutorial */
+.racing-kings-tutorial {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 20px 0;
+    padding: 20px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+}
+
+.target-row {
+    background-color: rgba(76, 175, 80, 0.2) !important;
+    border-top: 2px solid #4CAF50;
+}
+
+.danger-line {
+    position: relative;
+}
+
+.danger-line::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(244, 67, 54, 0.1);
+    box-shadow: inset 0 0 10px rgba(244, 67, 54, 0.2);
+}
