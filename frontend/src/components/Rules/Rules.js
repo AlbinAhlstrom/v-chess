@@ -804,9 +804,11 @@ function CrazyhouseTutorialBoard() {
     const [legalMoves, setLegalMoves] = useState([]);
     const [selectedReserve, setSelectedReserve] = useState(null); // index in reserve
     const [warpPieceId, setWarpPieceId] = useState(null); // ID of piece to animate drop
+    const [pocketingPiece, setPocketingPiece] = useState(null); // { type, file, rank }
     const boardRef = useRef(null);
     const captureSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3"));
     const dropSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/premove.mp3"));
+    const clinkSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-check.mp3"));
 
     const getSquareFromCoords = (clientX, clientY) => {
         if (!boardRef.current) return null;
@@ -821,7 +823,7 @@ function CrazyhouseTutorialBoard() {
     };
 
     const handleBoardClick = (e) => {
-        if (completed) return;
+        if (completed || pocketingPiece) return;
         const sq = getSquareFromCoords(e.clientX, e.clientY);
         if (!sq) return;
 
@@ -857,14 +859,21 @@ function CrazyhouseTutorialBoard() {
 
         if (selected && sq.file === 2 && sq.rank === 1) {
             // Capture logic
+            setPocketingPiece({ type: 'B', file: 2, rank: 1 });
             setPieces(prev => prev.filter(p => p.id !== 'bb').map(p => 
                 p.id === 'wr' ? { ...p, file: 2, rank: 1 } : p
             ));
-            setReserve(['B']);
             setSelected(null);
             setLegalMoves([]);
             captureSound.current.play().catch(() => {});
-            setMessage("Bishop captured! It's now in your reserve. Click it in the tray, then click an empty square to drop it!");
+            
+            // Wait for flight animation (0.5s)
+            setTimeout(() => {
+                setReserve(['B']);
+                setPocketingPiece(null);
+                clinkSound.current.play().catch(() => {});
+                setMessage("Bishop captured! It's now in your reserve. Click it in the tray, then click an empty square to drop it!");
+            }, 500);
         } else if (clickedPiece && clickedPiece.color === 'b') {
             return;
         } else {
@@ -874,24 +883,30 @@ function CrazyhouseTutorialBoard() {
     };
 
     const handlePieceDragStart = ({ file, rank, piece }) => {
-        if (completed) return;
+        if (completed || pocketingPiece) return;
         if (piece !== 'R') return;
         setSelected({ file, rank });
         setLegalMoves([{ file: 2, rank: 1 }]);
     };
 
     const handlePieceDrop = ({ clientX, clientY }) => {
-        if (completed) return;
+        if (completed || pocketingPiece) return;
         const sq = getSquareFromCoords(clientX, clientY);
         if (sq && sq.file === 2 && sq.rank === 1) {
+            setPocketingPiece({ type: 'B', file: 2, rank: 1 });
             setPieces(prev => prev.filter(p => p.id !== 'bb').map(p => 
                 p.id === 'wr' ? { ...p, file: 2, rank: 1 } : p
             ));
-            setReserve(['B']);
             setSelected(null);
             setLegalMoves([]);
             captureSound.current.play().catch(() => {});
-            setMessage("Bishop captured! It's now in your reserve. Click it in the tray, then click an empty square to drop it!");
+            
+            setTimeout(() => {
+                setReserve(['B']);
+                setPocketingPiece(null);
+                clinkSound.current.play().catch(() => {});
+                setMessage("Bishop captured! It's now in your reserve. Click it in the tray, then click an empty square to drop it!");
+            }, 500);
         }
     };
 
@@ -905,6 +920,7 @@ function CrazyhouseTutorialBoard() {
         setSelected(null);
         setLegalMoves([]);
         setSelectedReserve(null);
+        setPocketingPiece(null);
         setMessage("Crazyhouse: Capture the Black Bishop to add it to your reserve!");
     };
 
@@ -921,6 +937,17 @@ function CrazyhouseTutorialBoard() {
                            onDragStartCallback={handlePieceDragStart} onDropCallback={handlePieceDrop}
                            className={p.id === warpPieceId ? 'drop-warp' : ''} />
                 ))}
+                
+                {pocketingPiece && (
+                    <div 
+                        className="pocketing-animation"
+                        style={{
+                            left: `${pocketingPiece.file * 25}%`,
+                            top: `${pocketingPiece.rank * 25}%`,
+                            backgroundImage: `url("/images/pieces/${pocketingPiece.type}.png")`
+                        }}
+                    />
+                )}
             </div>
             
             <div className="reserve-tray">

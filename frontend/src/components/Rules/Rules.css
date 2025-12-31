@@ -296,46 +296,53 @@
 .reserve-tray {
     margin-top: 20px;
     width: 300px;
-    background: #1a1a1d;
-    padding: 10px;
-    border-radius: 6px;
+    background: linear-gradient(145deg, #1a1a1d, #2a2a2d);
+    padding: 15px;
+    border-radius: 12px;
     border: 2px solid #3c3934;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 4px 10px rgba(0,0,0,0.3);
     text-align: center;
 }
 
 .reserve-tray h4 {
-    margin: 0 0 10px 0;
-    font-size: 0.9rem;
+    margin: 0 0 12px 0;
+    font-size: 0.8rem;
     text-transform: uppercase;
-    color: #888;
+    color: #666;
+    letter-spacing: 2px;
 }
 
 .reserve-slots {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     justify-content: center;
-    min-height: 50px;
+    min-height: 60px;
     align-items: center;
 }
 
 .reserve-piece {
-    width: 50px;
-    height: 50px;
+    width: 55px;
+    height: 55px;
     background-size: 100%;
     cursor: pointer;
-    border-radius: 4px;
-    transition: transform 0.2s, background-color 0.2s;
+    border-radius: 8px;
+    background-color: rgba(0,0,0,0.3);
+    box-shadow: 4px 4px 8px rgba(0,0,0,0.4), -1px -1px 2px rgba(255,255,255,0.05);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255,255,255,0.05);
 }
 
 .reserve-piece:hover {
     background-color: rgba(255, 255, 255, 0.1);
-    transform: scale(1.1);
+    transform: translateY(-5px) scale(1.1);
+    box-shadow: 0 10px 15px rgba(0,0,0,0.5);
 }
 
 .reserve-piece.selected {
-    background-color: rgba(149, 187, 74, 0.3);
-    box-shadow: 0 0 10px rgba(149, 187, 74, 0.5);
+    background-color: rgba(149, 187, 74, 0.2);
+    box-shadow: 0 0 20px rgba(149, 187, 74, 0.4);
     border: 2px solid #95bb4a;
+    transform: translateY(-8px) scale(1.15);
 }
 
 .empty-hint {
@@ -471,13 +478,29 @@
 
 /* Drop Warp */
 @keyframes drop-warp {
-    0% { transform: scale(0) rotate(180deg); opacity: 0; filter: brightness(3); }
-    60% { transform: scale(1.2) rotate(-10deg); opacity: 1; filter: brightness(1.5); }
+    0% { transform: scale(3) rotate(45deg); opacity: 0; filter: brightness(5) blur(10px); }
+    50% { transform: scale(0.8) rotate(-10deg); opacity: 1; filter: brightness(2) blur(0); }
     100% { transform: scale(1) rotate(0deg); opacity: 1; filter: brightness(1); }
 }
 
 .piece.drop-warp {
-    animation: drop-warp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    animation: drop-warp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Pocketing Animation (Crazyhouse) */
+@keyframes fly-to-pocket {
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+    100% { transform: translate(0, 150px) scale(0.2) rotate(180deg); opacity: 0; }
+}
+
+.pocketing-animation {
+    position: absolute;
+    width: 25%;
+    height: 25%;
+    background-size: 100%;
+    z-index: 2000;
+    pointer-events: none;
+    animation: fly-to-pocket 0.5s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
 }
 
 /* Turbo Effect (Racing Kings) */
