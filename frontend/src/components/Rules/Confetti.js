@@ -1,27 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import confetti from 'canvas-confetti';
 
 const Confetti = ({ trigger }) => {
-    const soundRef = useRef(null);
-
-    useEffect(() => {
-        // Initialize audio on mount with the correct pop sound
-        soundRef.current = new Audio(process.env.PUBLIC_URL + "/sounds/confetti-pop.mp3");
-        soundRef.current.load();
-    }, []);
-
     useEffect(() => {
         if (trigger) {
             // Add 0.2s delay as requested
             const timer = setTimeout(() => {
-                // Play sound perfectly synced with the visual burst
-                if (soundRef.current) {
-                    soundRef.current.currentTime = 0;
-                    soundRef.current.play().catch(e => {
-                        console.warn("Confetti audio playback failed (user interaction may be required):", e);
-                    });
-                }
-
                 // Very brief high-impact bursts
                 const duration = 0.5 * 1000;
                 const animationEnd = Date.now() + duration;
