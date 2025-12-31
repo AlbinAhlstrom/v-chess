@@ -358,3 +358,14 @@
     background: rgba(244, 67, 54, 0.1);
     box-shadow: inset 0 0 10px rgba(244, 67, 54, 0.2);
 }
+
+/* Horde Tutorial */
+.horde-tutorial {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 20px 0;
+    padding: 20px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+}

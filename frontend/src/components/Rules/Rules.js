@@ -881,6 +881,153 @@ function RacingKingsTutorialBoard() {
     );
 }
 
+function HordeTutorialBoard() {
+    const [pieces, setPieces] = useState([
+        { id: 'wp1', type: 'P', color: 'w', file: 0, rank: 3 },
+        { id: 'wp2', type: 'P', color: 'w', file: 1, rank: 3 },
+        { id: 'wp3', type: 'P', color: 'w', file: 2, rank: 3 },
+        { id: 'wp4', type: 'P', color: 'w', file: 3, rank: 3 },
+        { id: 'wp5', type: 'P', color: 'w', file: 0, rank: 2 },
+        { id: 'wp6', type: 'P', color: 'w', file: 1, rank: 2 },
+        { id: 'wp7', type: 'P', color: 'w', file: 2, rank: 2 },
+        { id: 'wp8', type: 'P', color: 'w', file: 3, rank: 2 },
+        { id: 'br', type: 'r', color: 'b', file: 1, rank: 0 },
+    ]);
+    const [message, setMessage] = useState("Horde: Use your pawn army to overwhelm the Black pieces!");
+    const [completed, setCompleted] = useState(false);
+    const [selected, setSelected] = useState(null);
+    const [legalMoves, setLegalMoves] = useState([]);
+    const boardRef = useRef(null);
+
+    const getSquareFromCoords = (clientX, clientY) => {
+        if (!boardRef.current) return null;
+        const rect = boardRef.current.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        const squareSize = rect.width / 4;
+        const file = Math.floor(x / squareSize);
+        const rank = Math.floor(y / squareSize);
+        if (file >= 0 && file < 4 && rank >= 0 && rank < 4) return { file, rank };
+        return null;
+    };
+
+    const handleBoardClick = (e) => {
+        if (completed) return;
+        const sq = getSquareFromCoords(e.clientX, e.clientY);
+        if (!sq) return;
+
+        const clickedPiece = pieces.find(p => p.file === sq.file && p.rank === sq.rank);
+
+        if (clickedPiece && clickedPiece.color === 'w') {
+            setSelected(sq);
+            // Allow 1 or 2 squares for rank 3, 1 for rank 2
+            const moves = [];
+            if (sq.rank === 3) {
+                moves.push({ file: sq.file, rank: 2 }, { file: sq.file, rank: 1 });
+            } else if (sq.rank === 2) {
+                moves.push({ file: sq.file, rank: 1 });
+            }
+            // Add capture
+            if (sq.rank === 1 && (sq.file === 0 || sq.file === 2)) {
+                moves.push({ file: 1, rank: 0 });
+            }
+            setLegalMoves(moves);
+            return;
+        }
+
+        if (selected) {
+            const isLegal = legalMoves.some(m => m.file === sq.file && m.rank === sq.rank);
+            if (isLegal) {
+                const isCapture = sq.file === 1 && sq.rank === 0;
+                setPieces(prev => prev.filter(p => !(p.file === sq.file && p.rank === sq.rank)).map(p => 
+                    (p.file === selected.file && p.rank === selected.rank) ? { ...p, file: sq.file, rank: sq.rank } : p
+                ));
+                setSelected(null);
+                setLegalMoves([]);
+                if (isCapture) {
+                    setCompleted(true);
+                    setMessage("The Rook is captured! In Horde, White wins by capturing all Black pieces.");
+                } else {
+                    setMessage("The pawns advance! Keep pushing forward.");
+                }
+            } else {
+                setSelected(null);
+                setLegalMoves([]);
+            }
+        }
+    };
+
+    const handlePieceDragStart = ({ file, rank, piece }) => {
+        if (completed) return;
+        if (piece !== 'P') return;
+        setSelected({ file, rank });
+        const moves = [{ file, rank: rank - 1 }];
+        if (rank === 3) moves.push({ file, rank: 1 });
+        if (rank === 1 && (file === 0 || file === 2)) moves.push({ file: 1, rank: 0 });
+        setLegalMoves(moves);
+    };
+
+    const handlePieceDrop = ({ clientX, clientY }) => {
+        if (completed) return;
+        const sq = getSquareFromCoords(clientX, clientY);
+        if (sq && selected) {
+            const isLegal = legalMoves.some(m => m.file === sq.file && m.rank === sq.rank);
+            if (isLegal) {
+                const isCapture = sq.file === 1 && sq.rank === 0;
+                setPieces(prev => prev.filter(p => !(p.file === sq.file && p.rank === sq.rank)).map(p => 
+                    (p.file === selected.file && p.rank === selected.rank) ? { ...p, file: sq.file, rank: sq.rank } : p
+                ));
+                setSelected(null);
+                setLegalMoves([]);
+                if (isCapture) {
+                    setCompleted(true);
+                    setMessage("The Rook is captured! In Horde, White wins by capturing all Black pieces.");
+                } else {
+                    setMessage("The pawns advance! Keep pushing forward.");
+                }
+            }
+        }
+    };
+
+    const reset = () => {
+        setPieces([
+            { id: 'wp1', type: 'P', color: 'w', file: 0, rank: 3 },
+            { id: 'wp2', type: 'P', color: 'w', file: 1, rank: 3 },
+            { id: 'wp3', type: 'P', color: 'w', file: 2, rank: 3 },
+            { id: 'wp4', type: 'P', color: 'w', file: 3, rank: 3 },
+            { id: 'wp5', type: 'P', color: 'w', file: 0, rank: 2 },
+            { id: 'wp6', type: 'P', color: 'w', file: 1, rank: 2 },
+            { id: 'wp7', type: 'P', color: 'w', file: 2, rank: 2 },
+            { id: 'wp8', type: 'P', color: 'w', file: 3, rank: 2 },
+            { id: 'br', type: 'r', color: 'b', file: 1, rank: 0 },
+        ]);
+        setCompleted(false);
+        setSelected(null);
+        setLegalMoves([]);
+        setMessage("Horde: Use your pawn army to overwhelm the Black pieces!");
+    };
+
+    return (
+        <div className="horde-tutorial">
+            <div className="tutorial-board" ref={boardRef} onClick={handleBoardClick}>
+                {[0, 1, 2, 3].map(rank => [0, 1, 2, 3].map(file => (
+                    <div key={`${file}-${rank}`} className={`tutorial-square ${(rank + file) % 2 === 1 ? 'black-square' : 'white-square'}`} />
+                )))}
+                {selected && <HighlightSquare file={selected.file} rank={selected.rank} color="rgba(255, 255, 0, 0.5)" />}
+                {legalMoves.map((m, i) => <LegalMoveDot key={i} file={m.file} rank={m.rank} />)}
+                {pieces.map(p => (
+                    <Piece key={p.id} piece={p.type} file={p.file} rank={p.rank} 
+                           onDragStartCallback={handlePieceDragStart} onDropCallback={handlePieceDrop} />
+                ))}
+            </div>
+            <div className="tutorial-controls">
+                <p>{message}</p>
+                {completed && <button onClick={reset}>Reset Tutorial</button>}
+            </div>
+        </div>
+    );
+}
+
 function Rules() {
     const { variant } = useParams();
     const currentVariant = variant || 'standard';
@@ -925,6 +1072,7 @@ function Rules() {
                 {currentVariant === 'crazyhouse' && <CrazyhouseTutorialBoard />}
                 {currentVariant === 'king_of_the_hill' && <KOTHTutorialBoard />}
                 {currentVariant === 'racing_kings' && <RacingKingsTutorialBoard />}
+                {currentVariant === 'horde' && <HordeTutorialBoard />}
 
                 <ul className="rules-list">
                     {variantData.rules.map((rule, index) => (
