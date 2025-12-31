@@ -443,6 +443,7 @@ function AntichessTutorialBoard() {
     const [selected, setSelected] = useState(null);
     const [legalMoves, setLegalMoves] = useState([]);
     const [shatter, setShatter] = useState(null); // { file, rank }
+    const [isShaking, setIsShaking] = useState(false);
     const boardRef = useRef(null);
     const canvasRef = useRef(null);
 
@@ -527,7 +528,7 @@ function AntichessTutorialBoard() {
     };
 
     const handleBoardClick = (e) => {
-        if (completed || shatter) return;
+        if (completed || shatter || isShaking) return;
         const sq = getSquareFromCoords(e.clientX, e.clientY);
         if (!sq) return;
 
@@ -543,6 +544,8 @@ function AntichessTutorialBoard() {
         if (selected && sq.file === 2 && sq.rank === 1) {
             setPieces([{ id: 'wp', type: 'P', color: 'w', file: 2, rank: 1 }]);
             setShatter({ file: 2, rank: 1 });
+            setIsShaking(true);
+            setTimeout(() => setIsShaking(false), 300);
             setSelected(null);
             setLegalMoves([]);
             setCompleted(true);
@@ -554,18 +557,20 @@ function AntichessTutorialBoard() {
     };
 
     const handlePieceDragStart = ({ file, rank, piece }) => {
-        if (completed || shatter) return;
+        if (completed || shatter || isShaking) return;
         if (piece !== 'P') return;
         setSelected({ file, rank });
         setLegalMoves([{ file: 2, rank: 1 }]);
     };
 
     const handlePieceDrop = ({ clientX, clientY }) => {
-        if (completed || shatter) return;
+        if (completed || shatter || isShaking) return;
         const sq = getSquareFromCoords(clientX, clientY);
         if (sq && sq.file === 2 && sq.rank === 1) {
             setPieces([{ id: 'wp', type: 'P', color: 'w', file: 2, rank: 1 }]);
             setShatter({ file: 2, rank: 1 });
+            setIsShaking(true);
+            setTimeout(() => setIsShaking(false), 300);
             setSelected(null);
             setLegalMoves([]);
             setCompleted(true);
@@ -582,12 +587,13 @@ function AntichessTutorialBoard() {
         setSelected(null);
         setLegalMoves([]);
         setShatter(null);
+        setIsShaking(false);
         setMessage("In Antichess, captures are mandatory! Try to move or capture.");
     };
 
     return (
         <div className="antichess-tutorial">
-            <div className="tutorial-board" ref={boardRef} onClick={handleBoardClick}>
+            <div className={`tutorial-board ${isShaking ? 'shaking' : ''}`} ref={boardRef} onClick={handleBoardClick}>
                 {[0, 1, 2, 3].map(rank => [0, 1, 2, 3].map(file => (
                     <div key={`${file}-${rank}`} className={`tutorial-square ${(rank + file) % 2 === 1 ? 'black-square' : 'white-square'}`} />
                 )))}
@@ -1177,6 +1183,7 @@ function ThreeCheckTutorialBoard() {
     const [completed, setCompleted] = useState(false);
     const [selected, setSelected] = useState(null);
     const [legalMoves, setLegalMoves] = useState([]);
+    const [checkFlash, setCheckFlash] = useState(false);
     const boardRef = useRef(null);
 
     const getSquareFromCoords = (clientX, clientY) => {
@@ -1200,7 +1207,7 @@ function ThreeCheckTutorialBoard() {
     };
 
     const handleBoardClick = (e) => {
-        if (completed) return;
+        if (completed || checkFlash) return;
         const sq = getSquareFromCoords(e.clientX, e.clientY);
         if (!sq) return;
 
@@ -1235,6 +1242,9 @@ function ThreeCheckTutorialBoard() {
                 if (deliverCheck) {
                     const nextChecks = checks + 1;
                     setChecks(nextChecks);
+                    setCheckFlash(true);
+                    setTimeout(() => setCheckFlash(false), 600);
+
                     if (nextChecks >= 3) {
                         setCompleted(true);
                         setMessage("3 Checks delivered! You win by Three-Check rules.");
@@ -1252,7 +1262,7 @@ function ThreeCheckTutorialBoard() {
     };
 
     const handlePieceDragStart = ({ file, rank, piece }) => {
-        if (completed) return;
+        if (completed || checkFlash) return;
         if (piece !== 'Q') return;
         setSelected({ file, rank });
         const moves = [];
@@ -1268,7 +1278,7 @@ function ThreeCheckTutorialBoard() {
     };
 
     const handlePieceDrop = ({ clientX, clientY }) => {
-        if (completed) return;
+        if (completed || checkFlash) return;
         const sq = getSquareFromCoords(clientX, clientY);
         if (sq && selected) {
             const isLegal = legalMoves.some(m => m.file === sq.file && m.rank === sq.rank);
@@ -1283,6 +1293,9 @@ function ThreeCheckTutorialBoard() {
                 if (deliverCheck) {
                     const nextChecks = checks + 1;
                     setChecks(nextChecks);
+                    setCheckFlash(true);
+                    setTimeout(() => setCheckFlash(false), 600);
+
                     if (nextChecks >= 3) {
                         setCompleted(true);
                         setMessage("3 Checks delivered! You win by Three-Check rules.");
@@ -1305,6 +1318,7 @@ function ThreeCheckTutorialBoard() {
         setCompleted(false);
         setSelected(null);
         setLegalMoves([]);
+        setCheckFlash(false);
         setMessage("Three-Check: Deliver 3 checks to the Black King to win!");
     };
 
@@ -1319,7 +1333,8 @@ function ThreeCheckTutorialBoard() {
                 {legalMoves.map((m, i) => <LegalMoveDot key={i} file={m.file} rank={m.rank} />)}
                 {pieces.map(p => (
                     <Piece key={p.id} piece={p.type} file={p.file} rank={p.rank} 
-                           onDragStartCallback={handlePieceDragStart} onDropCallback={handlePieceDrop} />
+                           onDragStartCallback={handlePieceDragStart} onDropCallback={handlePieceDrop}
+                           className={p.id === 'bk' && checkFlash ? 'check-pulse' : ''} />
                 ))}
             </div>
             <div className="tutorial-controls">
