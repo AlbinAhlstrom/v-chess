@@ -1040,7 +1040,6 @@ function KOTHTutorialBoard() {
     const [isShaking, setIsShaking] = useState(false);
     const boardRef = useRef(null);
     const moveSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-check.mp3"));
-    const victorySound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/game-end.mp3"));
 
     const centerSquares = [
         { file: 1, rank: 1 }, { file: 2, rank: 1 },
@@ -1211,7 +1210,6 @@ function RacingKingsTutorialBoard() {
     const [turboTrail, setTurboTrail] = useState(null); // { file, rank }
     const boardRef = useRef(null);
     const zoomSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/castle.mp3"));
-    const victorySound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/game-end.mp3"));
 
     const getSquareFromCoords = (clientX, clientY) => {
         if (!boardRef.current) return null;
@@ -1383,7 +1381,6 @@ function HordeTutorialBoard() {
     const [legalMoves, setLegalMoves] = useState([]);
     const boardRef = useRef(null);
     const moveSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-check.mp3"));
-    const victorySound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/game-end.mp3"));
 
     const getSquareFromCoords = (clientX, clientY) => {
         if (!boardRef.current) return null;
@@ -1507,7 +1504,6 @@ function ThreeCheckTutorialBoard() {
     const [strikeSquare, setStrikeSquare] = useState(null); // { file, rank }
     const boardRef = useRef(null);
     const strikeSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-check.mp3"));
-    const finalSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/game-end.mp3"));
 
     const getSquareFromCoords = (clientX, clientY) => {
         if (!boardRef.current) return null;
@@ -1712,7 +1708,6 @@ function StandardTutorialBoard() {
     const [legalMoves, setLegalMoves] = useState([]);
     const boardRef = useRef(null);
     const moveSound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-check.mp3"));
-    const victorySound = useRef(new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/game-end.mp3"));
 
     const getSquareFromCoords = (clientX, clientY) => {
         if (!boardRef.current) return null;
