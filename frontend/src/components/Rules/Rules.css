@@ -179,22 +179,25 @@
 @keyframes simple-ballistic-flight {
     0% { 
         transform: rotate(0deg) scale(1.1);
-        filter: blur(0px);
+        filter: none;
     }
-    25% {
-        transform: rotate(-45deg) scale(1.6); /* Pitching up/forward */
+    33% {
+        transform: rotate(-45deg) scale(1.6);
+        filter: none;
+    }
+    66% { 
+        transform: rotate(-90deg) scale(2.2);
+        filter: none;
+    }
+    67% {
         filter: blur(1px) drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
     }
-    50% { 
-        transform: rotate(-90deg) scale(2.2); /* Level flight at peak */
-        filter: blur(2px) drop-shadow(-10px 10px 15px rgba(255, 165, 0, 0.8));
-    }
-    75% {
-        transform: rotate(-150deg) scale(1.8); /* Starting nose dive */
+    83% {
+        transform: rotate(-150deg) scale(1.8);
         filter: blur(1px) drop-shadow(0 0 20px rgba(255, 69, 0, 0.9));
     }
     100% { 
-        transform: rotate(-180deg) scale(1); /* Vertical impact */
+        transform: rotate(-180deg) scale(1);
         filter: blur(0px) drop-shadow(0 0 30px rgba(255, 69, 0, 1));
     }
 }
@@ -233,8 +236,8 @@
 }
 
 @keyframes exhaust-delay {
-    0%, 33% { opacity: 0; }
-    34%, 100% { opacity: 1; }
+    0%, 66% { opacity: 0; }
+    67%, 100% { opacity: 1; }
 }
 
 @keyframes rocket-pulse {
