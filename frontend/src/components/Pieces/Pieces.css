@@ -23,20 +23,6 @@
     cursor: grabbing;
 }
 
-.piece.p { background-image: url("/images/pieces/p.png"); }
-.piece.n { background-image: url("/images/pieces/n.png"); }
-.piece.b { background-image: url("/images/pieces/b.png"); }
-.piece.r { background-image: url("/images/pieces/r.png"); }
-.piece.q { background-image: url("/images/pieces/q.png"); }
-.piece.k { background-image: url("/images/pieces/k.png"); }
-
-.piece.P { background-image: url("/images/pieces/P.png"); }
-.piece.N { background-image: url("/images/pieces/N.png"); }
-.piece.B { background-image: url("/images/pieces/B.png"); }
-.piece.R { background-image: url("/images/pieces/R.png"); }
-.piece.Q { background-image: url("/images/pieces/Q.png"); }
-.piece.K { background-image: url("/images/pieces/K.png"); }
-
 @keyframes flash-animation {
     0% { background-color: transparent; }
     50% { background-color: var(--king-check-flash-color); }
