@@ -96,7 +96,7 @@ const VARIANT_RULES = {
 };
 
 function WinnerSound({ completed }) {
-    const soundRef = useRef(new Audio("/sounds/winner-game-sound.mp3"));
+    const soundRef = useRef(new Audio("/sounds/win-sound.wav"));
     
     useEffect(() => {
         if (completed) {
