@@ -470,6 +470,7 @@ function AtomicTutorialBoard() {
         setIsFlying(false);
         setIsPreparing(false);
         setIsShaking(false);
+        setIsFlashing(false);
         setAnimatingKnight(null);
         setScorchMark(null);
         setLaunchPuff(null);
