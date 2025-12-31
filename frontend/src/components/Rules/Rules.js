@@ -327,17 +327,17 @@ function AtomicTutorialBoard() {
                 {/* Explosion */}
                 {explosion && (
                     <div 
-                        className="explosion-container"
+                        className="atomic-explosion"
                         style={{
                             left: `${explosion.file * 25}%`,
                             top: `${explosion.rank * 25}%`,
-                            width: '25%',
-                            height: '25%'
                         }}
                     >
-                        <div className="explosion-ring"></div>
-                        <div className="explosion-ring"></div>
-                        <div className="explosion-ring"></div>
+                        <div className="mushroom-cloud cloud-1"></div>
+                        <div className="mushroom-cloud cloud-2"></div>
+                        <div className="mushroom-cloud cloud-3"></div>
+                        <div className="explosion-shockwave"></div>
+                        <div className="explosion-flash"></div>
                     </div>
                 )}
             </div>

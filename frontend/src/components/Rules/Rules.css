@@ -428,3 +428,64 @@
 .chess960-tutorial button:hover {
     background: #454552;
 }
+
+/* Mushroom Cloud Explosion (Top POV) */
+.atomic-explosion {
+    position: absolute;
+    width: 25%;
+    height: 25%;
+    pointer-events: none;
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.mushroom-cloud {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0%, #ff0 15%, #f60 40%, #800 70%, rgba(0,0,0,0) 90%);
+    opacity: 0;
+    transform: scale(0);
+}
+
+.cloud-1 { animation: mushroom-billow 0.8s ease-out forwards; }
+.cloud-2 { animation: mushroom-billow 0.8s ease-out 0.05s forwards; filter: blur(2px); }
+.cloud-3 { animation: mushroom-billow 0.8s ease-out 0.1s forwards; filter: blur(4px); }
+
+@keyframes mushroom-billow {
+    0% { transform: scale(0); opacity: 1; }
+    40% { opacity: 1; }
+    100% { transform: scale(4.5); opacity: 0; }
+}
+
+.explosion-shockwave {
+    position: absolute;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    width: 0;
+    height: 0;
+    animation: shockwave-out 0.6s ease-out forwards;
+}
+
+@keyframes shockwave-out {
+    0% { width: 0; height: 0; opacity: 1; border-width: 10px; }
+    100% { width: 500%; height: 500%; opacity: 0; border-width: 1px; }
+}
+
+.explosion-flash {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: white;
+    border-radius: 50%;
+    filter: blur(10px);
+    opacity: 0;
+    animation: flash-init 0.2s ease-out;
+}
+
+@keyframes flash-init {
+    0% { transform: scale(0.5); opacity: 0; }
+    50% { transform: scale(2); opacity: 1; }
+    100% { transform: scale(3); opacity: 0; }
+}
