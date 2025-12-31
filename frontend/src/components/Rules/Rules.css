@@ -369,3 +369,24 @@
     background: rgba(0,0,0,0.2);
     border-radius: 8px;
 }
+
+/* Three Check Tutorial */
+.three-check-tutorial {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 20px 0;
+    padding: 20px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+}
+
+.check-counter {
+    background: #95bb4a;
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}

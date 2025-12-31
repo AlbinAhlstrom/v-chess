@@ -1028,6 +1028,169 @@ function HordeTutorialBoard() {
     );
 }
 
+function ThreeCheckTutorialBoard() {
+    const [pieces, setPieces] = useState([
+        { id: 'wq', type: 'Q', color: 'w', file: 0, rank: 3 }, // White Queen at a1
+        { id: 'bk', type: 'k', color: 'b', file: 2, rank: 1 }, // Black King at c3
+    ]);
+    const [checks, setChecks] = useState(0);
+    const [message, setMessage] = useState("Three-Check: Deliver 3 checks to the Black King to win!");
+    const [completed, setCompleted] = useState(false);
+    const [selected, setSelected] = useState(null);
+    const [legalMoves, setLegalMoves] = useState([]);
+    const boardRef = useRef(null);
+
+    const getSquareFromCoords = (clientX, clientY) => {
+        if (!boardRef.current) return null;
+        const rect = boardRef.current.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        const squareSize = rect.width / 4;
+        const file = Math.floor(x / squareSize);
+        const rank = Math.floor(y / squareSize);
+        if (file >= 0 && file < 4 && rank >= 0 && rank < 4) return { file, rank };
+        return null;
+    };
+
+    const isCheck = (queenFile, queenRank, kingFile, kingRank) => {
+        // Vertical/Horizontal
+        if (queenFile === kingFile || queenRank === kingRank) return true;
+        // Diagonal
+        if (Math.abs(queenFile - kingFile) === Math.abs(queenRank - kingRank)) return true;
+        return false;
+    };
+
+    const handleBoardClick = (e) => {
+        if (completed) return;
+        const sq = getSquareFromCoords(e.clientX, e.clientY);
+        if (!sq) return;
+
+        const clickedPiece = pieces.find(p => p.file === sq.file && p.rank === sq.rank);
+
+        if (clickedPiece && clickedPiece.color === 'w') {
+            setSelected(sq);
+            const moves = [];
+            // Queen moves on 4x4
+            for (let f = 0; f < 4; f++) {
+                for (let r = 0; r < 4; r++) {
+                    if (f === sq.file && r === sq.rank) continue;
+                    if (f === sq.file || r === sq.rank || Math.abs(f - sq.file) === Math.abs(r - sq.rank)) {
+                        if (!(f === 2 && r === 1)) moves.push({ file: f, rank: r }); // Can't land on King
+                    }
+                }
+            }
+            setLegalMoves(moves);
+            return;
+        }
+
+        if (selected) {
+            const isLegal = legalMoves.some(m => m.file === sq.file && m.rank === sq.rank);
+            if (isLegal) {
+                const king = pieces.find(p => p.id === 'bk');
+                const deliverCheck = isCheck(sq.file, sq.rank, king.file, king.rank);
+                
+                setPieces(prev => prev.map(p => p.id === 'wq' ? { ...p, file: sq.file, rank: sq.rank } : p));
+                setSelected(null);
+                setLegalMoves([]);
+
+                if (deliverCheck) {
+                    const nextChecks = checks + 1;
+                    setChecks(nextChecks);
+                    if (nextChecks >= 3) {
+                        setCompleted(true);
+                        setMessage("3 Checks delivered! You win by Three-Check rules.");
+                    } else {
+                        setMessage(`CHECK! That's ${nextChecks}/3 checks. Keep going!`);
+                    }
+                } else {
+                    setMessage("Move delivered, but it wasn't a check. Try again!");
+                }
+            } else {
+                setSelected(null);
+                setLegalMoves([]);
+            }
+        }
+    };
+
+    const handlePieceDragStart = ({ file, rank, piece }) => {
+        if (completed) return;
+        if (piece !== 'Q') return;
+        setSelected({ file, rank });
+        const moves = [];
+        for (let f = 0; f < 4; f++) {
+            for (let r = 0; r < 4; r++) {
+                if (f === file && r === rank) continue;
+                if (f === file || r === rank || Math.abs(f - file) === Math.abs(r - rank)) {
+                    if (!(f === 2 && r === 1)) moves.push({ file: f, rank: r });
+                }
+            }
+        }
+        setLegalMoves(moves);
+    };
+
+    const handlePieceDrop = ({ clientX, clientY }) => {
+        if (completed) return;
+        const sq = getSquareFromCoords(clientX, clientY);
+        if (sq && selected) {
+            const isLegal = legalMoves.some(m => m.file === sq.file && m.rank === sq.rank);
+            if (isLegal) {
+                const king = pieces.find(p => p.id === 'bk');
+                const deliverCheck = isCheck(sq.file, sq.rank, king.file, king.rank);
+                
+                setPieces(prev => prev.map(p => p.id === 'wq' ? { ...p, file: sq.file, rank: sq.rank } : p));
+                setSelected(null);
+                setLegalMoves([]);
+
+                if (deliverCheck) {
+                    const nextChecks = checks + 1;
+                    setChecks(nextChecks);
+                    if (nextChecks >= 3) {
+                        setCompleted(true);
+                        setMessage("3 Checks delivered! You win by Three-Check rules.");
+                    } else {
+                        setMessage(`CHECK! That's ${nextChecks}/3 checks. Keep going!`);
+                    }
+                } else {
+                    setMessage("Move delivered, but it wasn't a check. Try again!");
+                }
+            }
+        }
+    };
+
+    const reset = () => {
+        setPieces([
+            { id: 'wq', type: 'Q', color: 'w', file: 0, rank: 3 },
+            { id: 'bk', type: 'k', color: 'b', file: 2, rank: 1 },
+        ]);
+        setChecks(0);
+        setCompleted(false);
+        setSelected(null);
+        setLegalMoves([]);
+        setMessage("Three-Check: Deliver 3 checks to the Black King to win!");
+    };
+
+    return (
+        <div className="three-check-tutorial">
+            <div className="check-counter">Checks: {checks} / 3</div>
+            <div className="tutorial-board" ref={boardRef} onClick={handleBoardClick}>
+                {[0, 1, 2, 3].map(rank => [0, 1, 2, 3].map(file => (
+                    <div key={`${file}-${rank}`} className={`tutorial-square ${(rank + file) % 2 === 1 ? 'black-square' : 'white-square'}`} />
+                )))}
+                {selected && <HighlightSquare file={selected.file} rank={selected.rank} color="rgba(255, 255, 0, 0.5)" />}
+                {legalMoves.map((m, i) => <LegalMoveDot key={i} file={m.file} rank={m.rank} />)}
+                {pieces.map(p => (
+                    <Piece key={p.id} piece={p.type} file={p.file} rank={p.rank} 
+                           onDragStartCallback={handlePieceDragStart} onDropCallback={handlePieceDrop} />
+                ))}
+            </div>
+            <div className="tutorial-controls">
+                <p>{message}</p>
+                {completed && <button onClick={reset}>Reset Tutorial</button>}
+            </div>
+        </div>
+    );
+}
+
 function Rules() {
     const { variant } = useParams();
     const currentVariant = variant || 'standard';
@@ -1073,6 +1236,7 @@ function Rules() {
                 {currentVariant === 'king_of_the_hill' && <KOTHTutorialBoard />}
                 {currentVariant === 'racing_kings' && <RacingKingsTutorialBoard />}
                 {currentVariant === 'horde' && <HordeTutorialBoard />}
+                {currentVariant === 'three_check' && <ThreeCheckTutorialBoard />}
 
                 <ul className="rules-list">
                     {variantData.rules.map((rule, index) => (
