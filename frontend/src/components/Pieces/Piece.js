@@ -150,7 +150,12 @@ function Piece({ piece, file, rank, actualFile, actualRank, onDragStartCallback,
             onTouchStart={startDrag}
             data-piece={piece}
             data-square={squareStr}
-        />
+        >
+            <div className="piece-inner">
+                <div className="piece-front" style={{ backgroundImage: pieceStyle['--piece-image'] }}></div>
+                <div className="piece-back" style={{ backgroundImage: pieceStyle['--piece-image'] }}></div>
+            </div>
+        </div>
     );
 }
 
