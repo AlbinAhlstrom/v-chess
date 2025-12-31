@@ -113,6 +113,10 @@
     --square-size: 75px; /* For animations */
 }
 
+.tutorial-board.shaking {
+    animation: board-shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+}
+
 .tutorial-square {
     width: 25%;
     height: 25%;
@@ -124,16 +128,6 @@
 
 .black-square {
     background-color: var(--dark-square);
-}
-
-.tutorial-piece {
-    position: absolute;
-    width: 25%;
-    height: 25%;
-    background-size: 100%;
-    cursor: pointer;
-    transition: all 0.2s ease-out;
-    z-index: 10;
 }
 
 .tutorial-controls {
@@ -174,10 +168,6 @@
     0%, 100% { transform: translate(0, 0); }
     10%, 30%, 50%, 70%, 90% { transform: translate(-6px, 6px); }
     20%, 40%, 60%, 80% { transform: translate(6px, -6px); }
-}
-
-.tutorial-board.shaking {
-    animation: board-shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
 }
 
 @keyframes ballistic-flight {
@@ -317,6 +307,7 @@
     color: #555;
     font-style: italic;
 }
+
 /* King of the Hill Tutorial */
 .koth-tutorial {
     display: flex;
@@ -439,5 +430,3 @@
     pointer-events: none;
     z-index: 10000;
 }
-
-@keyframes board-shake {
