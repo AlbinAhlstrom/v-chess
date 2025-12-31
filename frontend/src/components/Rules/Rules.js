@@ -204,11 +204,42 @@ function AtomicTutorialBoard() {
             }
         }
 
+        class Debris {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 15 + 5;
+                this.s = Math.random() * 3 + 1;
+                this.d = Math.random() * Math.PI * 2;
+                this.alpha = 0.6;
+            }
+            update() {
+                this.x += Math.cos(this.d) * this.s;
+                this.y += Math.sin(this.d) * this.s;
+                this.s *= 0.98;
+                this.alpha -= 0.008;
+                this.size += 0.2;
+            }
+            draw() {
+                if (this.alpha <= 0) return;
+                ctx.beginPath();
+                ctx.fillStyle = `rgba(60, 60, 60, ${this.alpha})`;
+                ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI, false);
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
         const particles = Array.from({ length: config.particleNumber }, () => new Particle(centerX, centerY));
+        const smoke = Array.from({ length: 40 }, () => new Debris(centerX, centerY));
 
         let animationFrame;
         const animate = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            smoke.forEach(s => {
+                s.update();
+                s.draw();
+            });
             particles.forEach(p => {
                 p.update();
                 p.draw();
