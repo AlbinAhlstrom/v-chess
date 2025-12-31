@@ -427,6 +427,12 @@ function AtomicTutorialBoard() {
                 setSelected(null);
                 setLegalMoves([]);
             }
+        } else if (clickedPiece && clickedPiece.color === 'b') {
+            // Ignore clicks on black pieces if nothing is selected to avoid resetting instructions
+            return;
+        } else {
+            setSelected(null);
+            setLegalMoves([]);
         }
     };
 
@@ -685,6 +691,7 @@ function AntichessTutorialBoard() {
 
         if (clickedPiece && clickedPiece.color === 'w') {
             setSelected(sq);
+            // In this setup, only capture is legal
             setLegalMoves([{ file: 2, rank: 1 }]); 
             setMessage("You MUST capture the Knight! Moving forward is illegal here.");
             return;
@@ -699,6 +706,8 @@ function AntichessTutorialBoard() {
             setLegalMoves([]);
             setCompleted(true);
             setMessage("Great! You made the mandatory capture. Lose all your pieces to win!");
+        } else if (clickedPiece && clickedPiece.color === 'b') {
+            return;
         } else {
             setSelected(null);
             setLegalMoves([]);
@@ -835,6 +844,8 @@ function CrazyhouseTutorialBoard() {
             setLegalMoves([]);
             captureSound.current.play().catch(() => {});
             setMessage("Bishop captured! It's now in your reserve. Click it in the tray, then click an empty square to drop it!");
+        } else if (clickedPiece && clickedPiece.color === 'b') {
+            return;
         } else {
             setSelected(null);
             setLegalMoves([]);
@@ -985,8 +996,12 @@ function KOTHTutorialBoard() {
                 setSelected(null);
                 setLegalMoves([]);
             }
+        } else if (clickedPiece && clickedPiece.color === 'b') {
+            return;
+        } else {
+            setSelected(null);
+            setLegalMoves([]);
         }
-    };
 
     const handlePieceDragStart = ({ file, rank, piece }) => {
         if (completed) return;
@@ -1134,6 +1149,11 @@ function RacingKingsTutorialBoard() {
                 setSelected(null);
                 setLegalMoves([]);
             }
+        } else if (clickedPiece && clickedPiece.color === 'b') {
+            return;
+        } else {
+            setSelected(null);
+            setLegalMoves([]);
         }
     };
 
@@ -1272,6 +1292,8 @@ function HordeTutorialBoard() {
             setLegalMoves([]);
             setCompleted(true);
             setMessage("CHECKMATE! The King has no escape. White wins!");
+        } else if (clickedPiece && clickedPiece.color === 'b') {
+            return;
         } else {
             setSelected(null);
             setLegalMoves([]);
@@ -1417,6 +1439,11 @@ function ThreeCheckTutorialBoard() {
                 setSelected(null);
                 setLegalMoves([]);
             }
+        } else if (clickedPiece && clickedPiece.color === 'b') {
+            return;
+        } else {
+            setSelected(null);
+            setLegalMoves([]);
         }
     };
 
@@ -1574,6 +1601,11 @@ function StandardTutorialBoard() {
                 setSelected(null);
                 setLegalMoves([]);
             }
+        } else if (clickedPiece && clickedPiece.color === 'b') {
+            return;
+        } else {
+            setSelected(null);
+            setLegalMoves([]);
         }
     };
 
