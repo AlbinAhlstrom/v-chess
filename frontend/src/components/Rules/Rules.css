@@ -489,6 +489,17 @@
     animation: turbo-trail 0.5s ease-out forwards;
 }
 
+/* Target Square Flash */
+@keyframes target-flash-anim {
+    from { background-color: rgba(255, 0, 0, 0); }
+    to { background-color: rgba(255, 0, 0, 0.8); }
+}
+
+.tutorial-square.target-flash {
+    animation: target-flash-anim 0.1s infinite alternate;
+    z-index: 2;
+}
+
 /* Combined Atomic Explosion Styles */
 .mushroom-cloud-container {
     position: absolute;
@@ -515,7 +526,7 @@
 @keyframes mushroom-billow-combined {
     0% { transform: scale(0); opacity: 1; }
     40% { opacity: 1; }
-    100% { transform: scale(4); opacity: 0; }
+    100% { transform: scale(3.2); opacity: 0; } /* Reduced from 4 (-20%) */
 }
 
 .explosion-flash {
