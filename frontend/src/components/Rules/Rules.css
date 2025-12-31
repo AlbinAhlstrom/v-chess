@@ -497,7 +497,7 @@
 }
 
 .tutorial-square.target-flash {
-    animation: target-flash-anim 0.2s 3;
+    animation: target-flash-anim 0.15s 3;
     z-index: 2;
 }
 
