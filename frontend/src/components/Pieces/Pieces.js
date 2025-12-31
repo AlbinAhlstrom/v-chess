@@ -1092,6 +1092,19 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
 
     return (
         <>
+            <PlayerNameDisplay 
+                isOpponent={true}
+                isFlipped={isFlipped}
+                player={topPlayer}
+                ratingDiff={topDiff}
+                takebackOffer={takebackOffer}
+                user={user}
+                timers={timers}
+                turn={turn}
+                formatTime={formatTime}
+                matchmaking={matchmaking}
+            />
+
             <div
                 className="pieces"
                 ref={ref}
@@ -1100,19 +1113,6 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                     if (isMenuOpen) setIsMenuOpen(false);
                 }}
             >
-                <PlayerNameDisplay 
-                    isOpponent={true}
-                    isFlipped={isFlipped}
-                    player={topPlayer}
-                    ratingDiff={topDiff}
-                    takebackOffer={takebackOffer}
-                    user={user}
-                    timers={timers}
-                    turn={turn}
-                    formatTime={formatTime}
-                    matchmaking={matchmaking}
-                />
-
                 {isPromotionDialogOpen && <PromotionDialog onPromote={handlePromotion} onCancel={handleCancelPromotion} color={promotionColor} />}
                 {isImportDialogOpen && <ImportDialog onImport={handleImport} onCancel={handleCancelImport} />}
 
@@ -1141,50 +1141,19 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                     winner={winner}
                     isFlipped={isFlipped}
                 />
-
-                <PlayerNameDisplay 
-                    isOpponent={false}
-                    isFlipped={isFlipped}
-                    player={bottomPlayer}
-                    ratingDiff={bottomDiff}
-                    takebackOffer={takebackOffer}
-                    user={user}
-                    timers={timers}
-                    turn={turn}
-                    formatTime={formatTime}
-                    matchmaking={matchmaking}
-                />
             </div>
 
-            <GameSidebar 
-                matchmaking={matchmaking}
-                moveHistory={moveHistory}
-                onUndo={handleOtbUndo}
-                onTakeback={isComputerGame ? handleOtbUndo : handleTakebackOffer}
-                handleReset={handleReset}
-                handleNewGameClick={handleNewGameClick}
-                handleMenuToggle={handleMenuToggle}
-                handleResign={handleResign}
-                handleOfferDraw={handleOfferDraw}
-                handleAcceptDraw={handleAcceptDraw}
-                handleDeclineDraw={handleDeclineDraw}
-                handleAcceptTakeback={handleAcceptTakeback}
-                handleDeclineTakeback={handleDeclineTakeback}
-                isMenuOpen={isMenuOpen}
-                copyFenToClipboard={copyFenToClipboard}
-                handleImportClick={handleImportClick}
+            <PlayerNameDisplay 
+                isOpponent={false}
+                isFlipped={isFlipped}
+                player={bottomPlayer}
+                ratingDiff={bottomDiff}
                 takebackOffer={takebackOffer}
-                drawOffer={drawOffer}
                 user={user}
-                isGameOver={isGameOver}
-                handleRematch={handleRematch}
-                handleNewOpponent={handleNewOpponent}
-                gameId={gameId}
-                isQuickMatch={isQuickMatch}
-                onJumpToMove={handleJumpToMove}
-                onStepForward={handleStepForward}
-                onStepBackward={handleStepBackward}
-                viewedIndex={viewedIndex}
+                timers={timers}
+                turn={turn}
+                formatTime={formatTime}
+                matchmaking={matchmaking}
             />
         </>
     );

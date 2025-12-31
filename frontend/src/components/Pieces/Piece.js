@@ -144,7 +144,7 @@ function Piece({ piece, file, rank, actualFile, actualRank, onDragStartCallback,
 
     return (
         <div
-            className={`piece ${className}`}
+            className={`piece ${piece} ${className}`}
             style={{...pieceStyle, touchAction: 'none'}}
             onMouseDown={startDrag}
             onTouchStart={startDrag}
