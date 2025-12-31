@@ -171,8 +171,8 @@
 }
 
 @keyframes tilt-up {
-    from { transform: scale(1) rotate(0deg) skewY(0deg); }
-    to { transform: scale(1.1) rotate(15deg) skewY(-25deg); }
+    from { transform: perspective(500px) rotateX(0deg) rotateZ(0deg) scale(1); }
+    to { transform: perspective(500px) rotateX(-40deg) rotateZ(15deg) scale(1.1); }
 }
 
 .piece.preparing-knight {
@@ -182,19 +182,19 @@
 
 @keyframes ballistic-flight {
     0% { 
-        transform: scale(1.1) rotate(15deg) skewY(-25deg);
+        transform: perspective(500px) rotateX(-40deg) rotateZ(15deg) scale(1.1);
         filter: none;
     }
     33% {
-        transform: scale(1.8) rotate(35deg) skewY(-45deg); /* Steep takeoff */
+        transform: perspective(500px) rotateX(-70deg) rotateZ(35deg) scale(1.8); /* Steep climb */
         filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.4));
     }
     66% {
-        transform: scale(2.4) rotate(60deg) skewY(0deg); /* High peak, leveling out */
+        transform: perspective(500px) rotateX(0deg) rotateZ(60deg) scale(2.4); /* Peak, level */
         filter: drop-shadow(-15px 15px 15px rgba(255, 165, 0, 0.8));
     }
     100% { 
-        transform: scale(1) rotate(90deg) skewY(45deg); /* Vertical nose-dive impact */
+        transform: perspective(500px) rotateX(70deg) rotateZ(90deg) scale(1); /* Nose dive */
         filter: drop-shadow(0 0 30px rgba(255, 69, 0, 1));
     }
 }
