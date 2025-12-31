@@ -1002,6 +1002,7 @@ function KOTHTutorialBoard() {
             setSelected(null);
             setLegalMoves([]);
         }
+    };
 
     const handlePieceDragStart = ({ file, rank, piece }) => {
         if (completed) return;
