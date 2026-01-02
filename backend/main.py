@@ -83,8 +83,7 @@ origins = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
 ]
-if not IS_PROD:
-    origins.append("*")
+# No wildcard '*' allowed with allow_credentials=True
 
 app.add_middleware(
     CORSMiddleware,
