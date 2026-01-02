@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import SoundManager from '../../../helpers/soundManager';
+import { getWsBase } from '../../../api';
 
 export function useGameWebSocket({
     gameId,
@@ -39,9 +40,7 @@ export function useGameWebSocket({
             return;
         }
 
-        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        const host = process.env.NODE_ENV === 'development' ? 'localhost:8000' : window.location.host;
-        const wsBase = `${protocol}://${host}/ws`;
+        const wsBase = getWsBase();
         
         // Close existing connection if gameId has changed
         if (ws.current) {
