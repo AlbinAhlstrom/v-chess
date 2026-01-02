@@ -20,7 +20,7 @@ function Piece({
         '--piece-image': `url("/images/pieces/${piece}.png")`
     };
 
-    const { startDrag } = usePieceDrag({
+    const { handlePointerDown, handlePointerMove, handlePointerUp } = usePieceDrag({
         piece, realFile, realRank, pieceStyle,
         onDragStartCallback, onDragEndCallback, onDropCallback, onDragHoverCallback,
         onPieceClick
@@ -30,8 +30,9 @@ function Piece({
         <div
             className={`piece ${piece} ${className}`}
             style={{...pieceStyle, touchAction: 'none'}}
-            onMouseDown={startDrag}
-            onTouchStart={startDrag}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
             data-piece={piece}
             data-square={squareStr}
         />

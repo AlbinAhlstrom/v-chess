@@ -9,107 +9,113 @@ export function usePieceDrag({
     onDragEndCallback,
     onDropCallback,
     onDragHoverCallback,
-    onPieceClick // New callback for tap/click detection
+    onPieceClick
 }) {
     const ghostRef = useRef(null);
+    const startData = useRef(null);
+    const isDragging = useRef(false);
 
-    const startDrag = (e) => {
-        // Prevent default touch behavior to stop scrolling while dragging/tapping pieces
-        if (e.type.startsWith('touch') && e.cancelable) e.preventDefault();
-        
-        // Stop propagation to prevent the board's background handler from firing
+    const handlePointerDown = (e) => {
+        // Prevent default to ensure pointer capture works reliably and scrolling is prevented
+        e.preventDefault();
         e.stopPropagation();
 
-        const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
-        const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
-        const startX = clientX;
-        const startY = clientY;
+        const node = e.target;
+        node.setPointerCapture(e.pointerId);
 
-        const rect = e.target.getBoundingClientRect();
-        const offsetX = rect.width / 2;
-        const offsetY = rect.height / 2;
-
-        let dragStarted = false;
-
-        const handleMove = (moveEvent) => {
-            const mClientX = moveEvent.type.startsWith('touch') ? moveEvent.touches[0].clientX : moveEvent.clientX;
-            const mClientY = moveEvent.type.startsWith('touch') ? moveEvent.touches[0].clientY : moveEvent.clientY;
-
-            if (!dragStarted) {
-                const dist = Math.sqrt(Math.pow(mClientX - startX, 2) + Math.pow(mClientY - startY, 2));
-                if (dist > 8) {
-                    dragStarted = true;
-                    if (moveEvent.cancelable) moveEvent.preventDefault();
-
-                    if (onDragStartCallback) {
-                        onDragStartCallback({ file: realFile, rank: realRank, piece });
-                    }
-
-                    const ghost = document.createElement("div");
-                    ghost.classList.add("piece");
-                    ghost.style.position = "fixed";
-                    ghost.style.pointerEvents = "none";
-                    ghost.style.zIndex = "9999";
-                    ghost.style.width = `${rect.width}px`;
-                    ghost.style.height = `${rect.height}px`;
-                    ghost.style.backgroundImage = pieceStyle['--piece-image'];
-                    ghost.style.backgroundSize = '100%';
-                    ghost.style.left = `${mClientX - offsetX}px`;
-                    ghost.style.top = `${mClientY - offsetY}px`;
-                    
-                    document.body.appendChild(ghost);
-                    ghostRef.current = ghost;
-                    e.target.style.opacity = "0";
-                    document.body.style.cursor = "grabbing";
-                } else {
-                    return;
-                }
-            }
-
-            if (moveEvent.cancelable) moveEvent.preventDefault();
-            if (ghostRef.current) {
-                ghostRef.current.style.left = `${mClientX - offsetX}px`;
-                ghostRef.current.style.top = `${mClientY - offsetY}px`;
-            }
-            if (onDragHoverCallback) onDragHoverCallback(mClientX, mClientY);
+        const rect = node.getBoundingClientRect();
+        
+        startData.current = {
+            x: e.clientX,
+            y: e.clientY,
+            pointerId: e.pointerId,
+            rect,
+            offsetX: rect.width / 2,
+            offsetY: rect.height / 2
         };
-
-        const handleEnd = (endEvent) => {
-            const endX = endEvent.type.startsWith('touch') ? (endEvent.changedTouches ? endEvent.changedTouches[0].clientX : clientX) : endEvent.clientX;
-            const endY = endEvent.type.startsWith('touch') ? (endEvent.changedTouches ? endEvent.changedTouches[0].clientY : clientY) : endEvent.clientY;
-
-            document.removeEventListener('mousemove', handleMove);
-            document.removeEventListener('mouseup', handleEnd);
-            document.removeEventListener('touchmove', handleMove);
-            document.removeEventListener('touchend', handleEnd);
-
-            if (dragStarted) {
-                if (endEvent.cancelable) endEvent.preventDefault();
-                if (ghostRef.current) {
-                    ghostRef.current.remove();
-                    ghostRef.current = null;
-                }
-                e.target.style.opacity = "1";
-                document.body.style.cursor = "default";
-
-                if (onDropCallback) {
-                    onDropCallback({ clientX: endX, clientY: endY, piece, file: realFile, rank: realRank });
-                }
-                if (onDragHoverCallback) onDragHoverCallback(null);
-                if (onDragEndCallback) onDragEndCallback();
-            } else {
-                // If no drag occurred, it's a click/tap
-                if (onPieceClick) {
-                    onPieceClick({ clientX: endX, clientY: endY });
-                }
-            }
-        };
-
-        document.addEventListener('mousemove', handleMove);
-        document.addEventListener('mouseup', handleEnd);
-        document.addEventListener('touchmove', handleMove, { passive: false });
-        document.addEventListener('touchend', handleEnd);
+        isDragging.current = false;
     };
 
-    return { startDrag };
+    const handlePointerMove = (e) => {
+        if (!startData.current || e.pointerId !== startData.current.pointerId) return;
+
+        const { x: startX, y: startY, offsetX, offsetY } = startData.current;
+        const dist = Math.hypot(e.clientX - startX, e.clientY - startY);
+
+        if (!isDragging.current) {
+            // Threshold for Drag vs Tap
+            if (dist > 8) {
+                isDragging.current = true;
+                
+                if (onDragStartCallback) {
+                    onDragStartCallback({ file: realFile, rank: realRank, piece });
+                }
+
+                // Create Ghost
+                const ghost = document.createElement("div");
+                ghost.classList.add("piece");
+                ghost.style.position = "fixed";
+                ghost.style.pointerEvents = "none";
+                ghost.style.zIndex = "9999";
+                ghost.style.width = `${startData.current.rect.width}px`;
+                ghost.style.height = `${startData.current.rect.height}px`;
+                ghost.style.backgroundImage = pieceStyle['--piece-image'];
+                ghost.style.backgroundSize = '100%';
+                ghost.style.left = `${e.clientX - offsetX}px`;
+                ghost.style.top = `${e.clientY - offsetY}px`;
+                
+                document.body.appendChild(ghost);
+                ghostRef.current = ghost;
+                
+                // Hide original
+                e.target.style.opacity = "0";
+                document.body.style.cursor = "grabbing";
+            }
+        }
+
+        if (isDragging.current && ghostRef.current) {
+            ghostRef.current.style.left = `${e.clientX - offsetX}px`;
+            ghostRef.current.style.top = `${e.clientY - offsetY}px`;
+            
+            if (onDragHoverCallback) onDragHoverCallback(e.clientX, e.clientY);
+        }
+    };
+
+    const handlePointerUp = (e) => {
+        if (!startData.current || e.pointerId !== startData.current.pointerId) return;
+
+        const node = e.target;
+        node.releasePointerCapture(e.pointerId);
+
+        if (isDragging.current) {
+            // Drop Logic
+            node.style.opacity = "1";
+            document.body.style.cursor = "default";
+            
+            if (ghostRef.current) {
+                ghostRef.current.remove();
+                ghostRef.current = null;
+            }
+
+            if (onDropCallback) {
+                onDropCallback({ clientX: e.clientX, clientY: e.clientY, piece, file: realFile, rank: realRank });
+            }
+            if (onDragHoverCallback) onDragHoverCallback(null);
+            if (onDragEndCallback) onDragEndCallback();
+        } else {
+            // Tap Logic
+            if (onPieceClick) {
+                onPieceClick({ clientX: e.clientX, clientY: e.clientY });
+            }
+        }
+
+        startData.current = null;
+        isDragging.current = false;
+    };
+
+    return {
+        handlePointerDown,
+        handlePointerMove,
+        handlePointerUp
+    };
 }
