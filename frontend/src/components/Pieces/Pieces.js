@@ -195,8 +195,6 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
 
                 <BoardEffects currentVariant={currentVariant} isFlipped={isFlipped} {...effects} />
 
-                <div ref={highlightRef} className="drag-hover-highlight" style={{ display: 'none', position: 'absolute', width: 'var(--square-size)', height: 'var(--square-size)', pointerEvents: 'none', zIndex: 5 }} />
-
                 {position.map((rankArray, rankIndex) => rankArray.map((pieceType, fileIndex) => pieceType ? (
                     <Piece 
                         key={`p-${rankIndex}-${fileIndex}`} 
