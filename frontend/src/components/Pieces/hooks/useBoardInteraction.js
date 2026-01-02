@@ -18,9 +18,15 @@ export function useBoardInteraction(isFlipped, position, allPossibleMoves, canMo
     const calculateSquare = useCallback(e => {
         if (!ref.current) return null;
         const { width, left, top } = ref.current.getBoundingClientRect();
+        
+        const clientX = e.clientX ?? (e.touches?.[0]?.clientX) ?? (e.changedTouches?.[0]?.clientX);
+        const clientY = e.clientY ?? (e.touches?.[0]?.clientY) ?? (e.changedTouches?.[0]?.clientY);
+
+        if (clientX === undefined || clientY === undefined) return null;
+
         const size = width / 8;
-        let file = Math.floor((e.clientX - left) / size);
-        let rank = Math.floor((e.clientY - top) / size);
+        let file = Math.floor((clientX - left) / size);
+        let rank = Math.floor((clientY - top) / size);
         
         if (isFlipped) {
             file = 7 - file;

@@ -5,7 +5,7 @@ import { usePieceDrag } from './hooks/usePieceDrag';
 function Piece({ 
     piece, file, rank, actualFile, actualRank, 
     onDragStartCallback, onDragEndCallback, onDropCallback, onDragHoverCallback, 
-    className = '' 
+    className = '', canMove = false
 }) {
     const realFile = actualFile !== undefined ? actualFile : file;
     const realRank = actualRank !== undefined ? actualRank : rank;
@@ -25,12 +25,19 @@ function Piece({
         onDragStartCallback, onDragEndCallback, onDropCallback, onDragHoverCallback
     });
 
+    const handleInteraction = (e) => {
+        if (canMove) {
+            e.stopPropagation();
+        }
+        startDrag(e);
+    };
+
     return (
         <div
             className={`piece ${piece} ${className}`}
             style={{...pieceStyle, touchAction: 'none'}}
-            onMouseDown={startDrag}
-            onTouchStart={startDrag}
+            onMouseDown={handleInteraction}
+            onTouchStart={handleInteraction}
             data-piece={piece}
             data-square={squareStr}
         />

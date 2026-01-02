@@ -183,7 +183,14 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
         <>
             <PlayerNameDisplay isOpponent={true} isFlipped={isFlipped} player={topPlayer} ratingDiff={topDiff} takebackOffer={takebackOffer} user={user} timers={timers} turn={turn} formatTime={formatTime} matchmaking={matchmaking} />
 
-            <div className="pieces" ref={ref} onClick={(e) => { handleSquareClick(e); if (isMenuOpen) setIsMenuOpen(false); }}>
+            <div className="pieces" ref={ref} 
+                onClick={(e) => { handleSquareClick(e); if (isMenuOpen) setIsMenuOpen(false); }}
+                onTouchStart={(e) => { 
+                    if (e.cancelable) e.preventDefault(); 
+                    handleSquareClick(e); 
+                    if (isMenuOpen) setIsMenuOpen(false); 
+                }}
+            >
                 <PromotionManager isPromotionDialogOpen={isPromotionDialogOpen} promotionColor={fen?.split(' ')[1] === 'w' ? 'w' : 'b'} handlePromotion={handlePromotion} handleCancelPromotion={() => setPromotionDialogOpen(false)} />
                 {isImportDialogOpen && <ImportDialog onImport={(f, v) => { setImportDialogOpen(false); initializeGame(f, v); }} onCancel={() => setImportDialogOpen(false)} />}
 
@@ -196,7 +203,18 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
                 <div ref={highlightRef} className="drag-hover-highlight" style={{ display: 'none', position: 'absolute', width: 'var(--square-size)', height: 'var(--square-size)', pointerEvents: 'none', zIndex: 5 }} />
 
                 {position.map((rankArray, rankIndex) => rankArray.map((pieceType, fileIndex) => pieceType ? (
-                    <Piece key={`p-${rankIndex}-${fileIndex}`} rank={isFlipped ? 7 - rankIndex : rankIndex} file={isFlipped ? 7 - fileIndex : fileIndex} actualRank={rankIndex} actualFile={fileIndex} piece={pieceType} onDragStartCallback={handlePieceDragStart} onDropCallback={handleManualDrop} onDragHoverCallback={handlePieceDragHover} />
+                    <Piece 
+                        key={`p-${rankIndex}-${fileIndex}`} 
+                        rank={isFlipped ? 7 - rankIndex : rankIndex} 
+                        file={isFlipped ? 7 - fileIndex : fileIndex} 
+                        actualRank={rankIndex} 
+                        actualFile={fileIndex} 
+                        piece={pieceType} 
+                        onDragStartCallback={handlePieceDragStart} 
+                        onDropCallback={handleManualDrop} 
+                        onDragHoverCallback={handlePieceDragHover}
+                        canMove={canMovePiece(pieceType === pieceType.toUpperCase() ? 'w' : 'b')}
+                    />
                 ) : null))}
 
                 {!isGameOver && legalMoves.map((moveUci, index) => {

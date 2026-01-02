@@ -425,15 +425,42 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
-/* Standard Chess Tutorial */
+/* Coin Collectible */
+.tutorial-coin {
+    position: absolute;
+    width: 25%;
+    height: 25%;
+    background-size: 60%;
+    background-repeat: no-repeat;
+    background-position: center;
+    z-index: 1;
+    animation: coin-bob 1.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.tutorial-coin::after {
+    display: none;
+}
+
+@keyframes coin-bob {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-5px) scale(1.1); }
+}
+
+@keyframes coin-collect {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(2); opacity: 0; }
+}
+
+.tutorial-coin.collecting {
+    animation: coin-collect 0.4s ease-out forwards;
+}
+
 .standard-tutorial {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 20px 0;
-    padding: 20px;
-    background: rgba(0,0,0,0.2);
-    border-radius: 8px;
+    gap: 20px;
 }
 
 /* Chess960 Tutorial */
