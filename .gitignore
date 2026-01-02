@@ -8,7 +8,8 @@ v_chess_engine.egg-info/
 *.md
 *.env
 *.db
-chess.db
-*.db
-hypothesis/constants/*
-backend_local.log
+*.db-shm
+*.db-wal
+*.db-journal
+*.log
+nav_fail.png
