@@ -38,6 +38,9 @@ export function HistoryDisplay({
                     {moveHistory.map((move, i) => {
                         const moveIndex = i + 1;
                         const isActive = activeIndex === moveIndex;
+                        const isWhiteMove = i % 2 === 0;
+                        const moveNumber = Math.floor(i / 2) + 1;
+
                         return (
                             <span 
                                 key={i} 
@@ -45,7 +48,7 @@ export function HistoryDisplay({
                                 onClick={() => onJumpToMove(moveIndex)}
                                 ref={isActive ? activeMobileRef : null}
                             >
-                                {move}
+                                {isWhiteMove ? `${moveNumber}. ${move}` : move}
                             </span>
                         );
                     })}
