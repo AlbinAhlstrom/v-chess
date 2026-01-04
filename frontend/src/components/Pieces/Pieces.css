@@ -301,6 +301,8 @@
     width: calc(8 * var(--square-size));
     height: 30px;
     display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: space-between;
     padding: 0 10px;
@@ -694,6 +696,13 @@
         top: auto;
         width: 100%;
         margin-top: 5px;
+    }
+
+    .opponent-name {
+        position: absolute;
+        top: auto;
+        bottom: 100%;
+        width: 100%;
     }
 
     .move-history {

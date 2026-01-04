@@ -47,7 +47,7 @@ function PlayerNameDisplay({
 
     return (
         <div className={`player-name-display ${displayClass}`}>
-            <div className="player-info">
+            <div className="player-info" style={{ minWidth: 0, flexShrink: 1 }}>
                 {renderName()}
                 {shouldShowRating && rating && <span className="rating-text"> ({rating})</span>}
                 {playerId !== "computer" && ratingDiff !== null && ratingDiff !== undefined && (
