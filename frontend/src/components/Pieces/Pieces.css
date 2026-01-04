@@ -736,8 +736,8 @@
         --button-icon-size: 14px; /* Scale down the icons */
     }
 
-    /* Remove redundant undo/back button on mobile */
-    .game-controls .control-button:first-child {
+    /* Remove redundant undo/back button on mobile (only local undo) */
+    .game-controls .control-button.undo-btn {
         display: none;
     }
 }
