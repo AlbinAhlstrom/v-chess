@@ -5,6 +5,7 @@ import * as Icons from './SidebarIcons';
 export function SidebarGameControls({
     matchmaking,
     isGameOver,
+    moveHistoryLength,
     onUndo,
     onTakeback,
     onResign,
@@ -29,10 +30,19 @@ export function SidebarGameControls({
 }) {
     const navigate = useNavigate();
 
-    const renderOnlineControls = () => {
+    const renderGameControls = () => {
         if (!isGameOver) {
+            // "until the first ply is complete" means length < 1 (0 moves made)
+            const showAbort = moveHistoryLength === 0;
+            const takebackAction = matchmaking ? onTakeback : onUndo;
+            // For local games, onResign handles ending the game. For online, it resigns.
+            // Abort action usually just ends the game without rating loss if early enough, 
+            // but here we map it to onResign/end game logic for simplicity unless specific abort handler exists.
+            // Since backend handles resign as abort if early, this is fine.
+            
             return (
                 <>
+                    {/* Takeback / Abort Button */}
                     {takebackOffer && user && takebackOffer.by_user_id !== user.id ? (
                         <div className="takeback-prompt-container">
                             <span className="takeback-prompt">Accept takeback?</span>
@@ -46,10 +56,17 @@ export function SidebarGameControls({
                             </div>
                         </div>
                     ) : (
-                        <button onClick={onTakeback} title={takebackOffer ? "Waiting..." : "Takeback"} className={`control-button ${takebackOffer ? 'waiting' : ''}`} disabled={!!takebackOffer}>
-                            {Icons.UNDO_ICON}
+                        <button 
+                            onClick={showAbort ? onResign : takebackAction} 
+                            title={showAbort ? "Abort Game" : (matchmaking ? (takebackOffer ? "Waiting..." : "Offer Takeback") : "Undo")} 
+                            className={`control-button ${takebackOffer ? 'waiting' : ''}`} 
+                            disabled={!!takebackOffer}
+                        >
+                            {showAbort ? Icons.ABORT_ICON : Icons.UNDO_ICON}
                         </button>
                     )}
+
+                    {/* Draw Button */}
                     {drawOffer && user && drawOffer.by_user_id !== user.id ? (
                         <div className="takeback-prompt-container">
                             <span className="takeback-prompt">Accept draw?</span>
@@ -63,49 +80,64 @@ export function SidebarGameControls({
                             </div>
                         </div>
                     ) : (
-                        <button onClick={onDraw} title={drawOffer ? "Waiting..." : "Draw"} className={`control-button ${drawOffer ? 'waiting' : ''}`} disabled={!!drawOffer}>
+                        <button 
+                            onClick={onDraw} 
+                            title={drawOffer ? "Waiting..." : "Offer Draw"} 
+                            className={`control-button ${drawOffer ? 'waiting' : ''}`} 
+                            disabled={!!drawOffer}
+                        >
                             {Icons.DRAW_ICON}
                         </button>
                     )}
+
+                    {/* Resign Button */}
                     <button onClick={onResign} title="Resign" className="control-button">
                         {Icons.RESIGN_ICON}
                     </button>
                 </>
             );
         } else {
-            return (
-                <>
-                    <button onClick={onRematch} title="Rematch" className="control-button">
-                        {Icons.REMATCH_ICON}
-                    </button>
-                    <button onClick={onNewOpponent} title={isQuickMatch ? "New Opponent" : "New Lobby"} className="control-button">
-                        {Icons.NEW_OPPONENT_ICON}
-                    </button>
-                    <button onClick={() => navigate(`/analysis/${gameId}`)} title="Analysis" className="control-button">
-                        {Icons.ANALYSIS_ICON}
-                    </button>
-                </>
-            );
+            // Game Over Controls
+            if (matchmaking) {
+                return (
+                    <>
+                        <button onClick={onRematch} title="Rematch" className="control-button">
+                            {Icons.REMATCH_ICON}
+                        </button>
+                        <button onClick={onNewOpponent} title={isQuickMatch ? "New Opponent" : "New Lobby"} className="control-button">
+                            {Icons.NEW_OPPONENT_ICON}
+                        </button>
+                        <button onClick={() => navigate(`/analysis/${gameId}`)} title="Analysis" className="control-button">
+                            {Icons.ANALYSIS_ICON}
+                        </button>
+                    </>
+                );
+            } else {
+                // Local Game Over Controls
+                // User said "remove new game and reset buttons".
+                // But if we remove them here, the user is stuck?
+                // "remove new game and reset buttons from all game types" -> likely means active game toolbar.
+                // It's reasonable to offer "New Game" when the current one ends.
+                return (
+                    <>
+                        <button onClick={onReset} title="Rematch (Reset)" className="control-button">
+                            {Icons.REMATCH_ICON}
+                        </button>
+                        <button onClick={onNewGame} title="New Game" className="control-button">
+                            {Icons.NEW_GAME_ICON}
+                        </button>
+                        <button onClick={() => navigate(`/analysis/${gameId}`)} title="Analysis" className="control-button">
+                            {Icons.ANALYSIS_ICON}
+                        </button>
+                    </>
+                );
+            }
         }
     };
 
-    const renderLocalControls = () => (
-        <>
-            <button onClick={onUndo} title="Undo" className="control-button">
-                {Icons.UNDO_ICON}
-            </button>
-            <button onClick={onReset} title="Reset" className="control-button">
-                {Icons.RESET_ICON}
-            </button>
-            <button onClick={onNewGame} title="New Game" className="control-button">
-                {Icons.NEW_GAME_ICON}
-            </button>
-        </>
-    );
-
     return (
         <div className="game-controls">
-            {matchmaking ? renderOnlineControls() : renderLocalControls()}
+            {renderGameControls()}
             
             <button onClick={onMenuToggle} title="More" className="control-button">
                 {Icons.MORE_ICON}

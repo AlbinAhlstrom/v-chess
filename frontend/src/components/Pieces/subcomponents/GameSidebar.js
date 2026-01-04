@@ -45,6 +45,7 @@ function GameSidebar({
             <SidebarGameControls 
                 matchmaking={matchmaking}
                 isGameOver={isGameOver}
+                moveHistoryLength={moveHistory.length}
                 onUndo={onUndo}
                 onTakeback={onTakeback}
                 onResign={onResign}
