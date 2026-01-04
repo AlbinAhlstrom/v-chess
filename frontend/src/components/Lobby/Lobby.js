@@ -96,7 +96,7 @@ function Lobby() {
                 if (data.game_id) navigate(`/computer-game/${data.game_id}`);
             } catch (err) { console.error(err); }
         } else if (gameMode === 'otb') {
-            navigate(selectedVariant === 'standard' ? '/otb' : `/otb/${selectedVariant}`);
+            navigate(selectedVariant === 'standard' ? '/otb' : `/otb/${selectedVariant}`, { state: { timeControl: tc } });
         }
     };
 

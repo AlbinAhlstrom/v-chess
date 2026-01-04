@@ -30,7 +30,7 @@ const getAutoPromotePreference = () => {
     return saved !== null ? JSON.parse(saved) : true;
 };
 
-export function Pieces({ onFenChange, variant = "standard", matchmaking = false, computer = false, setFlipped, setIsLatest }) {
+export function Pieces({ onFenChange, variant = "standard", matchmaking = false, computer = false, setFlipped, setIsLatest, timeControl = null }) {
     const { gameId: urlGameId } = useParams();
     const navigate = useNavigate();
     const [isFlipped, setIsFlippedLocal] = useState(false);
@@ -144,9 +144,9 @@ export function Pieces({ onFenChange, variant = "standard", matchmaking = false,
             if (gameId !== urlGameId) loadExistingGame(urlGameId);
         } else if (!gameId && !initializingRef.current) {
             initializingRef.current = true;
-            initializeGame();
+            initializeGame(null, null, timeControl);
         }
-    }, [urlGameId, gameId, loadExistingGame, initializeGame]);
+    }, [urlGameId, gameId, loadExistingGame, initializeGame, timeControl]);
 
     useEffect(() => {
         if (matchmaking && (whitePlayerId || blackPlayerId)) {

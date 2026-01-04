@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import Board from './Board';
 import { Pieces } from '../Pieces/Pieces';
 
 function GameBoardWrapper({ variant: propVariant, matchmaking = false, computer = false }) {
   const { variant: urlVariant } = useParams();
+  const location = useLocation();
   const variant = urlVariant || propVariant || "standard";
   const [flipped, setFlipped] = useState(false);
   const [isLatest, setIsLatest] = useState(true);
@@ -28,6 +29,7 @@ function GameBoardWrapper({ variant: propVariant, matchmaking = false, computer 
           computer={computer}
           setFlipped={setFlipped}
           setIsLatest={setIsLatest}
+          timeControl={location.state?.timeControl}
         />
       </Board>
     </div>
