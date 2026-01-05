@@ -10,7 +10,17 @@ if TYPE_CHECKING:
 
 
 def board_from_fen(fen_board: str) -> dict[Square, Piece]:
-    """Gets a piece dict from the board part of a fen string."""
+    """Parses the piece placement part of a FEN string.
+
+    Args:
+        fen_board: The piece placement part of a FEN string.
+
+    Returns:
+        A dictionary mapping Squares to Pieces.
+
+    Raises:
+        ValueError: If the FEN string contains invalid characters.
+    """
     # Strip pocket info if present for board parsing
     if "[" in fen_board:
         fen_board = fen_board.split("[")[0]
@@ -34,7 +44,14 @@ def board_from_fen(fen_board: str) -> dict[Square, Piece]:
     return board
 
 def get_fen_from_board(board: "Board") -> str:
-    """Generates the piece placement part of FEN."""
+    """Generates the piece placement part of a FEN string from a board.
+
+    Args:
+        board: The board to serialize.
+
+    Returns:
+        The FEN piece placement string.
+    """
     fen_rows = []
     for row in range(8):
         empty_squares = 0
@@ -60,7 +77,14 @@ def get_fen_from_board(board: "Board") -> str:
     return "/".join(fen_rows)
 
 def _parse_pocket(pocket_str: str) -> Tuple[Tuple[Piece, ...], Tuple[Piece, ...]]:
-    """Parses [QNp] string into pockets."""
+    """Parses a Crazyhouse pocket string into piece tuples.
+
+    Args:
+        pocket_str: The pocket string (e.g., 'QNp').
+
+    Returns:
+        A tuple (white_pocket, black_pocket).
+    """
     # content inside []
     white_pocket: List[Piece] = []
     black_pocket: List[Piece] = []
@@ -77,7 +101,15 @@ def _parse_pocket(pocket_str: str) -> Tuple[Tuple[Piece, ...], Tuple[Piece, ...]
     return (tuple(white_pocket), tuple(black_pocket))
 
 def _serialize_pocket(white_pocket: Tuple[Piece, ...], black_pocket: Tuple[Piece, ...]) -> str:
-    """Serializes pockets to [QNp] format."""
+    """Serializes Crazyhouse pockets to a string.
+
+    Args:
+        white_pocket: Pieces in White's pocket.
+        black_pocket: Pieces in Black's pocket.
+
+    Returns:
+        The FEN-compatible pocket string.
+    """
     s = ""
     for p in white_pocket:
         s += p.fen
@@ -86,6 +118,17 @@ def _serialize_pocket(white_pocket: Tuple[Piece, ...], black_pocket: Tuple[Piece
     return f"[{s}]" if s else ""
 
 def state_from_fen(fen: str) -> "GameState":
+    """Creates a GameState object from a full FEN string.
+
+    Args:
+        fen: The full FEN string.
+
+    Returns:
+        A GameState (or subclass) instance.
+
+    Raises:
+        ValueError: If the FEN string is malformed.
+    """
     from v_chess.game_state import GameState, ThreeCheckGameState, CrazyhouseGameState
     from v_chess.board import Board
     from v_chess.rules import StandardRules
@@ -151,9 +194,16 @@ def state_from_fen(fen: str) -> "GameState":
     return state
 
 def state_to_fen(state: "GameState") -> str:
+    """Serializes a GameState object to a full FEN string.
+
+    Args:
+        state: The GameState to serialize.
+
+    Returns:
+        The full FEN string.
+    """
     from v_chess.game_state import ThreeCheckGameState, CrazyhouseGameState
     
-    """Serializes the state to FEN."""
     placement = state.board.fen
     
     # Variant handling for placement (Crazyhouse)

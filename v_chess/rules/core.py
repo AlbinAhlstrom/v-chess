@@ -9,7 +9,17 @@ if TYPE_CHECKING:
 
 
 class Rules(ABC):
+    """Abstract base class for chess variant rules.
+
+    Attributes:
+        state: The current GameState context.
+    """
     def __init__(self, state: "GameState | None" = None):
+        """Initializes the rules with an optional state.
+
+        Args:
+            state: The initial game state.
+        """
         self.state = state
         if self.has_check and self.is_check.__func__ == Rules.is_check:
              raise TypeError(f"Class {self.__class__.__name__} has check but does not override is_check.")
@@ -17,36 +27,34 @@ class Rules(ABC):
     @property
     @abstractmethod
     def name(self) -> str:
-        """A unique, human-readable name for this rules variant."""
+        """The human-readable name of the variant."""
         ...
 
     @property
     @abstractmethod
     def fen_type(self) -> str:
-        """Specifies the FEN notation used ('standard' or 'x-fen')."""
+        """The FEN notation type used (e.g., 'standard')."""
         ...
 
     @property
     @abstractmethod
     def has_check(self) -> bool:
-        """Indicates if this variant has the concept of 'check'."""
+        """Whether the variant includes the concept of check."""
         ...
 
     @property
     def starting_fen(self) -> str:
-        """The default starting position for this variant."""
+        """The default starting FEN for the variant."""
         from v_chess.game_state import GameState
         return GameState.STARTING_FEN
 
     def get_legal_moves(self) -> list[Move]:
-        """Returns all legal moves in the current state."""
+        """Returns all legal moves in the current position."""
         return [move for move in self.get_theoretical_moves() if self.is_legal(move)]
 
     @abstractmethod
     def get_theoretical_moves(self) -> list[Move]:
-        """Returns all moves that are theoretically possible on an empty board,
-        ignoring check and other legality constraints.
-        """
+        """Returns all moves that are theoretically possible on an empty board."""
         ...
 
     def has_legal_moves(self) -> bool:
@@ -55,84 +63,117 @@ class Rules(ABC):
 
     @abstractmethod
     def apply_move(self, move: Move) -> "GameState":
-        """Returns the new state after applying the move."""
+        """Executes a move and returns the resulting state.
+
+        Args:
+            move: The move to apply.
+
+        Returns:
+            The new GameState.
+        """
         ...
 
     @abstractmethod
     def validate_move(self, move: Move) -> MoveLegalityReason:
-        """Returns the legality reason for a move."""
+        """Validates if a move is fully legal.
+
+        Args:
+            move: The move to validate.
+
+        Returns:
+            The reason for the move's legality status.
+        """
         ...
 
     @abstractmethod
     def move_pseudo_legality_reason(self, move: Move) -> MoveLegalityReason:
-        """Returns the pseudo-legality reason for a move."""
+        """Checks if a move is pseudo-legal.
+
+        Args:
+            move: The move to check.
+
+        Returns:
+            The reason for the move's pseudo-legality status.
+        """
         ...
 
     @abstractmethod
     def validate_board_state(self) -> BoardLegalityReason:
-        """Returns the validity of the board state."""
+        """Validates the overall board state.
+
+        Returns:
+            The reason for the board's legality status.
+        """
         ...
 
     @abstractmethod
     def get_game_over_reason(self) -> GameOverReason:
-        """Returns the reason the game is over."""
+        """Determines why the game ended.
+
+        Returns:
+            The reason for the game ending.
+        """
         ...
 
     @abstractmethod
     def get_winner(self) -> Color | None:
-        """Returns the winner if the game is over, else None."""
+        """Determines the winner of the game.
+
+        Returns:
+            The color of the winner, or None if it's a draw or ongoing.
+        """
         ...
 
     @abstractmethod
     def get_legal_castling_moves(self) -> list[Move]:
-        """Returns legal castling moves for the current state."""
+        """Returns a list of all legal castling moves."""
         ...
 
     @abstractmethod
     def get_legal_en_passant_moves(self) -> list[Move]:
-        """Returns legal en passant moves for the current state."""
+        """Returns a list of all legal en passant moves."""
         ...
 
     @abstractmethod
     def get_legal_promotion_moves(self) -> list[Move]:
-        """Returns legal promotion moves for the current state."""
+        """Returns a list of all legal pawn promotion moves."""
         ...
 
     def is_check(self) -> bool:
-        """Returns True if the current player is in check.
+        """Checks if the current player is in check.
 
-        If has_check is False, this method returns False.
-        If has_check is True, this method MUST be overridden.
+        Returns:
+            True if the player is in check, False otherwise.
         """
         return False
 
     def is_game_over(self) -> bool:
-        """Returns True if the game is over."""
+        """Checks if the game has ended."""
         cls = getattr(self, "GameOverReason", GameOverReason)
         return self.get_game_over_reason() != cls.ONGOING
 
     @property
     def is_fifty_moves(self) -> bool:
-        """Returns True if the 50-move rule applies (100 halfmoves)."""
+        """Whether the 50-move rule has been triggered."""
         return self.state.halfmove_clock >= 100
 
     @property
     def is_checkmate(self) -> bool:
-        """Returns True if the game is in checkmate."""
+        """Whether the game is over by checkmate."""
         cls = getattr(self, "GameOverReason", GameOverReason)
         reason = getattr(cls, "CHECKMATE", None)
         return reason is not None and self.get_game_over_reason() == reason
 
     @property
     def is_stalemate(self) -> bool:
-        """Returns True if the game is in stalemate."""
+        """Whether the game is over by stalemate."""
         cls = getattr(self, "GameOverReason", GameOverReason)
         reason = getattr(cls, "STALEMATE", None)
         return reason is not None and self.get_game_over_reason() == reason
 
     @property
     def is_draw(self) -> bool:
-        """Returns True if the game is a draw."""
+        """Whether the game is over and resulted in a draw."""
         cls = getattr(self, "GameOverReason", GameOverReason)
         draw_reasons = []
         for attr in ("STALEMATE", "REPETITION", "FIFTY_MOVE_RULE", "MUTUAL_AGREEMENT", "INSUFFICIENT_MATERIAL"):
@@ -143,11 +184,13 @@ class Rules(ABC):
         return self.get_game_over_reason() in draw_reasons
 
     def is_legal(self, move: Move | None = None) -> bool:
-        """
-        Checks if a move or board state is legal/valid.
+        """Checks the legality of a move or the entire board.
 
         Args:
-            move: The Move to validate, defaults to None. Will check board state if it is None.
+            move: The move to check. If None, checks the board state.
+
+        Returns:
+            True if the move/board is legal, False otherwise.
         """
         if isinstance(move, Move):
             cls = getattr(self, "MoveLegalityReason", MoveLegalityReason)

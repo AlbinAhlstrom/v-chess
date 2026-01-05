@@ -20,6 +20,20 @@ class Square:
     _CACHE = {}
 
     def __new__(cls, *args) -> 'Square':
+        """Creates a new Square instance.
+        
+        Uses a cache to ensure unique instances for each coordinate.
+
+        Args:
+            *args: Can be (row, col) integers, a SAN string (e.g., 'e4'),
+                  a tuple (row, col), or another Square instance.
+
+        Returns:
+            The Square instance corresponding to the arguments.
+
+        Raises:
+            ValueError: If the arguments do not represent a valid square.
+        """
         _row: int
         _col: int
 
@@ -66,6 +80,7 @@ class Square:
 
     @property
     def is_none_square(self) -> bool:
+        """True if this is the special NoneSquare (representing no square)."""
         return self.row == -1 and self.col == -1
 
     @property
@@ -75,17 +90,21 @@ class Square:
 
     @staticmethod
     def is_valid(row: int, col: int) -> bool:
-        """Check if row and col are within the 0-7 range."""
+        """Checks if the row and column are within the board boundaries (0-7)."""
         return 0 <= row < 8 and 0 <= col < 8
 
     def is_promotion_row(self, player: Color) -> bool:
-        """Return True if square is the promotion row for given player."""
+        """Checks if the square is on the promotion rank for the given player."""
         return self.row == 0 if player == Color.WHITE else self.row == 7
 
     def get_step(self, direction: Direction) -> Square:
-        """
-        Return the resulting Square if a step in 'direction' is on the board.
-        Returns None otherwise.
+        """Returns the square one step in the given direction.
+
+        Args:
+             direction: The direction to step.
+
+        Returns:
+             The resulting Square, or a NoneSquare if off the board.
         """
         d_col, d_row = direction.value
         new_col, new_row = self.col + d_col, self.row + d_row
@@ -112,12 +131,18 @@ class Square:
         return row, col
 
     def adjacent(self, direction: Direction) -> 'Square':
-        """Return a new coordinate one step in a direction.
+        """Returns a new coordinate one step in a direction.
 
         NOTE: This method assumes the result is a valid square and is typically
         used when you are certain the move is within bounds, or when you are
         iterating over all possible directions (where validity is checked
         by the Square constructor/post_init).
+
+        Args:
+            direction: The direction to move.
+
+        Returns:
+             The adjacent Square, or NoneSquare if off the board.
         """
         d_col, d_row = direction.value
         new_row, new_col = self.row + d_row, self.col + d_col
@@ -128,11 +153,12 @@ class Square:
         return Square(new_row, new_col)
 
     def is_adjacent_to(self, square: 'Square', moveset: set[Direction] = Direction.straight_and_diagonal()):
+        """Checks if this square is adjacent to another square."""
         adjacent_squares = [self.adjacent(direction) for direction in moveset]
         return square in adjacent_squares
 
     def __str__(self):
-        """Return algebraic notation."""
+        """Returns the algebraic notation (e.g., 'e4')."""
         if self.is_none_square:
             return "NoneSquare"
         return f"{chr(self.col + ord('a'))}{8 - self.row}"

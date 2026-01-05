@@ -1,5 +1,6 @@
 from typing import Type
-from .piece import *
+
+from .piece import Piece
 from .rook import Rook
 from .knight import Knight
 from .bishop import Bishop

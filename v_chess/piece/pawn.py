@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 from v_chess.square import Square
 from v_chess.enums import Color, Direction
 from v_chess.piece.piece import Piece
@@ -22,6 +23,7 @@ class Pawn(Piece):
 
     @property
     def direction(self) -> Direction:
+        """Which direction the piece moves in (up for white and down for black)."""
         if self.color == Color.WHITE:
             return Direction.UP
         else:

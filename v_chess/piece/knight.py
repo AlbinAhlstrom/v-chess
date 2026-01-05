@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 from v_chess.enums import Color, Direction
 from v_chess.piece.piece import Piece
 

@@ -15,10 +15,18 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class GameState:
-    """The Context (Snapshot).
+    """Represents the state of a chess game at a specific point in time.
 
-    Represents the state of the game at a specific point in time.
-    Immutable.
+    Attributes:
+        board: The current board configuration.
+        turn: The color of the player whose turn it is.
+        castling_rights: Available castling rights.
+        ep_square: The en passant target square, if any.
+        halfmove_clock: Number of halfmoves since the last capture or pawn move.
+        fullmove_count: The number of the full move.
+        rules: The ruleset being used.
+        repetition_count: Number of times this position has occurred.
+        explosion_square: The square where an explosion occurred (Atomic chess).
     """
     board: Board
     turn: Color
@@ -35,21 +43,26 @@ class GameState:
 
     @classmethod
     def starting_setup(cls) -> "GameState":
+        """Creates a GameState with the standard starting position."""
         return state_from_fen(cls.STARTING_FEN)
 
     @classmethod
     def from_fen(cls, fen: str) -> "GameState":
+        """Creates a GameState from a FEN string."""
         return state_from_fen(fen)
 
     @classmethod
     def empty(cls) -> "GameState":
+        """Creates a GameState with an empty board."""
         return state_from_fen(cls.EMPTY_BOARD_FEN)
 
     @cached_property
     def fen(self) -> str:
+        """The FEN string representation of the game state."""
         return state_to_fen(self)
 
     def __hash__(self):
+        """Returns the hash of the FEN string."""
         return hash(self.fen)
 
 
@@ -57,9 +70,8 @@ class GameState:
 class ThreeCheckGameState(GameState):
     """GameState for Three-Check Chess.
     
-    Tracks the number of times each side has given check.
-    checks[0] = checks by White (against Black King)
-    checks[1] = checks by Black (against White King)
+    Attributes:
+        checks: Tuple (white_checks, black_checks) tracking checks given.
     """
     checks: Tuple[int, int] = (0, 0)
 
@@ -68,8 +80,7 @@ class ThreeCheckGameState(GameState):
 class CrazyhouseGameState(GameState):
     """GameState for Crazyhouse Chess.
     
-    Tracks captured pieces available for dropping.
-    pockets[0] = White's pocket (captured Black pieces, converted to White)
-    pockets[1] = Black's pocket (captured White pieces, converted to Black)
+    Attributes:
+        pockets: Tuple (white_pocket, black_pocket) tracking available drop pieces.
     """
     pockets: Tuple[Tuple["Piece", ...], Tuple["Piece", ...]] = ((), ())

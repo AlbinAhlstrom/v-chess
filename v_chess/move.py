@@ -22,7 +22,17 @@ class Move:
     drop_piece: Piece | None = field(default=None, compare=True)
 
     def __init__(self, *args, player_to_move: Color = Color.WHITE, **kwargs) -> None:
-        """Allows for instatiation using args or UCI string."""
+        """Initializes a Move.
+
+        Can be initialized with:
+        1. A UCI string (e.g., 'e2e4', 'P@e4').
+        2. start and end Square objects.
+
+        Args:
+            *args: Variable arguments (UCI string or start/end Squares).
+            player_to_move: The color of the player moving (used for parsing context).
+            **kwargs: Keyword arguments for 'promotion_piece' and 'drop_piece'.
+        """
         _start: Square = Square(None)
         _end: Square = Square(None)
         _promotion_piece: Piece | None = kwargs.get('promotion_piece')
@@ -72,26 +82,30 @@ class Move:
 
     @property
     def is_drop(self) -> bool:
+        """Whether the move is a drop move (placing a piece from reserve)."""
         return self.drop_piece is not None
 
     @property
     def is_vertical(self) -> bool:
+        """Whether the move is along a file."""
         if self.is_drop: return False
         return self.start.col == self.end.col
 
     @property
     def is_horizontal(self) -> bool:
+        """Whether the move is along a rank."""
         if self.is_drop: return False
         return self.start.row == self.end.row
 
     @property
     def is_diagonal(self) -> bool:
+        """Whether the move is diagonal."""
         if self.is_drop: return False
         return abs(self.start.col - self.end.col) == abs(self.start.row - self.end.row)
 
     @property
     def uci(self) -> str:
-        """Returns the move in UCI format (e.g., 'e2e4', 'a7a8q', 'P@e4')."""
+        """The move in UCI format (e.g., 'e2e4', 'a7a8q', 'P@e4')."""
         if self.is_drop:
             return f"{self.drop_piece.fen.upper()}@{self.end}"
 
@@ -101,7 +115,14 @@ class Move:
         return move_str
 
     def get_san(self, game: "Game") -> str:
-        """Returns the Standard Algebraic Notation (SAN) string for the move."""
+        """Generates the Standard Algebraic Notation (SAN) for the move.
+
+        Args:
+            game: The game context, used to resolve ambiguity and checks.
+
+        Returns:
+            The SAN string (e.g., 'Nf3', 'O-O', 'exd5').
+        """
         if self.is_drop:
             # SAN for drop is usually same as UCI/special: N@e4
             return self.uci
@@ -168,6 +189,7 @@ class Move:
 
     @staticmethod
     def is_uci_valid(uci_str: str):
+        """Validates if a string is a well-formed UCI move."""
         try:
             if "@" in uci_str:
                 parts = uci_str.split("@")
@@ -186,6 +208,7 @@ class Move:
 
     @staticmethod
     def is_square_valid(sq_str: str):
+        """Validates if a string represents a valid square (e.g., 'e4')."""
         try:
             Square(sq_str)
             return True
@@ -194,6 +217,7 @@ class Move:
 
     @classmethod
     def from_san_castling(cls, san_str: str, game: "Game") -> "Move":
+        """Creates a castling Move from a SAN string."""
         color = game.state.turn
         if san_str == "O-O":
             if color == Color.WHITE:
@@ -209,7 +233,18 @@ class Move:
 
     @classmethod
     def from_san_move(cls, san_str: str, game: "Game") -> "Move":
-        """Parses a Standard Algebraic Notation string into a Move object."""
+        """Parses a Standard Algebraic Notation string into a Move object.
+
+        Args:
+            san_str: The move string in SAN.
+            game: The game context for resolving the move.
+
+        Returns:
+            The corresponding Move object.
+
+        Raises:
+             ValueError: If the SAN string is ambiguous or illegal.
+        """
 
         # Handle Drops in SAN if strictly parsing
         if "@" in san_str:
@@ -274,6 +309,7 @@ class Move:
 
     @classmethod
     def from_san(cls, san_str: str, game: "Game") -> "Move":
+        """Creates a Move from a SAN string (including castling)."""
         if san_str in ("O-O", "O-O-O"):
             return cls.from_san_castling(san_str, game)
 

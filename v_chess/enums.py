@@ -139,21 +139,23 @@ GAMEOVER_DISCREPANCIES = {
 
 
 class Color(StrEnum):
-    """Piece/player color."""
+    """Represents a piece or player color."""
 
     BLACK = "b"
     WHITE = "w"
 
     @property
-    def opposite(self):
+    def opposite(self) -> Color:
+        """Returns the opposite color."""
         return Color.BLACK if self == Color.WHITE else Color.WHITE
 
     def __str__(self):
+        """Returns the full name of the color."""
         return "black" if self.value == "b" else "white"
 
 
 class CastlingRight(StrEnum):
-    """A players castling rights."""
+    """Represents a player's castling rights."""
 
     WHITE_SHORT = "K"
     BLACK_SHORT = "k"
@@ -166,6 +168,7 @@ class CastlingRight(StrEnum):
 
     @property
     def expected_rook_square(self) -> Square:
+        """Returns the square where the rook is expected to be for this right."""
         from v_chess.square import Square
         if self == CastlingRight.WHITE_SHORT: return Square("h1")
         if self == CastlingRight.WHITE_LONG: return Square("a1")
@@ -180,6 +183,7 @@ class CastlingRight(StrEnum):
 
     @property
     def expected_king_square(self) -> Square:
+        """Returns the square where the king is expected to be for this right."""
         from v_chess.square import Square
         if self.value.isupper():
             return Square("e1")
@@ -189,20 +193,31 @@ class CastlingRight(StrEnum):
 
     @property
     def color(self) -> Color:
+        """Returns the color associated with this castling right."""
         if self == CastlingRight.NONE:
             raise ValueError("CastlingRight.NONE has no associated color")
         return Color.WHITE if self.value.isupper() else Color.BLACK
 
     @classmethod
     def short(cls, color: Color) -> CastlingRight:
+        """Returns the short castling right for the given color."""
         return cls.WHITE_SHORT if color == Color.WHITE else cls.BLACK_SHORT
 
     @classmethod
     def long(cls, color: Color) -> CastlingRight:
+        """Returns the long castling right for the given color."""
         return cls.WHITE_LONG if color == Color.WHITE else cls.BLACK_LONG
 
     @classmethod
     def from_fen(cls, fen_castling_string: str) -> tuple[CastlingRight, ...]:
+        """Parses a FEN castling string into a tuple of CastlingRight objects.
+
+        Args:
+            fen_castling_string: The castling part of a FEN string.
+
+        Returns:
+            A tuple of CastlingRight instances.
+        """
         if not fen_castling_string or fen_castling_string == "-":
             return tuple()
         rights = []
@@ -244,18 +259,22 @@ class Direction(Enum):
 
     @classmethod
     def straight(cls) -> set[Direction]:
+        """Returns the set of orthogonal directions."""
         return {cls.UP, cls.DOWN, cls.LEFT, cls.RIGHT}
 
     @classmethod
     def diagonal(cls) -> set[Direction]:
+        """Returns the set of diagonal directions."""
         return {cls.UP_LEFT, cls.DOWN_LEFT, cls.UP_RIGHT, cls.DOWN_RIGHT}
 
     @classmethod
     def straight_and_diagonal(cls) -> set[Direction]:
+        """Returns the set of all 8 standard directions."""
         return cls.straight() | cls.diagonal()
 
     @classmethod
     def two_straight_one_sideways(cls) -> set[Direction]:
+        """Returns the set of directions a knight moves in."""
         return {
             cls.L_UP_LEFT, cls.L_UP_RIGHT, cls.L_DOWN_LEFT, cls.L_DOWN_RIGHT,
             cls.L_LEFT_UP, cls.L_LEFT_DOWN, cls.L_RIGHT_UP, cls.L_RIGHT_DOWN,
@@ -263,18 +282,31 @@ class Direction(Enum):
 
     @classmethod
     def up_straight_or_diagonal(cls) -> set[Direction]:
+        """Returns the set of forward (white) pawn directions."""
         return {cls.UP, cls.UP_LEFT, cls.UP_RIGHT}
 
     @classmethod
     def down_straight_or_diagonal(cls) -> set[Direction]:
+        """Returns the set of forward (black) pawn directions."""
         return {cls.DOWN, cls.DOWN_LEFT, cls.DOWN_RIGHT}
 
     @classmethod
     def two_left_or_right(cls) -> set[Direction]:
+        """Returns the directions for a king's castling move."""
         return {cls.TWO_LEFT, cls.TWO_RIGHT}
 
     def get_path(self, square: Square, max_squares: int = 7) -> list[Square]:
-        """Get all squares in a direction."""
+        """Returns all squares in this direction from a starting square.
+
+        Uses an internal cache for performance.
+
+        Args:
+            square: The starting square.
+            max_squares: Maximum number of squares to look ahead.
+
+        Returns:
+            A list of Squares in the path.
+        """
         if not hasattr(self.__class__, "_PATH_CACHE"):
             self.__class__._PATH_CACHE = {}
 
@@ -287,9 +319,14 @@ class Direction(Enum):
         return path
 
     def take_step(self, start_square: Square, max_squares: int):
-        """
-        Generator that yields squares in a specified direction from a start square.
-        Stops when the board edge is reached or max_squares is hit.
+        """Generator that yields squares in this direction.
+
+        Args:
+            start_square: The square to start from.
+            max_squares: Maximum number of steps to take.
+
+        Yields:
+            Squares in the specified direction.
         """
 
         from v_chess.square import Square
@@ -306,17 +343,18 @@ class Direction(Enum):
                 break
 
     def shift(self, bb: int) -> int:
-        """Shifts a bitboard in this direction, handling board boundaries."""
+        """Shifts a bitboard in this direction.
+
+        Handles board boundaries to prevent wrap-around.
+
+        Args:
+            bb: The bitboard to shift.
+
+        Returns:
+            The shifted bitboard.
+        """
         d_col, d_row = self.value
         shift_amt = d_row * 8 + d_col
-
-        # Masks to prevent wraparound
-        # FILE_A: col 0. 0x0101010101010101 if LSB is a8?
-        # Mapping: Index = row*8 + col.
-        # Row 0 (top): 0..7
-        # Row 7 (bottom): 56..63
-        # FILE_A: 0, 8, 16... => 0x0101010101010101
-        # FILE_H: 7, 15, 23... => 0x8080808080808080
 
         FILE_A = 0x0101010101010101
         FILE_H = 0x8080808080808080
@@ -330,10 +368,6 @@ class Direction(Enum):
         elif d_col == -2: # Two Left
             return (bb & ~FILE_A & ~(FILE_A << 1)) >> 2
 
-        # Vertical moves (no wraparound issues with simple shifts usually, except off board)
-        # Down: row + 1 => index + 8. Left shift 8.
-        # Up: row - 1 => index - 8. Right shift 8.
-
         if shift_amt > 0:
             return (bb << shift_amt) & 0xFFFFFFFFFFFFFFFF
         elif shift_amt < 0:
@@ -341,7 +375,14 @@ class Direction(Enum):
         return bb
 
     def get_ray_mask(self, square_index: int) -> int:
-        """Returns a bitmask of the ray in this direction from the given square."""
+        """Returns a bitmask of the ray in this direction.
+
+        Args:
+            square_index: The starting square index.
+
+        Returns:
+            A bitmask representing the ray.
+        """
         if not hasattr(self.__class__, "_RAY_MASKS"):
             self.__class__._RAY_MASKS = {}
 

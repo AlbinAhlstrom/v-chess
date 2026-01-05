@@ -15,6 +15,13 @@ class Game:
     Responsible for turn management and history.
     """
     def __init__(self, state: GameState | str | None = None, rules: Rules | None = None, time_control: Dict = None):
+        """Initializes a new Game.
+
+        Args:
+            state: Initial GameState, FEN string, or None for starting setup.
+            rules: Rules instance to enforce.
+            time_control: Dictionary defining time limits (e.g., {'limit': 600, 'increment': 0}).
+        """
         if rules and state is None:
             # If rules are provided but no state, use the variant's starting setup
             self.state = GameState.from_fen(rules.starting_fen)
@@ -60,14 +67,19 @@ class Game:
             }
 
     def add_to_history(self):
+        """Adds the current state to the history stack."""
         self.history.append(self.state)
 
     def render(self):
-        """Print the board."""
+        """Print the board to the console."""
         self.state.board.print()
 
     def resign(self, player_color: Color):
-        """Player resigns the game."""
+        """Player resigns the game.
+
+        Args:
+            player_color: The color of the player resigning.
+        """
         self.game_over_reason_override = GameOverReason.SURRENDER
         winner_color = player_color.opposite
         self.winner_override = winner_color.value
@@ -76,19 +88,37 @@ class Game:
         self.move_history.append(result)
 
     def abort(self):
-        """Game is aborted."""
+        """Aborts the game.
+
+        The game ends with no winner and Aborted reason.
+        """
         self.game_over_reason_override = GameOverReason.ABORTED
         self.winner_override = "aborted"
         self.move_history.append("aborted")
 
     def agree_draw(self):
-        """Players agree to a draw."""
+        """Players agree to a draw.
+
+        The game ends with a draw result.
+        """
         self.game_over_reason_override = GameOverReason.MUTUAL_AGREEMENT
         self.winner_override = "draw"
         self.move_history.append("1/2-1/2")
 
     def take_turn(self, move: Move, offer_draw: bool = False):
-        """Make a move by finding the corresponding legal move."""
+        """Executes a move in the game.
+
+        Validates the move, updates the board state, checks for game end conditions,
+        and updates history.
+
+        Args:
+            move: The move to execute.
+            offer_draw: Whether the move is accompanied by a draw offer.
+
+        Raises:
+            IllegalMoveException: If the move is not legal.
+            IllegalBoardException: If the board state is invalid before the move.
+        """
         if self.is_over:
              raise IllegalMoveException("Game is over.")
 
@@ -154,7 +184,13 @@ class Game:
              self.move_history.append(result)
 
     def get_current_clocks(self) -> Optional[Dict[Color, float]]:
-        """Returns the clocks accounting for time passed since the last move."""
+        """Returns the current remaining time for each player.
+
+        Accounts for time passed since the last move.
+
+        Returns:
+            A dictionary mapping Color to remaining seconds, or None if no time control.
+        """
         if not self.clocks or self.last_move_at is None:
             return self.clocks
             
@@ -165,7 +201,16 @@ class Game:
         return current_clocks
 
     def undo_move(self) -> str:
-        """Revert to the previous board state."""
+        """Reverts the last move.
+
+        Restores the previous game state.
+
+        Returns:
+            The FEN string of the restored state.
+
+        Raises:
+            ValueError: If there are no moves to undo.
+        """
         if not self.history:
             raise ValueError("No moves to undo.")
 
@@ -192,30 +237,37 @@ class Game:
 
     @property
     def repetitions_of_position(self) -> int:
+        """Returns the number of times the current position has occurred."""
         return self.state.repetition_count
 
     @property
     def is_check(self) -> bool:
+        """Checks if the current side to move is in check."""
         return self.rules.is_check()
 
     @property
     def is_checkmate(self) -> bool:
+        """Checks if the current side to move is checkmated."""
         return self.rules.is_checkmate
 
     @property
     def is_over(self) -> bool:
+        """Checks if the game is over."""
         return self.rules.is_game_over() or self.is_over_by_timeout or self.game_over_reason_override is not None or self.winner_override is not None
 
     @property
     def is_draw(self) -> bool:
+        """Checks if the game is a draw."""
         return self.rules.is_draw
 
     @property
     def legal_moves(self) -> list[Move]:
+        """Returns a list of all legal moves in the current position."""
         return self.rules.get_legal_moves()
 
     @property
     def game_over_reason(self) -> GameOverReason:
+        """Returns the reason for the game ending."""
         if self.game_over_reason_override:
             return self.game_over_reason_override
         if self.is_over_by_timeout:
@@ -224,6 +276,7 @@ class Game:
 
     @property
     def winner(self) -> Optional[str]:
+        """Returns the winner's color (as string) or None if draw/ongoing."""
         if self.winner_override:
             return self.winner_override
         
@@ -239,8 +292,24 @@ class Game:
         return color.value if color else None
 
     def is_move_legal(self, move: Move) -> bool:
+        """Checks if a move is legal.
+
+        Args:
+            move: The move to check.
+
+        Returns:
+            True if the move is legal, False otherwise.
+        """
         return self.rules.validate_move(move) == MoveLegalityReason.LEGAL
 
     def is_move_pseudo_legal(self, move: Move) -> tuple[bool, MoveLegalityReason]:
+        """Checks if a move is pseudo-legal.
+
+        Args:
+            move: The move to check.
+
+        Returns:
+            A tuple (is_pseudo_legal, reason).
+        """
         reason = self.rules.move_pseudo_legality_reason(move)
         return reason == MoveLegalityReason.LEGAL, reason

@@ -12,26 +12,32 @@ from .core import Rules
 class StandardRules(Rules):
     @property
     def name(self) -> str:
+        """The human-readable name of the variant."""
         return "Standard Chess"
 
     @property
     def fen_type(self) -> str:
+        """The FEN notation type used."""
         return "standard"
 
     @property
     def has_check(self) -> bool:
+        """Whether the variant includes the concept of check."""
         return True
 
     def get_winner(self) -> Color | None:
+        """Determines the winner of the game."""
         reason = self.get_game_over_reason()
         if reason == GameOverReason.CHECKMATE:
             return self.state.turn.opposite
         return None
 
     def is_check(self) -> bool:
+        """Checks if the current player is in check."""
         return self._is_color_in_check(self.state.board, self.state.turn)
 
     def get_game_over_reason(self) -> GameOverReason:
+        """Determines why the game ended."""
         # Use variant-specific GameOverReason class if available
         cls = getattr(self, "GameOverReason", GameOverReason)
         
@@ -49,10 +55,11 @@ class StandardRules(Rules):
         return cls.ONGOING
 
     def has_legal_moves(self) -> bool:
-        """Returns True if there is at least one legal move."""
+        """Checks if there is at least one legal move."""
         return any(self.validate_move(move) == MoveLegalityReason.LEGAL for move in self.get_theoretical_moves())
 
     def validate_move(self, move: Move) -> MoveLegalityReason:
+        """Validates if a move is fully legal."""
         pseudo_reason = self.move_pseudo_legality_reason(move)
         if pseudo_reason != MoveLegalityReason.LEGAL:
             return pseudo_reason
@@ -68,6 +75,7 @@ class StandardRules(Rules):
         return MoveLegalityReason.LEGAL
 
     def validate_board_state(self) -> BoardLegalityReason:
+        """Validates the overall board state."""
         white_kings = self.state.board.get_pieces(King, Color.WHITE)
         black_kings = self.state.board.get_pieces(King, Color.BLACK)
         white_pawns = self.state.board.get_pieces(Pawn, Color.WHITE)
@@ -115,11 +123,11 @@ class StandardRules(Rules):
         return BoardLegalityReason.VALID
 
     def king_left_in_check(self, move: Move) -> bool:
-        """Returns True if king is left in check after a move."""
+        """Checks if the king is left in check after a move."""
         return self.state.board.bitboard.is_king_attacked_after_move(move, self.state.turn, self.state.board, self.state.ep_square)
 
     def apply_move(self, move: Move) -> GameState:
-        """Returns a new GameState with the move applied."""
+        """Executes a move and returns the new GameState."""
         new_board = self.state.board.copy()
 
         piece = new_board.get_piece(move.start)
@@ -199,6 +207,7 @@ class StandardRules(Rules):
         return new_state
 
     def get_theoretical_moves(self):
+        """Generates all moves possible on an empty board for the current turn."""
         bb = self.state.board.bitboard
         turn = self.state.turn
         
@@ -237,7 +246,7 @@ class StandardRules(Rules):
                 temp_mask &= temp_mask - 1
 
     def move_pseudo_legality_reason(self, move: Move) -> MoveLegalityReason:
-        """Determine if a move is pseudolegal."""
+        """Determines if a move is pseudo-legal."""
         piece = self.state.board.get_piece(move.start)
         target = self.state.board.get_piece(move.end)
 
@@ -292,7 +301,7 @@ class StandardRules(Rules):
         return MoveLegalityReason.LEGAL
 
     def castling_legality_reason(self, move: Move, piece: King) -> MoveLegalityReason:
-        """Determine if a castling move is pseudolegal."""
+        """Determines if a castling move is pseudo-legal."""
         required_right = None
         squares_to_check_attack = []
         squares_to_check_occupancy = []
@@ -345,19 +354,22 @@ class StandardRules(Rules):
         return MoveLegalityReason.LEGAL
 
     def is_attacking(self, board: Board, piece: Piece, square: Square, piece_square: Square) -> bool:
+        """Checks if a piece at a specific square is attacking another square."""
         if isinstance(piece, (Knight)):
             return square in piece.capture_squares(piece_square)
         else:
             return square in self.unblocked_paths(board, piece, piece.capture_paths(piece_square))
 
     def is_under_attack(self, board: Board, square: Square, by_color: Color) -> bool:
-        """Check if square is attacked by the given color."""
+        """Checks if a square is attacked by pieces of the given color."""
         return board.bitboard.is_attacked(square.index, by_color)
 
     def inactive_player_in_check(self) -> bool:
+        """Checks if the player who just moved is in check."""
         return self._is_color_in_check(self.state.board, self.state.turn.opposite)
 
     def invalid_castling_rights(self) -> list[CastlingRight]:
+        """Returns a list of castling rights that are no longer valid due to piece positions."""
         invalid = []
         for right in self.state.castling_rights:
             king = self.state.board.get_piece(right.expected_king_square)
@@ -371,6 +383,7 @@ class StandardRules(Rules):
         return invalid
 
     def unblocked_path(self, board: Board, piece: Piece, path: list[Square]) -> list[Square]:
+        """Returns the squares in a path that are not blocked by other pieces."""
         try:
             stop_index = next(
                 i for i, coord in enumerate(path) if board.get_piece(coord) is not None
@@ -386,11 +399,11 @@ class StandardRules(Rules):
             return path[:stop_index]
 
     def unblocked_paths(self, board: Board, piece: Piece, paths: list[list[Square]]) -> list[Square]:
-        """Return all unblocked squares in a piece's moveset"""
+        """Returns all reachable squares across multiple paths."""
         return list(chain.from_iterable([self.unblocked_path(board, piece, path) for path in paths]))
 
     def _is_color_in_check(self, board: Board, color: Color) -> bool:
-        """Check if the King of the given color is under attack."""
+        """Checks if the king of the given color is under attack."""
         king_sq = None
         for sq, piece in board.board.items():
             if isinstance(piece, King) and piece.color == color:
@@ -403,7 +416,7 @@ class StandardRules(Rules):
         return self.is_under_attack(board, king_sq, color.opposite)
 
     def get_legal_castling_moves(self) -> list[Move]:
-        # Implementation of castling logic reuse
+        """Returns all legal castling moves."""
         moves = []
         for sq, piece in self.state.board.board.items():
             if isinstance(piece, King) and piece.color == self.state.turn:
@@ -418,6 +431,7 @@ class StandardRules(Rules):
         return moves
 
     def get_legal_en_passant_moves(self) -> list[Move]:
+        """Returns all legal en passant moves."""
         if self.state.ep_square is None:
             return []
         moves = []
@@ -434,6 +448,7 @@ class StandardRules(Rules):
         return moves
 
     def get_legal_promotion_moves(self) -> list[Move]:
+        """Returns all legal pawn promotion moves."""
         moves = []
         for sq, piece in self.state.board.board.items():
             if isinstance(piece, Pawn) and piece.color == self.state.turn:
