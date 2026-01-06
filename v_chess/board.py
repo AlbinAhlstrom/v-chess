@@ -22,22 +22,21 @@ class Board:
     STARTING_POSITION_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
     EMPTY_BOARD_FEN = "8/8/8/8/8/8/8/8"
 
-    def __init__(self, pieces: dict[Square, Piece] | str = {}):
+    def __init__(self, setup: Bitboard | str = EMPTY_BOARD_FEN):
         """Initializes the Board.
 
         Args:
-            pieces: A dictionary mapping squares to pieces, or a FEN string.
+            setup: A Bitboard object or a FEN string.
         """
-        self.bitboard = Bitboard()
-
-        initial_pieces = {}
-        if isinstance(pieces, str):
-            initial_pieces = board_from_fen(pieces)
-        elif isinstance(pieces, dict):
-            initial_pieces = pieces
-
-        for sq, piece in initial_pieces.items():
-            self.bitboard.set_piece(sq.index, piece)
+        if isinstance(setup, Bitboard):
+            self.bitboard = setup.copy()
+        elif isinstance(setup, str):
+            self.bitboard = Bitboard()
+            initial_pieces = board_from_fen(setup)
+            for sq, piece in initial_pieces.items():
+                self.bitboard.set_piece(sq.index, piece)
+        else:
+            raise TypeError(f"setup must be Bitboard or str, not {type(setup)}")
 
     @property
     def board(self) -> dict[Square, Piece]:
@@ -55,7 +54,7 @@ class Board:
         """
         if not isinstance(coordinate, Square):
             coordinate = Square(coordinate)
-        
+
         p_type, color = self.bitboard.piece_at(coordinate.index)
         if p_type and color:
             return p_type(color)
@@ -127,7 +126,7 @@ class Board:
                 while mask:
                     mask &= mask - 1
                     pieces.append(p_cls(c))
-        
+
         return pieces
 
     def items(self) -> Generator[tuple[Square, Piece], None, None]:
@@ -188,9 +187,7 @@ class Board:
         Returns:
             A new Board instance with the same piece configuration.
         """
-        new_board = Board()
-        new_board.bitboard = self.bitboard.copy()
-        return new_board
+        return Board(self.bitboard)
 
     def print(self):
         """Prints the chess board to the console.
