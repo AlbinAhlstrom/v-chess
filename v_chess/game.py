@@ -313,15 +313,3 @@ class Game:
             True if the move is legal, False otherwise.
         """
         return self.rules.validate_move(self.state, move) == MoveLegalityReason.LEGAL
-
-    def is_move_pseudo_legal(self, move: Move) -> tuple[bool, MoveLegalityReason]:
-        """Checks if a move is pseudo-legal.
-
-        Args:
-            move: The move to check.
-
-        Returns:
-            A tuple (is_pseudo_legal, reason).
-        """
-        reason = self.rules.move_pseudo_legality_reason(self.state, move)
-        return reason == MoveLegalityReason.LEGAL, reason

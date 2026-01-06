@@ -51,10 +51,10 @@ def test_capture_own_king_bug():
         return
 
 
-    is_pseudo, reason = game.is_move_pseudo_legal(move)
-    print(f"is_move_pseudo_legal: {is_pseudo}, Reason: '{reason}'")
+    reason = game.rules.move_pseudo_legality_reason(game.state, move)
+    print(f"move_pseudo_legality_reason: '{reason}'")
 
-    if is_pseudo:
+    if reason == "move is legal":
         print("FAIL: Move should NOT be pseudo-legal (capturing own piece).")
     else:
         print("PASS: Move is correctly rejected as pseudo-illegal.")

@@ -12,15 +12,15 @@ def test_reproduce_illegal_move_ghost_pawn():
     move = Move("c8c6")
 
     # Expected: NO_PIECE (because c8 is empty)
-    is_legal, reason = game.is_move_pseudo_legal(move)
+    reason = game.rules.move_pseudo_legality_reason(game.state, move)
 
     # Assert we get NO_PIECE
-    assert reason == "no piece moved."
+    assert reason.value == "no piece moved."
 
     # Try c7c5 (Valid start square, likely intended move)
     move_valid = Move("c7c5")
-    is_legal, reason = game.is_move_pseudo_legal(move_valid)
-    assert is_legal is True
+    reason_valid = game.rules.move_pseudo_legality_reason(game.state, move_valid)
+    assert reason_valid.value == "move is legal"
 
 def test_reproduce_illegal_board_valid():
     """Reproduce 'Board state is illegal. Reason: valid'."""

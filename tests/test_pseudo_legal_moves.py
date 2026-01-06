@@ -39,8 +39,7 @@ def test_pseudo_legal_no_piece_moved(board, start, end):
     game = make_game(board)
     move = Move(start, end)
 
-    is_legal, reason = game.is_move_pseudo_legal(move)
-    assert is_legal is False
+    reason = game.rules.move_pseudo_legality_reason(game.state, move)
     assert reason == MoveLegalityReason.NO_PIECE
 
 @given(board=board(), start=squares(), end=squares())
@@ -51,8 +50,7 @@ def test_pseudo_legal_wrong_piece_color(board, start, end):
     board.set_piece(opponent_piece, start)
     move = Move(start, end)
 
-    is_legal, reason = game.is_move_pseudo_legal(move)
-    assert is_legal is False
+    reason = game.rules.move_pseudo_legality_reason(game.state, move)
     assert reason == MoveLegalityReason.WRONG_COLOR
 
 @given(board=board())
@@ -64,8 +62,7 @@ def test_pseudo_legal_move_not_in_moveset(board):
     invalid_end = Square(2, 1)
     move = Move(start, invalid_end)
 
-    is_legal, reason = game.is_move_pseudo_legal(move)
-    assert is_legal is False
+    reason = game.rules.move_pseudo_legality_reason(game.state, move)
     assert reason == MoveLegalityReason.NOT_IN_MOVESET
 
 @given(board=board())
@@ -78,8 +75,7 @@ def test_pseudo_legal_cant_capture_own_piece(board):
     board.set_piece(Pawn(Color.WHITE), end)
     move = Move(start, end)
 
-    is_legal, reason = game.is_move_pseudo_legal(move)
-    assert is_legal is False
+    reason = game.rules.move_pseudo_legality_reason(game.state, move)
     assert reason == MoveLegalityReason.OWN_PIECE_CAPTURE
 
 @given(board=board())
@@ -92,8 +88,7 @@ def test_pseudo_legal_pawn_cant_capture_forwards(board):
     board.set_piece(Pawn(Color.BLACK), end)
     move = Move(start, end)
 
-    is_legal, reason = game.is_move_pseudo_legal(move)
-    assert is_legal is False
+    reason = game.rules.move_pseudo_legality_reason(game.state, move)
     assert reason == MoveLegalityReason.FORWARD_PAWN_CAPTURE
 
 @given(board=board())
@@ -106,8 +101,7 @@ def test_pseudo_legal_pawn_diagonal_requires_capture(board):
     board.remove_piece(end)
     move = Move(start, end)
 
-    is_legal, reason = game.is_move_pseudo_legal(move)
-    assert is_legal is False
+    reason = game.rules.move_pseudo_legality_reason(game.state, move)
     assert reason == MoveLegalityReason.PAWN_DIAGONAL_NON_CAPTURE
 
 @given(board=board())
@@ -123,8 +117,7 @@ def test_pseudo_legal_path_is_blocked(board):
     board.remove_piece(end)
     move = Move(start, end)
 
-    is_legal, reason = game.is_move_pseudo_legal(move)
-    assert not is_legal, f"Expected 'Path is blocked'. got {reason}"
+    reason = game.rules.move_pseudo_legality_reason(game.state, move)
     assert reason == MoveLegalityReason.PATH_BLOCKED
 
     piece = board.get_piece(start)
@@ -135,7 +128,7 @@ def test_leaving_king_in_check_is_pseudo_legal():
     game = Game(fen)
     move = Move("a2h2")
 
-    assert game.is_move_pseudo_legal(move)[0]
+    assert game.rules.move_pseudo_legality_reason(game.state, move) == MoveLegalityReason.LEGAL
 
 def test_pseudo_legal_en_passant_is_legal():
     """Test that a valid en passant capture is recognized as pseudo-legal."""
@@ -143,8 +136,8 @@ def test_pseudo_legal_en_passant_is_legal():
     game = Game(fen)
     move = Move("e5d6")
 
-    is_legal, reason = game.is_move_pseudo_legal(move)
-    assert is_legal is True, f"En passant move was incorrectly deemed illegal: {reason}"
+    reason = game.rules.move_pseudo_legality_reason(game.state, move)
+    assert reason == MoveLegalityReason.LEGAL
 
 def test_fen_after_initial_pawn_move():
     """Test that the FEN's en passant field is correctly 'a3' after 1. a4."""

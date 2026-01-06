@@ -24,12 +24,6 @@ class Rules(ABC):
         """The default starting FEN for the variant."""
         ...
 
-    @property
-    @abstractmethod
-    def has_check(self) -> bool:
-        """Whether the variant includes the concept of check."""
-        ...
-
     @abstractmethod
     def get_theoretical_moves(self, state: "GameState") -> list[Move]:
         """Returns all moves that are theoretically possible on an empty board."""
@@ -62,19 +56,6 @@ class Rules(ABC):
         ...
 
     @abstractmethod
-    def move_pseudo_legality_reason(self, state: "GameState", move: Move) -> MoveLegalityReason:
-        """Checks if a move is pseudo-legal.
-
-        Args:
-            state: The current GameState.
-            move: The move to check.
-
-        Returns:
-            The reason for the move's pseudo-legality status.
-        """
-        ...
-
-    @abstractmethod
     def validate_board_state(self, state: "GameState") -> BoardLegalityReason:
         """Validates the overall board state.
 
@@ -99,21 +80,6 @@ class Rules(ABC):
         Returns:
             The color of the winner, or None if it's a draw or ongoing.
         """
-        ...
-
-    @abstractmethod
-    def get_legal_castling_moves(self, state: "GameState") -> list[Move]:
-        """Returns a list of all legal castling moves."""
-        ...
-
-    @abstractmethod
-    def get_legal_en_passant_moves(self, state: "GameState") -> list[Move]:
-        """Returns a list of all legal en passant moves."""
-        ...
-
-    @abstractmethod
-    def get_legal_promotion_moves(self, state: "GameState") -> list[Move]:
-        """Returns a list of all legal pawn promotion moves."""
         ...
 
     def is_check(self, state: "GameState") -> bool:
