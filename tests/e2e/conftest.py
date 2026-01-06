@@ -40,7 +40,8 @@ def e2e_environment(tmp_path_factory):
     # 2. Start Backend
     print("[E2E Setup] Starting Backend on port 8000...")
     # Ensure we use the same python interpreter (virtualenv)
-    backend_cmd = [sys.executable, "-m", "uvicorn", "backend.main:app", "--port", "8000"]
+    # Add --reload to ensure code changes are picked up automatically
+    backend_cmd = [sys.executable, "-m", "uvicorn", "backend.main:app", "--port", "8000", "--reload"]
     
     backend_proc = subprocess.Popen(
         backend_cmd,
