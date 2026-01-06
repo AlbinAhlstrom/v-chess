@@ -20,10 +20,6 @@ from dataclasses import replace
 
 class AtomicRules(StandardRules):
     @property
-    def name(self) -> str:
-        return "Atomic"
-        
-    @property
     def game_over_conditions(self) -> List[Callable[[GameState, "StandardRules"], Optional[GameOverReason]]]:
         return [evaluate_atomic_king_exploded] + super().game_over_conditions
 

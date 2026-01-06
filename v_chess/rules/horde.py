@@ -20,13 +20,15 @@ from .standard import StandardRules
 
 
 class HordeRules(StandardRules):
+
+
     """Rules for Horde chess variant."""
-    @property
-    def name(self) -> str:
-        """The human-readable name of the variant."""
-        return "Horde"
+
 
     @property
+
+
+
     def game_over_conditions(self) -> List[Callable[[GameState, "StandardRules"], Optional[GameOverReason]]]:
         return [evaluate_horde_win] + super().game_over_conditions
 

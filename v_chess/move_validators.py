@@ -5,6 +5,8 @@ if TYPE_CHECKING:
     from v_chess.game_state import GameState
     from v_chess.move import Move
     from v_chess.rules import Rules
+    from v_chess.rules.chess960 import Chess960Rules
+    from v_chess.rules.horde import HordeRules
 
 def validate_piece_presence(state: "GameState", move: "Move", rules: "Rules") -> Optional[MoveLegalityReason]:
     """Ensures a piece exists at the starting square (unless it's a drop)."""
@@ -12,22 +14,19 @@ def validate_piece_presence(state: "GameState", move: "Move", rules: "Rules") ->
         return None
     piece = state.board.get_piece(move.start)
     if piece is None:
-        cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-        return getattr(cls, "NO_PIECE", MoveLegalityReason.NO_PIECE)
+        return MoveLegalityReason.NO_PIECE
     return None
 
 def validate_turn(state: "GameState", move: "Move", rules: "Rules") -> Optional[MoveLegalityReason]:
     """Ensures the piece being moved belongs to the active player."""
     if move.is_drop:
         if move.player_to_move and move.player_to_move != state.turn:
-             cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-             return getattr(cls, "WRONG_COLOR", MoveLegalityReason.WRONG_COLOR)
+             return MoveLegalityReason.WRONG_COLOR
         return None
         
     piece = state.board.get_piece(move.start)
     if piece and piece.color != state.turn:
-        cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-        return getattr(cls, "WRONG_COLOR", MoveLegalityReason.WRONG_COLOR)
+        return MoveLegalityReason.WRONG_COLOR
     return None
 
 def validate_friendly_capture(state: "GameState", move: "Move", rules: "Rules") -> Optional[MoveLegalityReason]:
@@ -35,13 +34,13 @@ def validate_friendly_capture(state: "GameState", move: "Move", rules: "Rules") 
     target = state.board.get_piece(move.end)
     if target and target.color == state.turn:
         from v_chess.piece import King, Rook
+        from v_chess.rules.chess960 import Chess960Rules
         piece = state.board.get_piece(move.start)
         if isinstance(piece, King) and isinstance(target, Rook):
-             if rules.name == "Chess960":
+             if isinstance(rules, Chess960Rules):
                   return None
         
-        cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-        return getattr(cls, "OWN_PIECE_CAPTURE", MoveLegalityReason.OWN_PIECE_CAPTURE)
+        return MoveLegalityReason.OWN_PIECE_CAPTURE
     return None
 
 def validate_moveset(state: "GameState", move: "Move", rules: "Rules") -> Optional[MoveLegalityReason]:
@@ -53,13 +52,15 @@ def validate_moveset(state: "GameState", move: "Move", rules: "Rules") -> Option
     if not piece: return None
     
     from v_chess.piece import Pawn, King
+    from v_chess.rules.horde import HordeRules
+    from v_chess.rules.chess960 import Chess960Rules
     
     in_moveset = move.end in piece.theoretical_moves(move.start)
     
     is_pawn_double_push = False
     if isinstance(piece, Pawn):
         is_start_rank = (move.start.row == 6 if piece.color == Color.WHITE else move.start.row == 1)
-        if rules.name == "Horde" and piece.color == Color.WHITE and move.start.row == 7:
+        if isinstance(rules, HordeRules) and piece.color == Color.WHITE and move.start.row == 7:
             is_start_rank = True
             
         direction = piece.direction
@@ -72,15 +73,14 @@ def validate_moveset(state: "GameState", move: "Move", rules: "Rules") -> Option
     if isinstance(piece, King):
         if abs(move.start.col - move.end.col) == 2:
             is_castling_attempt = True
-        elif rules.name == "Chess960":
+        elif isinstance(rules, Chess960Rules):
             target = state.board.get_piece(move.end)
             from v_chess.piece import Rook
             if isinstance(target, Rook) and target.color == piece.color:
                 is_castling_attempt = True
     
     if not (in_moveset or is_pawn_double_push or is_castling_attempt):
-        cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-        return getattr(cls, "NOT_IN_MOVESET", MoveLegalityReason.NOT_IN_MOVESET)
+        return MoveLegalityReason.NOT_IN_MOVESET
     return None
 
 def validate_path(state: "GameState", move: "Move", rules: "Rules") -> Optional[MoveLegalityReason]:
@@ -92,9 +92,10 @@ def validate_path(state: "GameState", move: "Move", rules: "Rules") -> Optional[
     if not piece: return None
     
     from v_chess.piece import Pawn, King, Rook
+    from v_chess.rules.chess960 import Chess960Rules
     if isinstance(piece, King):
          if abs(move.start.col - move.end.col) < 2:
-              if rules.name == "Chess960":
+              if isinstance(rules, Chess960Rules):
                    target = state.board.get_piece(move.end)
                    if isinstance(target, Rook) and target.color == piece.color:
                         return None
@@ -112,14 +113,12 @@ def validate_path(state: "GameState", move: "Move", rules: "Rules") -> Optional[
         two_step = one_step.get_step(direction) if one_step and not one_step.is_none_square else None
         if move.end == two_step:
             if state.board.get_piece(one_step) is not None or state.board.get_piece(two_step) is not None:
-                cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-                return getattr(cls, "PATH_BLOCKED", MoveLegalityReason.PATH_BLOCKED)
+                return MoveLegalityReason.PATH_BLOCKED
             return None
 
     unblocked = rules.unblocked_paths(state.board, piece, piece.theoretical_move_paths(move.start))
     if move.end not in unblocked:
-        cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-        return getattr(cls, "PATH_BLOCKED", MoveLegalityReason.PATH_BLOCKED)
+        return MoveLegalityReason.PATH_BLOCKED
         
     return None
 
@@ -134,12 +133,10 @@ def validate_pawn_capture(state: "GameState", move: "Move", rules: "Rules") -> O
     is_capture = target is not None or move.end == state.ep_square
     
     if move.is_vertical and is_capture:
-        cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-        return getattr(cls, "FORWARD_PAWN_CAPTURE", MoveLegalityReason.FORWARD_PAWN_CAPTURE)
+        return MoveLegalityReason.FORWARD_PAWN_CAPTURE
 
     if move.is_diagonal and not is_capture:
-        cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-        return getattr(cls, "PAWN_DIAGONAL_NON_CAPTURE", MoveLegalityReason.PAWN_DIAGONAL_NON_CAPTURE)
+        return MoveLegalityReason.PAWN_DIAGONAL_NON_CAPTURE
         
     return None
 
@@ -152,16 +149,13 @@ def validate_promotion(state: "GameState", move: "Move", rules: "Rules") -> Opti
     is_promo_rank = move.end.is_promotion_row(state.turn)
     
     if is_pawn and is_promo_rank and move.promotion_piece is None:
-        cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-        return getattr(cls, "NON_PROMOTION", MoveLegalityReason.NON_PROMOTION)
+        return MoveLegalityReason.NON_PROMOTION
         
     if move.promotion_piece:
         if not is_pawn or not is_promo_rank:
-            cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-            return getattr(cls, "EARLY_PROMOTION", MoveLegalityReason.EARLY_PROMOTION)
+            return MoveLegalityReason.EARLY_PROMOTION
         if isinstance(move.promotion_piece, King):
-            cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-            return getattr(cls, "KING_PROMOTION", MoveLegalityReason.KING_PROMOTION)
+            return MoveLegalityReason.KING_PROMOTION
             
     return None
 
@@ -173,16 +167,14 @@ def validate_standard_castling(state: "GameState", move: "Move", rules: "Rules")
         return None
         
     reason = rules.castling_legality_reason(state, move, piece)
-    cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-    return reason if reason != cls.LEGAL else None
+    return reason if reason != MoveLegalityReason.LEGAL else None
 
 def validate_king_safety(state: "GameState", move: "Move", rules: "Rules") -> Optional[MoveLegalityReason]:
     """Ensures the move does not leave the player's own King in check."""
     from v_chess.piece import King
     has_king = any(isinstance(p, King) and p.color == state.turn for p in state.board.values())
     if has_king and rules.king_left_in_check(state, move):
-        cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-        return getattr(cls, "KING_LEFT_IN_CHECK", MoveLegalityReason.KING_LEFT_IN_CHECK)
+        return MoveLegalityReason.KING_LEFT_IN_CHECK
     return None
 
 def validate_mandatory_capture(state: "GameState", move: "Move", rules: "Rules") -> Optional[MoveLegalityReason]:
@@ -206,8 +198,7 @@ def validate_mandatory_capture(state: "GameState", move: "Move", rules: "Rules")
                     opt_is_cap = True
             
             if opt_is_cap:
-                cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-                return getattr(cls, "MANDATORY_CAPTURE", MoveLegalityReason.MANDATORY_CAPTURE)
+                return MoveLegalityReason.MANDATORY_CAPTURE
     
     return None
 
@@ -222,7 +213,7 @@ def validate_horde_pawn(state: "GameState", move: "Move", rules: "Rules") -> Opt
             two_step = one_step.get_step(Direction.UP) if one_step else None
             if move.end == two_step:
                 if state.board.get_piece(one_step) is None and state.board.get_piece(two_step) is None:
-                    return None # This validator approves it
+                    return None
     return None
 
 def validate_antichess_castling(state: "GameState", move: "Move", rules: "Rules") -> Optional[MoveLegalityReason]:
@@ -230,8 +221,7 @@ def validate_antichess_castling(state: "GameState", move: "Move", rules: "Rules"
     piece = state.board.get_piece(move.start)
     from v_chess.piece import King
     if isinstance(piece, King) and abs(move.start.col - move.end.col) > 1:
-        cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-        return getattr(cls, "CASTLING_DISABLED", MoveLegalityReason.CASTLING_DISABLED)
+        return MoveLegalityReason.CASTLING_DISABLED
     return None
 
 def validate_crazyhouse_drop(state: "GameState", move: "Move", rules: "Rules") -> Optional[MoveLegalityReason]:
@@ -243,24 +233,20 @@ def validate_crazyhouse_drop(state: "GameState", move: "Move", rules: "Rules") -
     from v_chess.piece import Pawn
     
     if not isinstance(state, CrazyhouseGameState):
-        cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-        return getattr(cls, "NO_PIECE", MoveLegalityReason.NO_PIECE)
+        return MoveLegalityReason.NO_PIECE
 
     pocket_idx = 0 if state.turn == Color.WHITE else 1
     pocket = state.pockets[pocket_idx]
 
     has_piece = any(type(p) == type(move.drop_piece) for p in pocket)
     if not has_piece:
-        cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-        return getattr(cls, "NO_PIECE", MoveLegalityReason.NO_PIECE)
+        return MoveLegalityReason.NO_PIECE
 
     if state.board.get_piece(move.end) is not None:
-        cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-        return getattr(cls, "PATH_BLOCKED", MoveLegalityReason.PATH_BLOCKED)
+        return MoveLegalityReason.PATH_BLOCKED
 
     if isinstance(move.drop_piece, Pawn) and (move.end.row == 0 or move.end.row == 7):
-        cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-        return getattr(cls, "NOT_IN_MOVESET", MoveLegalityReason.NOT_IN_MOVESET)
+        return MoveLegalityReason.NOT_IN_MOVESET
 
     return None
 
@@ -273,8 +259,7 @@ def validate_atomic_move(state: "GameState", move: "Move", rules: "Rules") -> Op
     piece = state.board.get_piece(move.start)
     if isinstance(piece, King):
         if state.board.get_piece(move.end) or move.end == state.ep_square:
-            cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-            return getattr(cls, "OWN_PIECE_CAPTURE", MoveLegalityReason.OWN_PIECE_CAPTURE)
+            return MoveLegalityReason.OWN_PIECE_CAPTURE
 
     sim_board = state.board.copy()
     sim_board.move_piece(piece, move.start, move.end)
@@ -290,9 +275,8 @@ def validate_atomic_move(state: "GameState", move: "Move", rules: "Rules") -> Op
     own_king_exists = any(isinstance(p, King) and p.color == state.turn 
                           for p in final_state.board.values())
 
-    cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
     if not own_king_exists:
-        return getattr(cls, "KING_EXPLODED", MoveLegalityReason.KING_EXPLODED)
+        return MoveLegalityReason.KING_EXPLODED
 
     opp_king_exists = any(isinstance(p, King) and p.color == state.turn.opposite 
                            for p in final_state.board.values())
@@ -301,25 +285,24 @@ def validate_atomic_move(state: "GameState", move: "Move", rules: "Rules") -> Op
         return None
 
     if rules.inactive_player_in_check(final_state):
-         return getattr(cls, "KING_LEFT_IN_CHECK", MoveLegalityReason.KING_LEFT_IN_CHECK)
+         return MoveLegalityReason.KING_LEFT_IN_CHECK
 
     wk = [sq for sq, p in final_state.board.items() if isinstance(p, King) and p.color == Color.WHITE]
     bk = [sq for sq, p in final_state.board.items() if isinstance(p, King) and p.color == Color.BLACK]
     if wk and bk and wk[0].is_adjacent_to(bk[0]):
-        return getattr(cls, "KING_EXPLODED", MoveLegalityReason.KING_EXPLODED)
+        return MoveLegalityReason.KING_EXPLODED
 
     return None
 
 def validate_racing_kings_move(state: "GameState", move: "Move", rules: "Rules") -> Optional[MoveLegalityReason]:
     """Enforces Racing Kings constraints."""
     next_state = rules.apply_move(state, move)
-    cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
     
     if rules.is_check(next_state):
-        return getattr(cls, "GIVES_CHECK", MoveLegalityReason.GIVES_CHECK)
+        return MoveLegalityReason.GIVES_CHECK
 
     if rules.inactive_player_in_check(next_state):
-         return getattr(cls, "KING_LEFT_IN_CHECK", MoveLegalityReason.KING_LEFT_IN_CHECK)
+         return MoveLegalityReason.KING_LEFT_IN_CHECK
          
     return None
 
@@ -339,5 +322,4 @@ def validate_chess960_castling(state: "GameState", move: "Move", rules: "Rules")
         return None
         
     reason = rules.castling_legality_reason(state, move, piece)
-    cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-    return reason if reason != cls.LEGAL else None
+    return reason if reason != MoveLegalityReason.LEGAL else None

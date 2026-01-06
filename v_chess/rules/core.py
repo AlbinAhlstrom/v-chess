@@ -20,12 +20,6 @@ class Rules(ABC):
 
     @property
     @abstractmethod
-    def name(self) -> str:
-        """The human-readable name of the variant."""
-        ...
-
-    @property
-    @abstractmethod
     def starting_fen(self) -> str:
         """The default starting FEN for the variant."""
         ...

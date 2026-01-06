@@ -3,7 +3,9 @@ from v_chess.enums import Color, MoveLegalityReason, BoardLegalityReason, GameOv
 from v_chess.move import Move
 from v_chess.piece import King, Pawn
 from v_chess.game_state import GameState
-from v_chess.game_over_conditions import evaluate_repetition, evaluate_fifty_move_rule, evaluate_antichess_win
+from v_chess.game_over_conditions import (
+    evaluate_repetition, evaluate_fifty_move_rule, evaluate_antichess_win
+)
 from v_chess.move_validators import (
     validate_piece_presence, validate_turn, 
     validate_moveset, validate_friendly_capture, validate_pawn_capture, 
@@ -17,10 +19,6 @@ from .standard import StandardRules
 
 
 class AntichessRules(StandardRules):
-    @property
-    def name(self) -> str:
-        return "Antichess"
-
     @property
     def game_over_conditions(self) -> List[Callable[[GameState, "StandardRules"], Optional[GameOverReason]]]:
         return [
@@ -61,16 +59,16 @@ class AntichessRules(StandardRules):
 
     def get_winner(self, state: GameState) -> Color | None:
         reason = self.get_game_over_reason(state)
-        if reason == self.GameOverReason.ALL_PIECES_CAPTURED:
+        if reason == GameOverReason.ALL_PIECES_CAPTURED:
              white_pieces = any(p.color == Color.WHITE for p in state.board.values())
              if not white_pieces: return Color.WHITE
              return Color.BLACK
-        if reason == self.GameOverReason.STALEMATE:
+        if reason == GameOverReason.STALEMATE:
              return state.turn
         return None
 
     def castling_legality_reason(self, state: GameState, move: Move, piece: King) -> MoveLegalityReason:
-        return self.MoveLegalityReason.CASTLING_DISABLED
+        return MoveLegalityReason.CASTLING_DISABLED
 
     def get_legal_castling_moves(self, state: GameState) -> list[Move]:
         return []

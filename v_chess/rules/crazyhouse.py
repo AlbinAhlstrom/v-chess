@@ -27,11 +27,6 @@ class CrazyhouseRules(StandardRules):
     """Rules for Crazyhouse chess variant."""
 
     @property
-    def name(self) -> str:
-        """The human-readable name of the variant."""
-        return "Crazyhouse"
-
-    @property
     def move_validators(self) -> List[Callable[[GameState, Move, "StandardRules"], Optional[MoveLegalityReason]]]:
         """Returns a list of move validators."""
         return [

@@ -19,10 +19,6 @@ from .standard import StandardRules
 
 class RacingKingsRules(StandardRules):
     @property
-    def name(self) -> str:
-        return "Racing Kings"
-        
-    @property
     def game_over_conditions(self) -> List[Callable[[GameState, "StandardRules"], Optional[GameOverReason]]]:
         return [
             evaluate_racing_kings_win,

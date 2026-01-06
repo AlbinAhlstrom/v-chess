@@ -8,10 +8,6 @@ from .standard import StandardRules
 
 class ThreeCheckRules(StandardRules):
     @property
-    def name(self) -> str:
-        return "Three-Check"
-        
-    @property
     def game_over_conditions(self) -> List[Callable[[GameState, "StandardRules"], Optional[GameOverReason]]]:
         return [evaluate_three_check_win] + super().game_over_conditions
 

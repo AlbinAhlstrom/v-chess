@@ -21,10 +21,6 @@ from dataclasses import replace
 
 class Chess960Rules(StandardRules):
     @property
-    def name(self) -> str:
-        return "Chess960"
-
-    @property
     def move_validators(self) -> List[Callable[[GameState, Move, "StandardRules"], Optional[MoveLegalityReason]]]:
         """Returns a list of move validators."""
         return [

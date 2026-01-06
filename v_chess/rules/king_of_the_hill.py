@@ -8,10 +8,6 @@ from .standard import StandardRules
 
 class KingOfTheHillRules(StandardRules):
     @property
-    def name(self) -> str:
-        return "King of the Hill"
-        
-    @property
     def game_over_conditions(self) -> List[Callable[[GameState, "StandardRules"], Optional[GameOverReason]]]:
         return [evaluate_king_center_win] + super().game_over_conditions
 

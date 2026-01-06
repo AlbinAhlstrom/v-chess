@@ -27,11 +27,6 @@ from .core import Rules
 
 class StandardRules(Rules):
     @property
-    def name(self) -> str:
-        """The human-readable name of the variant."""
-        return "Standard Chess"
-
-    @property
     def starting_fen(self) -> str:
         from v_chess.game_state import GameState
         return GameState.STARTING_FEN
