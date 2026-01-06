@@ -132,40 +132,42 @@ class Rules(ABC):
         """Convenience method to check the legality of the entire board state."""
         cls = getattr(self, "BoardLegalityReason", BoardLegalityReason)
         return self.validate_board_state(state) == cls.VALID
-
+    
     def is_check(self, state: "GameState") -> bool:
         """Checks if the current player is in check."""
         return False
-
+    
     def is_checkmate(self, state: "GameState") -> bool:
         """Checks if the game is over by checkmate."""
+        reason = self.get_game_over_reason(state)
         cls = getattr(self, "GameOverReason", GameOverReason)
-        reason = getattr(cls, "CHECKMATE", None)
-        return reason is not None and self.get_game_over_reason(state) == reason
+        checkmate_reason = getattr(cls, "CHECKMATE", GameOverReason.CHECKMATE)
+        return reason == checkmate_reason
 
     def is_stalemate(self, state: "GameState") -> bool:
         """Checks if the game is over by stalemate."""
+        reason = self.get_game_over_reason(state)
         cls = getattr(self, "GameOverReason", GameOverReason)
-        reason = getattr(cls, "STALEMATE", None)
-        return reason is not None and self.get_game_over_reason(state) == reason
+        stalemate_reason = getattr(cls, "STALEMATE", GameOverReason.STALEMATE)
+        return reason == stalemate_reason
 
     def is_draw(self, state: "GameState") -> bool:
         """Checks if the game resulted in a draw."""
         reason = self.get_game_over_reason(state)
         cls = getattr(self, "GameOverReason", GameOverReason)
-
+        
         # Explicit check against ONGOING to avoid accidental matches
-        if reason == cls.ONGOING:
+        if reason == GameOverReason.ONGOING:
             return False
-
+            
         draw_reasons = []
         for attr in ("STALEMATE", "REPETITION", "FIFTY_MOVE_RULE", "MUTUAL_AGREEMENT", "INSUFFICIENT_MATERIAL"):
             r = getattr(cls, attr, None)
             if r is not None:
                 draw_reasons.append(r)
-
+        
         return reason in draw_reasons
-
+    
     def is_fifty_moves(self, state: "GameState") -> bool:
         """Whether the 50-move rule has been triggered."""
         return state.halfmove_clock >= 100

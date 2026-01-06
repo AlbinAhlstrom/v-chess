@@ -2,9 +2,11 @@ from typing import TYPE_CHECKING, Optional
 from v_chess.enums import BoardLegalityReason, Color
 from v_chess.piece import King, Pawn
 
+
 if TYPE_CHECKING:
     from v_chess.game_state import GameState
     from v_chess.rules import Rules
+
 
 def standard_king_count(state: "GameState", rules: "Rules") -> Optional[BoardLegalityReason]:
     """Ensures exactly one king exists for each player."""
@@ -48,7 +50,7 @@ def piece_count_promotion_consistency(state: "GameState", rules: "Rules") -> Opt
     black_pawns = state.board.get_pieces(Pawn, Color.BLACK)
     white_non_pawns = [p for p in state.board.get_pieces(color=Color.WHITE) if not isinstance(p, Pawn)]
     black_non_pawns = [p for p in state.board.get_pieces(color=Color.BLACK) if not isinstance(p, Pawn)]
-    
+
     if len(white_non_pawns) > (16 - len(white_pawns)): return BoardLegalityReason.TOO_MANY_WHITE_PIECES
     if len(black_non_pawns) > (16 - len(black_pawns)): return BoardLegalityReason.TOO_MANY_BLACK_PIECES
     return None
