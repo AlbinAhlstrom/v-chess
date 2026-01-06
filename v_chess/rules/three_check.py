@@ -1,19 +1,23 @@
-from v_chess.enums import GameOverReason, Color, MoveLegalityReason, BoardLegalityReason
+from typing import List, Callable, Optional
+from v_chess.enums import GameOverReason, MoveLegalityReason, BoardLegalityReason, Color
 from v_chess.game_state import GameState, ThreeCheckGameState
 from v_chess.move import Move
+from v_chess.game_over_conditions import evaluate_three_check_win
 from .standard import StandardRules
 
 
 class ThreeCheckRules(StandardRules):
-    """Rules for Three-Check chess variant."""
     MoveLegalityReason = MoveLegalityReason.load("ThreeCheck")
     BoardLegalityReason = BoardLegalityReason.load("ThreeCheck")
     GameOverReason = GameOverReason.load("ThreeCheck")
 
     @property
     def name(self) -> str:
-        """The human-readable name of the variant."""
         return "Three-Check"
+        
+    @property
+    def game_over_conditions(self) -> List[Callable[[GameState, "StandardRules"], Optional[GameOverReason]]]:
+        return [evaluate_three_check_win] + super().game_over_conditions
 
     def post_move_actions(self, old_state: GameState, move: Move, new_state: GameState) -> GameState:
         """Updates check counter after a move."""
@@ -21,14 +25,10 @@ class ThreeCheckRules(StandardRules):
         if isinstance(old_state, ThreeCheckGameState):
             current_checks = old_state.checks
 
-        # Check if the move GAVE check (in the NEW state)
-        # new_state.turn is the player who will move NEXT.
-        # So we check if is_check(new_state) is true.
         is_check = self.is_check(new_state)
 
         white_checks, black_checks = current_checks
 
-        # The player who JUST moved is old_state.turn.
         if is_check:
             if old_state.turn == Color.WHITE:
                 white_checks += 1
@@ -46,20 +46,9 @@ class ThreeCheckRules(StandardRules):
             checks=(white_checks, black_checks)
         )
 
-    def get_game_over_reason(self, state: GameState) -> GameOverReason:
-        """Determines why the game ended, including the 3-check condition."""
-        # Check for 3 checks first
-        if isinstance(state, ThreeCheckGameState):
-            if state.checks[0] >= 3 or state.checks[1] >= 3:
-                return self.GameOverReason.THREE_CHECKS
-
-        return super().get_game_over_reason(state)
-
     def get_winner(self, state: GameState) -> Color | None:
-        """Determines the winner of the game."""
         reason = self.get_game_over_reason(state)
         if reason == self.GameOverReason.THREE_CHECKS:
-            # Who has 3 checks?
             if isinstance(state, ThreeCheckGameState):
                 if state.checks[0] >= 3:
                     return Color.WHITE

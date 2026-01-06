@@ -1,8 +1,21 @@
+from typing import List, Callable, Optional
 from v_chess.enums import GameOverReason, MoveLegalityReason, BoardLegalityReason, Color, Direction
 from v_chess.game_state import GameState
 from v_chess.move import Move
 from v_chess.piece import Pawn, King
 from v_chess.square import Square
+from v_chess.game_over_conditions import evaluate_horde_win
+from v_chess.move_validators import (
+    validate_piece_presence, validate_turn, 
+    validate_moveset, validate_friendly_capture, validate_pawn_capture, 
+    validate_path, validate_promotion, validate_standard_castling, 
+    validate_king_safety, validate_horde_pawn
+)
+from v_chess.state_validators import (
+    validate_black_king_count, 
+    validate_black_pawn_count, validate_piece_count, validate_castling_rights,
+    validate_en_passant, validate_inactive_player_check
+)
 from .standard import StandardRules
 
 
@@ -16,78 +29,49 @@ class HordeRules(StandardRules):
     def name(self) -> str:
         """The human-readable name of the variant."""
         return "Horde"
+        
+    @property
+    def game_over_conditions(self) -> List[Callable[[GameState, "StandardRules"], Optional[GameOverReason]]]:
+        return [evaluate_horde_win] + super().game_over_conditions
+
+    @property
+    def move_validators(self) -> List[Callable[[GameState, Move, "StandardRules"], Optional[MoveLegalityReason]]]:
+        """Returns a list of move validators."""
+        return [
+            validate_piece_presence,
+            validate_turn,
+            validate_horde_pawn,
+            validate_moveset,
+            validate_friendly_capture,
+            validate_pawn_capture,
+            validate_path,
+            validate_promotion,
+            validate_standard_castling,
+            validate_king_safety
+        ]
+
+    @property
+    def state_validators(self) -> List[Callable[[GameState, "StandardRules"], Optional[BoardLegalityReason]]]:
+        """Returns a list of board state validators."""
+        return [
+            validate_black_king_count,
+            validate_black_pawn_count,
+            validate_piece_count,
+            validate_castling_rights,
+            validate_en_passant,
+            validate_inactive_player_check
+        ]
 
     @property
     def starting_fen(self) -> str:
         """The default starting FEN for Horde."""
         return "rnbqkbnr/pppppppp/8/1PP2PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP w kq - 0 1"
 
-    def validate_board_state(self, state: GameState) -> BoardLegalityReason:
-        """Validates the board state, allowing for the lack of a White King."""
-        # Standard logic but without White King requirement
-        black_kings = state.board.get_pieces(King, Color.BLACK)
-        if len(black_kings) < 1:
-            return BoardLegalityReason.NO_BLACK_KING
-
-        # Standard pawn count limits don't apply to Horde White
-        black_pawns = state.board.get_pieces(Pawn, Color.BLACK)
-        if len(black_pawns) > 8:
-            return BoardLegalityReason.TOO_MANY_BLACK_PAWNS
-
-        if self.invalid_castling_rights(state):
-            return BoardLegalityReason.INVALID_CASTLING_RIGHTS
-
-        # Standard EP square check
-        is_ep_square_valid = state.ep_square is None or state.ep_square.row in (2, 5)
-        if not is_ep_square_valid:
-            return BoardLegalityReason.INVALID_EP_SQUARE
-
-        # Inactive player in check (only Black King can be in check)
-        if state.turn == Color.BLACK:
-            # White moved. Check if White king in check? No White king.
-            pass
-        else:
-            # Black moved. Check if Black king in check.
-            if self.is_check(state):
-                 if self.inactive_player_in_check(state):
-                      return BoardLegalityReason.OPPOSITE_CHECK
-
-        return BoardLegalityReason.VALID
-
     def is_check(self, state: GameState) -> bool:
         """Checks if the current player is in check (always False for White)."""
         if state.turn == Color.WHITE:
             return False # White has no King
         return super().is_check(state)
-
-    def get_game_over_reason(self, state: GameState) -> GameOverReason:
-        """Determines the game over reason, including capture of all White pieces."""
-        # White wins if Black checkmated
-        if state.turn == Color.BLACK:
-            if not self.has_legal_moves(state):
-                if self.is_check(state):
-                    return self.GameOverReason.CHECKMATE
-                return self.GameOverReason.STALEMATE
-
-        # Black wins if White has no pieces left
-        white_pieces = state.board.get_pieces(color=Color.WHITE)
-        if not white_pieces:
-            return self.GameOverReason.ALL_PIECES_CAPTURED
-
-        # Black wins if White checkmated? (No white king, so no)
-        # But White can be stalemated
-        if state.turn == Color.WHITE:
-            if not self.has_legal_moves(state):
-                return self.GameOverReason.STALEMATE
-
-        res = super().get_game_over_reason(state)
-        if str(res.value) == str(GameOverReason.ONGOING.value):
-            return self.GameOverReason.ONGOING
-
-        try:
-            return self.GameOverReason(res.value)
-        except ValueError:
-            return self.GameOverReason.ONGOING
 
     def get_winner(self, state: GameState) -> Color | None:
         """Determines the winner of the game."""
@@ -116,17 +100,3 @@ class HordeRules(StandardRules):
                     yield Move(sq, two_step)
 
                 mask &= mask - 1
-
-    def move_pseudo_legality_reason(self, state: GameState, move: Move) -> MoveLegalityReason:
-        """Checks pseudo-legality, handling Horde-specific rank 1 pawn pushes."""
-        piece = state.board.get_piece(move.start)
-        if piece and isinstance(piece, Pawn) and piece.color == Color.WHITE:
-            # White Rank 1: row 7. Double push is valid if path is clear.
-            if move.start.row == 7:
-                one_step = move.start.get_step(Direction.UP)
-                two_step = one_step.get_step(Direction.UP) if one_step else None
-                if move.end == two_step:
-                    if state.board.get_piece(one_step) is None and state.board.get_piece(two_step) is None:
-                        return self.MoveLegalityReason.LEGAL
-
-        return super().move_pseudo_legality_reason(state, move)

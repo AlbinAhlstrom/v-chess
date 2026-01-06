@@ -3,10 +3,17 @@
 # Ensure we are in the project root
 cd "$(dirname "$0")/.."
 
+COMMIT_MSG=$1
+
+if [ -z "$COMMIT_MSG" ]; then
+    echo "Error: No commit message provided."
+    echo "Usage: ./scripts/safe_commit.sh \"your commit message\""
+    exit 1
+fi
+
 echo "Running full test suite..."
 
 # Run tests using the virtual environment's pytest
-# Assuming venv is in the project root
 if [ -f "./venv/bin/pytest" ]; then
     ./venv/bin/pytest
 else
@@ -16,9 +23,10 @@ fi
 
 # Check exit code of pytest
 if [ $? -eq 0 ]; then
-    echo "Tests passed! Pushing to remote..."
-    git push
+    echo "Tests passed! Committing changes..."
+    git add .
+    git commit -m "$COMMIT_MSG"
 else
-    echo "Tests failed. Push aborted."
+    echo "Tests failed. Commit aborted."
     exit 1
 fi

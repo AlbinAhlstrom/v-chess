@@ -1,8 +1,24 @@
+from typing import List, Callable, Optional
 from v_chess.enums import GameOverReason, MoveLegalityReason, BoardLegalityReason, Color
 from v_chess.game_state import GameState, CrazyhouseGameState
 from v_chess.move import Move
 from v_chess.piece import Pawn, Piece
 from v_chess.square import Square
+from v_chess.game_over_conditions import (
+    evaluate_repetition, evaluate_fifty_move_rule, 
+    evaluate_checkmate, evaluate_stalemate
+)
+from v_chess.move_validators import (
+    validate_piece_presence, validate_turn, 
+    validate_moveset, validate_friendly_capture, validate_pawn_capture, 
+    validate_path, validate_promotion, validate_standard_castling, 
+    validate_king_safety, validate_crazyhouse_drop
+)
+from v_chess.state_validators import (
+    validate_standard_king_count, validate_pawn_position,
+    validate_pawn_count, validate_piece_count, validate_castling_rights,
+    validate_en_passant, validate_inactive_player_check
+)
 from .standard import StandardRules
 from dataclasses import replace
 
@@ -17,6 +33,22 @@ class CrazyhouseRules(StandardRules):
     def name(self) -> str:
         """The human-readable name of the variant."""
         return "Crazyhouse"
+
+    @property
+    def move_validators(self) -> List[Callable[[GameState, Move, "StandardRules"], Optional[MoveLegalityReason]]]:
+        """Returns a list of move validators."""
+        return [
+            validate_crazyhouse_drop,
+            validate_piece_presence,
+            validate_turn,
+            validate_moveset,
+            validate_friendly_capture,
+            validate_pawn_capture,
+            validate_path,
+            validate_promotion,
+            validate_standard_castling,
+            validate_king_safety
+        ]
 
     @property
     def fen_type(self) -> str:
@@ -104,26 +136,3 @@ class CrazyhouseRules(StandardRules):
             repetition_count=new_state.repetition_count,
             pockets=(tuple(new_pockets[0]), tuple(new_pockets[1]))
         )
-
-    def move_pseudo_legality_reason(self, state: GameState, move: Move) -> MoveLegalityReason:
-        """Checks pseudo-legality, including drop moves."""
-        if move.is_drop:
-            if not isinstance(state, CrazyhouseGameState):
-                return self.MoveLegalityReason.NO_PIECE
-
-            pocket_idx = 0 if state.turn == Color.WHITE else 1
-            pocket = state.pockets[pocket_idx]
-
-            has_piece = any(type(p) == type(move.drop_piece) for p in pocket)
-            if not has_piece:
-                return self.MoveLegalityReason.NO_PIECE
-
-            if state.board.get_piece(move.end) is not None:
-                return self.MoveLegalityReason.PATH_BLOCKED
-
-            if isinstance(move.drop_piece, Pawn) and (move.end.row == 0 or move.end.row == 7):
-                return self.MoveLegalityReason.NOT_IN_MOVESET
-
-            return self.MoveLegalityReason.LEGAL
-
-        return super().move_pseudo_legality_reason(state, move)

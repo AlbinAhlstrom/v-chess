@@ -1,8 +1,20 @@
+from typing import List, Callable, Optional
 from v_chess.enums import GameOverReason, MoveLegalityReason, BoardLegalityReason, Color, CastlingRight
 from v_chess.move import Move
 from v_chess.piece import King, Rook
 from v_chess.square import Square
 from v_chess.game_state import GameState
+from v_chess.move_validators import (
+    validate_piece_presence, validate_turn, 
+    validate_moveset, validate_friendly_capture, validate_pawn_capture, 
+    validate_path, validate_promotion, validate_king_safety,
+    validate_chess960_castling
+)
+from v_chess.state_validators import (
+    validate_standard_king_count, validate_pawn_position,
+    validate_pawn_count, validate_piece_count, validate_castling_rights,
+    validate_en_passant, validate_inactive_player_check
+)
 from .standard import StandardRules
 from dataclasses import replace
 
@@ -15,6 +27,21 @@ class Chess960Rules(StandardRules):
     @property
     def name(self) -> str:
         return "Chess960"
+
+    @property
+    def move_validators(self) -> List[Callable[[GameState, Move, "StandardRules"], Optional[MoveLegalityReason]]]:
+        """Returns a list of move validators."""
+        return [
+            validate_piece_presence,
+            validate_turn,
+            validate_moveset,
+            validate_friendly_capture,
+            validate_pawn_capture,
+            validate_path,
+            validate_promotion,
+            validate_chess960_castling,
+            validate_king_safety
+        ]
 
     @property
     def starting_fen(self) -> str:
@@ -89,23 +116,6 @@ class Chess960Rules(StandardRules):
                 invalid.append(right)
         return invalid
 
-    def move_pseudo_legality_reason(self, state: GameState, move: Move) -> MoveLegalityReason:
-        piece = state.board.get_piece(move.start)
-        if isinstance(piece, King):
-             for legal_castling in self.get_legal_castling_moves(state):
-                 if legal_castling.start == move.start and legal_castling.end == move.end:
-                      return self.castling_legality_reason(state, move, piece)
-             # Also allow King-to-Rook for pseudo-legality (will be validated in apply_move/validate_move)
-             target = state.board.get_piece(move.end)
-             if isinstance(target, Rook) and target.color == piece.color:
-                  # Map King-to-Rook to standard target for validation
-                  is_kingside = move.end.col > move.start.col
-                  target_col = 6 if is_kingside else 2
-                  m_equiv = Move(move.start, Square(move.start.row, target_col))
-                  return self.castling_legality_reason(state, m_equiv, piece)
-
-        return super().move_pseudo_legality_reason(state, move)
-
     def castling_legality_reason(self, state: GameState, move: Move, piece: King) -> MoveLegalityReason:
         target_king_sq = move.end
         row = 7 if piece.color == Color.WHITE else 0
@@ -170,14 +180,12 @@ class Chess960Rules(StandardRules):
             if isinstance(piece, King) and piece.color == state.turn:
                  for target_col in [6, 2]:
                      m = Move(sq, Square(sq.row, target_col))
-                     if self.castling_legality_reason(state, m, piece) == MoveLegalityReason.LEGAL:
+                     if self.validate_move(state, m) == MoveLegalityReason.LEGAL:
                          moves.append(m)
                  # Also add King-to-Rook moves for 960 notation
                  for r_sq, r_piece in state.board.items():
                       if isinstance(r_piece, Rook) and r_piece.color == piece.color:
-                           is_kingside = r_sq.col > sq.col
-                           target_col = 6 if is_kingside else 2
-                           m_equiv = Move(sq, Square(sq.row, target_col))
-                           if self.castling_legality_reason(state, m_equiv, piece) == MoveLegalityReason.LEGAL:
-                                moves.append(Move(sq, r_sq))
+                           m_kx_r = Move(sq, r_sq)
+                           if self.validate_move(state, m_kx_r) == MoveLegalityReason.LEGAL:
+                                moves.append(m_kx_r)
         return moves

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Callable, Optional
 
 from v_chess.enums import Color, MoveLegalityReason, BoardLegalityReason, GameOverReason
 from v_chess.move import Move
@@ -33,6 +33,24 @@ class Rules(ABC):
         """Whether the variant includes the concept of check/king safety."""
         ...
 
+    @property
+    @abstractmethod
+    def game_over_conditions(self) -> List[Callable[["GameState", "Rules"], Optional[GameOverReason]]]:
+        """Returns a list of conditions that can end the game."""
+        ...
+
+    @property
+    @abstractmethod
+    def move_validators(self) -> List[Callable[["GameState", "Move", "Rules"], Optional[MoveLegalityReason]]]:
+        """Returns a list of move validators."""
+        ...
+
+    @property
+    @abstractmethod
+    def state_validators(self) -> List[Callable[["GameState", "Rules"], Optional[BoardLegalityReason]]]:
+        """Returns a list of board state validators."""
+        ...
+
     @abstractmethod
     def get_theoretical_moves(self, state: "GameState") -> list[Move]:
         """Returns all moves that are theoretically possible on an empty board."""
@@ -51,28 +69,41 @@ class Rules(ABC):
         """
         ...
 
-    @abstractmethod
     def validate_board_state(self, state: "GameState") -> BoardLegalityReason:
-        """Validates the overall board state according to variant rules."""
-        ...
+        """Validates the overall board state using the component pipeline."""
+        for v in self.state_validators:
+            reason = v(state, self)
+            if reason:
+                return reason
+        return BoardLegalityReason.VALID
 
-    @abstractmethod
     def validate_move(self, state: "GameState", move: Move) -> MoveLegalityReason:
-        """Validates if a move is legal according to variant-specific logic.
+        """Validates a move using the component pipeline."""
+        for v in self.move_validators:
+            reason = v(state, move, self)
+            if reason:
+                return reason
+        return MoveLegalityReason.LEGAL
 
-        Note: Basic pseudo-legality (moveset, collisions) is handled by the Game orchestrator.
-        """
-        ...
-
-    @abstractmethod
     def move_pseudo_legality_reason(self, state: "GameState", move: Move) -> MoveLegalityReason:
-        """Checks if a move is pseudo-legal (geometry, blocking)."""
-        ...
+        """Checks pseudo-legality using the validator pipeline."""
+        for v in self.move_validators:
+            # Skip validators that check for 'full' legality (safety, variant goals)
+            name = v.__name__.lower()
+            if "safety" in name or "mandatory" in name or "atomic" in name or "racing" in name:
+                continue
+            reason = v(state, move, self)
+            if reason:
+                return reason
+        return MoveLegalityReason.LEGAL
 
-    @abstractmethod
     def get_game_over_reason(self, state: "GameState") -> GameOverReason:
         """Determines why the game ended."""
-        ...
+        for condition in self.game_over_conditions:
+            reason = condition(state, self)
+            if reason:
+                return reason
+        return GameOverReason.ONGOING
 
     @abstractmethod
     def get_winner(self, state: "GameState") -> Color | None:
@@ -93,6 +124,10 @@ class Rules(ABC):
     # -------------------------------------------------------------------------
     # Convenience / Helper methods exposed to Game
     # -------------------------------------------------------------------------
+
+    def has_legal_moves(self, state: "GameState") -> bool:
+        """Checks if there is at least one legal move."""
+        return any(self.validate_move(state, move) == MoveLegalityReason.LEGAL for move in self.get_theoretical_moves(state))
 
     def is_game_over(self, state: "GameState") -> bool:
         """Convenience method to check if the game has ended."""

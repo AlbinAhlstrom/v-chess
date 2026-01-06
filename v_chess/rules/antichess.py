@@ -1,7 +1,18 @@
+from typing import List, Callable, Optional
 from v_chess.enums import Color, MoveLegalityReason, BoardLegalityReason, GameOverReason
 from v_chess.move import Move
 from v_chess.piece import King, Pawn
 from v_chess.game_state import GameState
+from v_chess.game_over_conditions import evaluate_repetition, evaluate_fifty_move_rule, evaluate_antichess_win
+from v_chess.move_validators import (
+    validate_piece_presence, validate_turn, 
+    validate_moveset, validate_friendly_capture, validate_pawn_capture, 
+    validate_path, validate_promotion, validate_mandatory_capture,
+    validate_antichess_castling
+)
+from v_chess.state_validators import (
+    validate_pawn_position, validate_pawn_count, validate_en_passant
+)
 from .standard import StandardRules
 
 
@@ -17,29 +28,38 @@ class AntichessRules(StandardRules):
     @property
     def has_check(self) -> bool:
         return False
+    
+    @property
+    def game_over_conditions(self) -> List[Callable[[GameState, "StandardRules"], Optional[GameOverReason]]]:
+        return [
+            evaluate_repetition,
+            evaluate_fifty_move_rule,
+            evaluate_antichess_win
+        ]
 
-    def validate_move(self, state: GameState, move: Move) -> MoveLegalityReason:
-        pseudo_reason = self.move_pseudo_legality_reason(state, move)
-        if pseudo_reason != self.MoveLegalityReason.LEGAL:
-            return pseudo_reason
+    @property
+    def move_validators(self) -> List[Callable[[GameState, Move, "StandardRules"], Optional[MoveLegalityReason]]]:
+        """Returns a list of move validators."""
+        return [
+            validate_piece_presence,
+            validate_turn,
+            validate_moveset,
+            validate_friendly_capture,
+            validate_antichess_castling,
+            validate_pawn_capture,
+            validate_path,
+            validate_promotion,
+            validate_mandatory_capture
+        ]
 
-        is_capture = self._is_capture(state, move)
-        if is_capture:
-            return self.MoveLegalityReason.LEGAL
-
-        for opt_move in self.get_theoretical_moves(state):
-            if self.move_pseudo_legality_reason(state, opt_move).value == self.MoveLegalityReason.LEGAL.value:
-                if self._is_capture(state, opt_move):
-                    return self.MoveLegalityReason.MANDATORY_CAPTURE
-        return self.MoveLegalityReason.LEGAL
-
-    def _is_capture(self, state: GameState, move: Move) -> bool:
-        if state.board.get_piece(move.end):
-            return True
-        piece = state.board.get_piece(move.start)
-        if isinstance(piece, Pawn) and move.end == state.ep_square:
-            return True
-        return False
+    @property
+    def state_validators(self) -> List[Callable[[GameState, "StandardRules"], Optional[BoardLegalityReason]]]:
+        """Returns a list of board state validators."""
+        return [
+            validate_pawn_position,
+            validate_pawn_count,
+            validate_en_passant
+        ]
 
     def is_check(self, state: GameState) -> bool:
         return False
@@ -47,42 +67,13 @@ class AntichessRules(StandardRules):
     def inactive_player_in_check(self, state: GameState) -> bool:
         return False
 
-    def get_game_over_reason(self, state: GameState) -> GameOverReason:
-        if state.repetition_count >= 3:
-             return self.GameOverReason.REPETITION
-        if state.halfmove_clock >= 100:
-             return self.GameOverReason.FIFTY_MOVE_RULE
-        if not state.board.get_pieces(color=state.turn):
-            return self.GameOverReason.ALL_PIECES_CAPTURED
-        if not self.has_legal_moves(state):
-             return self.GameOverReason.STALEMATE
-        return self.GameOverReason.ONGOING
-
-    def validate_board_state(self, state: GameState) -> BoardLegalityReason:
-        white_pawns = state.board.get_pieces(Pawn, Color.WHITE)
-        black_pawns = state.board.get_pieces(Pawn, Color.BLACK)
-        pawns_on_backrank = []
-        for sq, piece in state.board.items():
-             if isinstance(piece, Pawn) and (sq.row == 0 or sq.row == 7):
-                 pawns_on_backrank.append(piece)
-
-        is_ep_square_valid = state.ep_square is None or state.ep_square.row in (2, 5)
-
-        if len(white_pawns) > 8:
-            return self.BoardLegalityReason.TOO_MANY_WHITE_PAWNS
-        if len(black_pawns) > 8:
-            return self.BoardLegalityReason.TOO_MANY_BLACK_PAWNS
-        if pawns_on_backrank:
-            return self.BoardLegalityReason.PAWNS_ON_BACKRANK
-
-        if not is_ep_square_valid:
-            return self.BoardLegalityReason.INVALID_EP_SQUARE
-
-        return self.BoardLegalityReason.VALID
-
     def get_winner(self, state: GameState) -> Color | None:
         reason = self.get_game_over_reason(state)
-        if reason in (self.GameOverReason.ALL_PIECES_CAPTURED, self.GameOverReason.STALEMATE):
+        if reason == self.GameOverReason.ALL_PIECES_CAPTURED:
+             white_pieces = any(p.color == Color.WHITE for p in state.board.values())
+             if not white_pieces: return Color.WHITE
+             return Color.BLACK
+        if reason == self.GameOverReason.STALEMATE:
              return state.turn
         return None
 

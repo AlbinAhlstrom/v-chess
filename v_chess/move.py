@@ -19,6 +19,7 @@ class Move:
     end: Square = field(compare=True)
     promotion_piece: Piece | None = field(default=None, compare=True)
     drop_piece: Piece | None = field(default=None, compare=True)
+    player_to_move: Color = field(default=Color.WHITE, compare=True)
 
     def __init__(self, *args, player_to_move: Color = Color.WHITE, **kwargs) -> None:
         """Initializes a Move.
@@ -78,6 +79,7 @@ class Move:
         object.__setattr__(self, 'end', _end)
         object.__setattr__(self, 'promotion_piece', _promotion_piece)
         object.__setattr__(self, 'drop_piece', _drop_piece)
+        object.__setattr__(self, 'player_to_move', player_to_move)
 
     @property
     def is_drop(self) -> bool:
