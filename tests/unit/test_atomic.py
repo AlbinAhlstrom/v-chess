@@ -43,7 +43,7 @@ def test_atomic_king_cannot_capture():
     game = Game(fen, rules=AtomicRules())
     
     # Kxe2 is illegal
-    assert game.rules.validate_move(Move("e1e2")) != MoveLegalityReason.LEGAL
+    assert game.rules.validate_move(game.state, Move("e1e2")) != MoveLegalityReason.LEGAL
 
 def test_atomic_win_by_explosion():
     """Verify winning by exploding opponent King."""
@@ -69,7 +69,7 @@ def test_atomic_illegal_own_king_explosion():
     game = Game(fen, rules=AtomicRules())
     
     # Nxe2 is illegal
-    assert game.rules.validate_move(Move("f3e2")) != MoveLegalityReason.LEGAL
+    assert game.rules.validate_move(game.state, Move("f3e2")) != MoveLegalityReason.LEGAL
 
 def test_atomic_adjacent_kings_illegal():
     """Verify Kings cannot be adjacent."""
@@ -78,4 +78,4 @@ def test_atomic_adjacent_kings_illegal():
     fen = "8/8/8/8/8/8/8/k1K5 w - - 0 1"
     game = Game(fen, rules=AtomicRules())
     
-    assert game.rules.validate_move(Move("c1b1")) != MoveLegalityReason.LEGAL
+    assert game.rules.validate_move(game.state, Move("c1b1")) != MoveLegalityReason.LEGAL

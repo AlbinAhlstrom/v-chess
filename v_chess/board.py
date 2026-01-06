@@ -1,14 +1,10 @@
-from __future__ import annotations
-from typing import TypeVar, Generator, TYPE_CHECKING
+from typing import TypeVar, Generator
 
 from v_chess.fen_helpers import board_from_fen, get_fen_from_board
 from v_chess.enums import Color
 from v_chess.piece.piece import Piece
 from v_chess.square import Coordinate, Square
 from v_chess.bitboard import Bitboard
-
-if TYPE_CHECKING:
-    from v_chess.piece import Piece
 
 T = TypeVar("T", bound=Piece)
 
@@ -146,7 +142,7 @@ class Board:
         return bin(self.bitboard.occupied).count('1')
 
     @classmethod
-    def empty(cls) -> "Board":
+    def empty(cls) -> Board:
         """Creates an empty board.
 
         Returns:
@@ -155,7 +151,7 @@ class Board:
         return cls(cls.EMPTY_BOARD_FEN)
 
     @classmethod
-    def starting_setup(cls) -> "Board":
+    def starting_setup(cls) -> Board:
         """Creates a board with the standard starting position.
 
         Returns:
@@ -176,7 +172,7 @@ class Board:
         """Returns the FEN string of the board."""
         return self.fen
 
-    def copy(self) -> "Board":
+    def copy(self) -> Board:
         """Creates a shallow copy of the board.
 
         Returns:

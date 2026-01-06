@@ -1,14 +1,12 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from v_chess.enums import Color, Direction
-from v_chess.piece import Pawn, Knight, Bishop, Rook, Queen, King
+from v_chess.piece import Pawn, Knight, Bishop, Rook, Queen, King, Piece
+from v_chess.move import Move
+from v_chess.square import Square
 
 if TYPE_CHECKING:
-    from v_chess.piece import Piece
-    from v_chess.move import Move
     from v_chess.board import Board
-    from v_chess.square import Square
 
 
 class AttackTables:
@@ -80,7 +78,7 @@ class Bitboard:
         self.occupied_co = {Color.WHITE: 0, Color.BLACK: 0}
         self.occupied = 0
 
-    def copy(self) -> 'Bitboard':
+    def copy(self) -> Bitboard:
         """Creates a deep copy of the Bitboard."""
         new_bb = Bitboard()
         for color in Color:
@@ -118,7 +116,7 @@ class Bitboard:
         """Returns the bitmask for a specific piece type and color."""
         return self.pieces[color].get(piece_type, 0)
 
-    def piece_at(self, square_index: int) -> tuple[Optional[type[Piece]], Optional[Color]]:
+    def piece_at(self, square_index: int) -> tuple[type[Piece] | None, Color | None]:
         """Returns the piece type and color at the given square index."""
         if square_index < 0:
             return None, None
@@ -138,7 +136,7 @@ class Bitboard:
 
         return None, None
 
-    def is_attacked(self, square_idx: int, by_color: Color, occupancy_override: Optional[int] = None) -> bool:
+    def is_attacked(self, square_idx: int, by_color: Color, occupancy_override: int | None = None) -> bool:
         """Checks if a square is attacked by pieces of a specific color."""
         occ = occupancy_override if occupancy_override is not None else self.occupied
 
@@ -174,7 +172,7 @@ class Bitboard:
 
         return False
 
-    def is_king_attacked_after_move(self, move: Move, color: Color, board: Board, ep_square: Optional[Square] = None) -> bool:
+    def is_king_attacked_after_move(self, move: Move, color: Color, board: "Board", ep_square: Square | None = None) -> bool:
         """Checks if the king is under attack after a hypothetical move."""
         start_idx = move.start.index
         end_idx = move.end.index

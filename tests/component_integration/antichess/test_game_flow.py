@@ -14,16 +14,9 @@ def test_forced_sequence():
     game = Game(fen, rules=AntichessRules())
 
     # White attempts non-capture
-    assert not game.rules.validate_move(Move("a1b1")) == MoveLegalityReason.LEGAL
+    assert not game.is_move_legal(Move("a1b1"))
     # White captures
     game.take_turn(Move("a1a2"))
-
-    # Now Black's turn. Black R b8. White R a2.
-    # b8xa2? No, R b8 -> a2 is not theoretical move?
-    # R moves straight. b8->a2 is Knight move.
-    # R b8->b2? No.
-    # So Black might not have mandatory capture.
-    pass
 
 def test_king_capture():
     """Verify King can be captured."""
@@ -32,11 +25,11 @@ def test_king_capture():
     game = Game(fen, rules=AntichessRules())
 
     # White MUST capture K.
-    assert game.rules.validate_move(Move("a1a2")) == MoveLegalityReason.LEGAL
+    assert game.is_move_legal(Move("a1a2"))
     game.take_turn(Move("a1a2"))
 
     assert game.state.board.get_piece("a2").color == "w"
     # Black has no King. Game continues?
     # In Antichess, King is not royal. Losing King is fine.
     # Losing ALL pieces is the goal.
-    assert game.rules.get_game_over_reason() != GameOverReason.ONGOING
+    assert game.game_over_reason != GameOverReason.ONGOING

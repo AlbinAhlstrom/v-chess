@@ -11,7 +11,7 @@ def test_pawn_double_push_blocked_by_friendly_piece():
     move = Move("f2f4")
 
 
-    is_legal = game.rules.is_legal(move)
+    is_legal = game.is_move_legal(move)
     assert not is_legal, "Move f2f4 should be illegal because f3 is blocked by a Knight"
 
     with pytest.raises(IllegalMoveException):

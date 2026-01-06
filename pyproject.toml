@@ -7,7 +7,7 @@ name = "v_chess-engine"
 version = "0.1.0"
 description = "FastAPI & React webapp for a chess engine."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.14"
 
 
 [tool.setuptools.packages]

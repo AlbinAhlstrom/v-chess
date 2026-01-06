@@ -1,4 +1,3 @@
-from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
@@ -70,7 +69,7 @@ class Move:
             if len(args) >= 3 and _promotion_piece is None:
                 if isinstance(args[2], Piece) or args[2] is None:
                      _promotion_piece = args[2]
-            
+
             if len(args) >= 4 and _drop_piece is None:
                 if isinstance(args[3], Piece) or args[3] is None:
                      _drop_piece = args[3]
@@ -150,7 +149,7 @@ class Move:
                     continue
 
                 candidate_move = Move(sq, self.end, self.promotion_piece, player_to_move=game.state.turn)
-                if game.rules.validate_move(candidate_move) == MoveLegalityReason.LEGAL:
+                if game.rules.validate_move(game.state, candidate_move) == MoveLegalityReason.LEGAL:
                     candidates.append(sq)
 
         if candidates:
@@ -195,7 +194,7 @@ class Move:
                 parts = uci_str.split("@")
                 if len(parts) != 2: return False
                 return parts[0] in piece_from_char and Move.is_square_valid(parts[1])
-            
+
             if not 3 < len(uci_str) < 6:
                 return False
             Square(uci_str[:2])
@@ -300,7 +299,7 @@ class Move:
         legal_moves = [
             Move(sq, end_square, promotion_piece, player_to_move=game.state.turn)
             for sq in candidates
-            if game.rules.validate_move(Move(sq, end_square, promotion_piece, player_to_move=game.state.turn)) == MoveLegalityReason.LEGAL
+            if game.rules.validate_move(game.state, Move(sq, end_square, promotion_piece, player_to_move=game.state.turn)) == MoveLegalityReason.LEGAL
         ]
         if len(legal_moves) != 1:
             raise ValueError(f"San {san_str} is ambiguous or illegal. Found {len(legal_moves)} matches.")

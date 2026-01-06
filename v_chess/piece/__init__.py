@@ -1,5 +1,3 @@
-from typing import Type
-
 from .piece import Piece
 from .rook import Rook
 from .knight import Knight
@@ -9,7 +7,7 @@ from .king import King
 from .pawn import Pawn
 
 
-piece_from_char: dict[str, Type[Piece]] = {
+piece_from_char: dict[str, type[Piece]] = {
     "R": Rook,
     "r": Rook,
     "N": Knight,

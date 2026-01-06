@@ -7,7 +7,7 @@ def test_castling_prevented_through_check():
     game = Game(fen)
 
     move = Move("e1g1")
-    assert not game.rules.is_legal(move)
+    assert not game.is_move_legal(move)
 
 def test_promotion_checkmate():
     fen = "kn6/P1K5/8/8/8/8/5B2/8 w - - 0 1"

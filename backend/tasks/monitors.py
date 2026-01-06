@@ -34,7 +34,7 @@ async def timeout_monitor():
                                 "fen": game.state.fen,
                                 "turn": game.state.turn.value,
                                 "is_over": True,
-                                "in_check": game.rules.is_check(),
+                                "in_check": game.is_check,
                                 "winner": winner.value,
                                 "move_history": game.move_history,
                                 "uci_history": game.uci_history,

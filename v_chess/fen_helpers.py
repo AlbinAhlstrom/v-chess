@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Tuple, List
+from typing import TYPE_CHECKING
 from v_chess.enums import CastlingRight, Color
 from v_chess.piece.piece import Piece
 from v_chess.square import Square
@@ -76,7 +76,7 @@ def get_fen_from_board(board: "Board") -> str:
 
     return "/".join(fen_rows)
 
-def _parse_pocket(pocket_str: str) -> Tuple[Tuple[Piece, ...], Tuple[Piece, ...]]:
+def _parse_pocket(pocket_str: str) -> tuple[tuple[Piece, ...], tuple[Piece, ...]]:
     """Parses a Crazyhouse pocket string into piece tuples.
 
     Args:
@@ -86,8 +86,8 @@ def _parse_pocket(pocket_str: str) -> Tuple[Tuple[Piece, ...], Tuple[Piece, ...]
         A tuple (white_pocket, black_pocket).
     """
     # content inside []
-    white_pocket: List[Piece] = []
-    black_pocket: List[Piece] = []
+    white_pocket: list[Piece] = []
+    black_pocket: list[Piece] = []
 
     for char in pocket_str:
         piece_cls = piece_from_char.get(char)
@@ -100,7 +100,7 @@ def _parse_pocket(pocket_str: str) -> Tuple[Tuple[Piece, ...], Tuple[Piece, ...]
 
     return (tuple(white_pocket), tuple(black_pocket))
 
-def _serialize_pocket(white_pocket: Tuple[Piece, ...], black_pocket: Tuple[Piece, ...]) -> str:
+def _serialize_pocket(white_pocket: tuple[Piece, ...], black_pocket: tuple[Piece, ...]) -> str:
     """Serializes Crazyhouse pockets to a string.
 
     Args:
@@ -131,7 +131,6 @@ def state_from_fen(fen: str) -> "GameState":
     """
     from v_chess.game_state import GameState, ThreeCheckGameState, CrazyhouseGameState
     from v_chess.board import Board
-    from v_chess.rules import StandardRules
 
     # Pre-processing for Variants
     # Check for Three-Check: ends with +N+M
@@ -164,8 +163,6 @@ def state_from_fen(fen: str) -> "GameState":
     except ValueError:
         raise ValueError("FEN halfmove and fullmove must be int.")
 
-    rules = StandardRules()
-
     # Instantiate specific GameState
     if three_check_suffix:
         # format +w+b e.g. +2+0
@@ -173,25 +170,22 @@ def state_from_fen(fen: str) -> "GameState":
         # parts[0] is empty string, parts[1] is white, parts[2] is black
         w_checks = int(parts[1])
         b_checks = int(parts[2])
-        state = ThreeCheckGameState(
+        return ThreeCheckGameState(
             board, active_color, castling_rights, en_passant,
-            halfmove_clock, fullmove_count, rules, 1,
+            halfmove_clock, fullmove_count, 1,
             checks=(w_checks, b_checks)
         )
     elif crazyhouse_pocket:
-        state = CrazyhouseGameState(
+        return CrazyhouseGameState(
             board, active_color, castling_rights, en_passant,
-            halfmove_clock, fullmove_count, rules, 1,
+            halfmove_clock, fullmove_count, 1,
             pockets=crazyhouse_pocket
         )
     else:
-        state = GameState(
+        return GameState(
             board, active_color, castling_rights, en_passant,
-            halfmove_clock, fullmove_count, rules, 1
+            halfmove_clock, fullmove_count, 1
         )
-
-    rules.state = state
-    return state
 
 def state_to_fen(state: "GameState") -> str:
     """Serializes a GameState object to a full FEN string.

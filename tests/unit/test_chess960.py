@@ -14,7 +14,7 @@ def test_chess960_castling_non_standard():
     
     # Target square for Kingside castling is g1 (row 7, col 6)
     move = Move("f1g1")
-    assert game.rules.validate_move(move) == MoveLegalityReason.LEGAL
+    assert game.rules.validate_move(game.state, move) == MoveLegalityReason.LEGAL
     
     game.take_turn(move)
     
@@ -37,4 +37,4 @@ def test_chess960_castling_blocked():
     game = Game(fen, rules=Chess960Rules())
     
     move = Move("f1g1")
-    assert game.rules.validate_move(move) != MoveLegalityReason.LEGAL
+    assert game.rules.validate_move(game.state, move) != MoveLegalityReason.LEGAL

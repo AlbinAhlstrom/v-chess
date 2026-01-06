@@ -9,8 +9,6 @@ from v_chess.piece.rook import Rook
 from v_chess.game_state import GameState
 from v_chess.rules import StandardRules
 
-from v_chess.rules import StandardRules
-
 def make_game(board):
     rules = StandardRules()
     state = GameState(
@@ -19,11 +17,9 @@ def make_game(board):
         castling_rights=(CastlingRight.WHITE_SHORT, CastlingRight.WHITE_LONG, CastlingRight.BLACK_SHORT, CastlingRight.BLACK_LONG),
         ep_square=None,
         halfmove_clock=0,
-        fullmove_count=1,
-        rules=rules
+        fullmove_count=1
     )
-    rules.state = state
-    return Game(state)
+    return Game(state, rules=rules)
 
 def board():
     """Generates a board in the standard starting position."""

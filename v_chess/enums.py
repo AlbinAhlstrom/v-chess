@@ -1,4 +1,3 @@
-from __future__ import annotations
 from enum import Enum, StrEnum
 from typing import TYPE_CHECKING
 
@@ -167,7 +166,7 @@ class CastlingRight(StrEnum):
     BA = "a"; BB = "b"; BC = "c"; BD = "d"; BE = "e"; BF = "f"; BG = "g"; BH = "h"
 
     @property
-    def expected_rook_square(self) -> Square:
+    def expected_rook_square(self) -> "Square":
         """Returns the square where the rook is expected to be for this right."""
         from v_chess.square import Square
         if self == CastlingRight.WHITE_SHORT: return Square("h1")
@@ -182,7 +181,7 @@ class CastlingRight(StrEnum):
         return Square(row, col)
 
     @property
-    def expected_king_square(self) -> Square:
+    def expected_king_square(self) -> "Square":
         """Returns the square where the king is expected to be for this right."""
         from v_chess.square import Square
         if self.value.isupper():
@@ -295,7 +294,7 @@ class Direction(Enum):
         """Returns the directions for a king's castling move."""
         return {cls.TWO_LEFT, cls.TWO_RIGHT}
 
-    def get_path(self, square: Square, max_squares: int = 7) -> list[Square]:
+    def get_path(self, square: "Square", max_squares: int = 7) -> list["Square"]:
         """Returns all squares in this direction from a starting square.
 
         Uses an internal cache for performance.
@@ -318,7 +317,7 @@ class Direction(Enum):
         self.__class__._PATH_CACHE[cache_key] = path
         return path
 
-    def take_step(self, start_square: Square, max_squares: int):
+    def take_step(self, start_square: "Square", max_squares: int):
         """Generator that yields squares in this direction.
 
         Args:

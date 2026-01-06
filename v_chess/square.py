@@ -1,8 +1,6 @@
-from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from .enums import Direction, Color
-from typing import TypeAlias
 
 
 @dataclass(frozen=True)
@@ -19,7 +17,7 @@ class Square:
 
     _CACHE = {}
 
-    def __new__(cls, *args) -> 'Square':
+    def __new__(cls, *args) -> Square:
         """Creates a new Square instance.
         
         Uses a cache to ensure unique instances for each coordinate.
@@ -130,7 +128,7 @@ class Square:
         row = 8 - int(rank_char)
         return row, col
 
-    def adjacent(self, direction: Direction) -> 'Square':
+    def adjacent(self, direction: Direction) -> Square:
         """Returns a new coordinate one step in a direction.
 
         NOTE: This method assumes the result is a valid square and is typically
@@ -152,7 +150,7 @@ class Square:
 
         return Square(new_row, new_col)
 
-    def is_adjacent_to(self, square: 'Square', moveset: set[Direction] = Direction.straight_and_diagonal()):
+    def is_adjacent_to(self, square: Square, moveset: set[Direction] = Direction.straight_and_diagonal()):
         """Checks if this square is adjacent to another square."""
         adjacent_squares = [self.adjacent(direction) for direction in moveset]
         return square in adjacent_squares
@@ -163,6 +161,6 @@ class Square:
             return "NoneSquare"
         return f"{chr(self.col + ord('a'))}{8 - self.row}"
 
-Coordinate: TypeAlias = str | tuple | Square
+type Coordinate = str | tuple | Square
 
 

@@ -1,7 +1,5 @@
-from __future__ import annotations
 import time
 from dataclasses import replace
-from typing import Optional, Dict
 from v_chess.game_state import GameState
 from v_chess.move import Move
 from v_chess.rules import Rules
@@ -14,7 +12,7 @@ class Game:
 
     Responsible for turn management and history.
     """
-    def __init__(self, state: GameState | str | None = None, rules: Rules | None = None, time_control: Dict = None):
+    def __init__(self, state: GameState | str | None = None, rules: Rules | None = None, time_control: dict | None = None):
         """Initializes a new Game.
 
         Args:
@@ -33,13 +31,10 @@ class Game:
             self.state = GameState.starting_setup()
 
         if rules:
-            # Sync rules with state
-            rules.state = self.state
-            self.state = replace(self.state, rules=rules)
             self.rules = rules
         else:
-            self.rules = self.state.rules
-            self.rules.state = self.state
+            from v_chess.rules import StandardRules
+            self.rules = StandardRules()
 
         self.history: list[GameState] = []
         self.move_history: list[str] = [] # SAN
@@ -52,7 +47,7 @@ class Game:
         self.is_over_by_timeout = False
         self.winner_override = None
         self.game_over_reason_override = None
-        
+
         if self.time_control:
             if 'limit' in self.time_control:
                 start_sec = float(self.time_control['limit'])
@@ -83,7 +78,7 @@ class Game:
         self.game_over_reason_override = GameOverReason.SURRENDER
         winner_color = player_color.opposite
         self.winner_override = winner_color.value
-        
+
         result = "1-0" if winner_color == Color.WHITE else "0-1"
         self.move_history.append(result)
 
@@ -122,11 +117,11 @@ class Game:
         if self.is_over:
              raise IllegalMoveException("Game is over.")
 
-        board_status = self.rules.validate_board_state()
+        board_status = self.rules.validate_board_state(self.state)
         if board_status != BoardLegalityReason.VALID:
              raise IllegalBoardException(f"Board state is illegal. Reason: {board_status}")
 
-        move_status = self.rules.validate_move(move)
+        move_status = self.rules.validate_move(self.state, move)
         if move_status != MoveLegalityReason.LEGAL:
             raise IllegalMoveException(f"Illegal move: {move_status.value} (attempted: {move.uci})")
 
@@ -145,7 +140,7 @@ class Game:
                 self.last_move_at = now
 
         self.add_to_history()
-        new_state = self.rules.apply_move(move)
+        new_state = self.rules.apply_move(self.state, move)
 
         current_fen_key = " ".join(new_state.fen.split()[:4])
 
@@ -156,14 +151,12 @@ class Game:
                 count += 1
 
         self.state = replace(new_state, repetition_count=count)
-        self.state.rules.state = self.state
-        self.rules = self.state.rules
 
-        is_game_over = self.rules.is_game_over()
-        is_check = self.rules.is_check()
+        is_game_over = self.rules.is_game_over(self.state)
+        is_check = self.rules.is_check(self.state)
 
         if is_game_over:
-            if self.rules.get_game_over_reason() == GameOverReason.CHECKMATE:
+            if self.rules.get_game_over_reason(self.state) == GameOverReason.CHECKMATE:
                  san += "#"
         elif is_check:
              san += "+"
@@ -176,14 +169,14 @@ class Game:
 
         if is_game_over:
              result = "1/2-1/2"
-             winner_color = self.rules.get_winner()
+             winner_color = self.rules.get_winner(self.state)
              if winner_color == Color.WHITE:
                  result = "1-0"
              elif winner_color == Color.BLACK:
                  result = "0-1"
              self.move_history.append(result)
 
-    def get_current_clocks(self) -> Optional[Dict[Color, float]]:
+    def get_current_clocks(self) -> dict[Color, float] | None:
         """Returns the current remaining time for each player.
 
         Accounts for time passed since the last move.
@@ -193,7 +186,7 @@ class Game:
         """
         if not self.clocks or self.last_move_at is None:
             return self.clocks
-            
+
         current_clocks = self.clocks.copy()
         # Deduct time passed from the player currently on move
         elapsed = time.time() - self.last_move_at
@@ -219,19 +212,18 @@ class Game:
             self.move_history.pop()
 
         self.state = self.history.pop()
-        self.rules = self.state.rules
         if self.move_history:
             self.move_history.pop()
         if self.uci_history:
             self.uci_history.pop()
-        
+
         if not self.uci_history:
             self.last_move_at = None
-        
+
         # Reset overrides if any
         self.game_over_reason_override = None
         self.winner_override = None
-            
+
         print(f"Undo move. Restored FEN: {self.state.fen}")
         return self.state.fen
 
@@ -243,27 +235,27 @@ class Game:
     @property
     def is_check(self) -> bool:
         """Checks if the current side to move is in check."""
-        return self.rules.is_check()
+        return self.rules.is_check(self.state)
 
     @property
     def is_checkmate(self) -> bool:
         """Checks if the current side to move is checkmated."""
-        return self.rules.is_checkmate
+        return self.rules.is_checkmate(self.state)
 
     @property
     def is_over(self) -> bool:
         """Checks if the game is over."""
-        return self.rules.is_game_over() or self.is_over_by_timeout or self.game_over_reason_override is not None or self.winner_override is not None
+        return self.rules.is_game_over(self.state) or self.is_over_by_timeout or self.game_over_reason_override is not None or self.winner_override is not None
 
     @property
     def is_draw(self) -> bool:
         """Checks if the game is a draw."""
-        return self.rules.is_draw
+        return self.rules.is_draw(self.state)
 
     @property
     def legal_moves(self) -> list[Move]:
         """Returns a list of all legal moves in the current position."""
-        return self.rules.get_legal_moves()
+        return self.rules.get_legal_moves(self.state)
 
     @property
     def game_over_reason(self) -> GameOverReason:
@@ -272,23 +264,20 @@ class Game:
             return self.game_over_reason_override
         if self.is_over_by_timeout:
              return GameOverReason.TIMEOUT
-        return self.rules.get_game_over_reason()
+        return self.rules.get_game_over_reason(self.state)
 
     @property
-    def winner(self) -> Optional[str]:
+    def winner(self) -> str | None:
         """Returns the winner's color (as string) or None if draw/ongoing."""
         if self.winner_override:
             return self.winner_override
-        
+
         # Timeout handling
         if self.is_over_by_timeout:
              # If timeout, the winner is the one NOT on turn (simplification)
-             # Ideally we check if opponent has mating material, but let's stick to simple flagging for now.
-             # Wait, timeout is detected externally usually, or via get_current_clocks check.
-             # If is_over_by_timeout is set, we assume the CURRENT turn player ran out of time.
              return self.state.turn.opposite.value
 
-        color = self.rules.get_winner()
+        color = self.rules.get_winner(self.state)
         return color.value if color else None
 
     def is_move_legal(self, move: Move) -> bool:
@@ -300,7 +289,7 @@ class Game:
         Returns:
             True if the move is legal, False otherwise.
         """
-        return self.rules.validate_move(move) == MoveLegalityReason.LEGAL
+        return self.rules.validate_move(self.state, move) == MoveLegalityReason.LEGAL
 
     def is_move_pseudo_legal(self, move: Move) -> tuple[bool, MoveLegalityReason]:
         """Checks if a move is pseudo-legal.
@@ -311,5 +300,5 @@ class Game:
         Returns:
             A tuple (is_pseudo_legal, reason).
         """
-        reason = self.rules.move_pseudo_legality_reason(move)
+        reason = self.rules.move_pseudo_legality_reason(self.state, move)
         return reason == MoveLegalityReason.LEGAL, reason

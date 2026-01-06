@@ -59,4 +59,4 @@ def test_rk_illegal_check():
     game = Game(fen, rules=RacingKingsRules())
     
     # Kh1 is illegal
-    assert game.rules.validate_move(Move("g1h1")) != MoveLegalityReason.LEGAL
+    assert game.rules.validate_move(game.state, Move("g1h1")) != MoveLegalityReason.LEGAL

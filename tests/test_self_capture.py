@@ -1,9 +1,3 @@
-import sys
-import os
-
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 from v_chess.game import Game
 from v_chess.board import Board
 from v_chess.move import Move
@@ -24,11 +18,9 @@ def test_capture_own_king_bug():
         castling_rights=(CastlingRight.WHITE_SHORT, CastlingRight.WHITE_LONG, CastlingRight.BLACK_SHORT, CastlingRight.BLACK_LONG),
         ep_square=None,
         halfmove_clock=0,
-        fullmove_count=1,
-        rules=rules
+        fullmove_count=1
     )
-    rules.state = state
-    game = Game(state)
+    game = Game(state, rules=rules)
     print("Board initialized with starting setup.")
 
 
@@ -52,14 +44,14 @@ def test_capture_own_king_bug():
 
     move_uci = "a1e1"
     try:
-        move = Move(move_uci, player_to_move=board.player_to_move)
+        move = Move(move_uci, player_to_move=state.turn)
         print(f"Move created from UCI '{move_uci}': {move}")
     except Exception as e:
         print(f"FAIL: Move failed: {e}")
         return
 
 
-    is_pseudo, reason = game.rules.is_move_pseudo_legal(move)
+    is_pseudo, reason = game.is_move_pseudo_legal(move)
     print(f"is_move_pseudo_legal: {is_pseudo}, Reason: '{reason}'")
 
     if is_pseudo:
@@ -68,7 +60,7 @@ def test_capture_own_king_bug():
         print("PASS: Move is correctly rejected as pseudo-illegal.")
 
 
-    is_legal = game.rules.is_legal(move)
+    is_legal = game.is_move_legal(move)
     print(f"is_move_legal: {is_legal}")
 
     if is_legal:

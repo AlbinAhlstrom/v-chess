@@ -1,4 +1,3 @@
-from dataclasses import replace
 from v_chess.enums import GameOverReason, MoveLegalityReason, BoardLegalityReason, Color
 from v_chess.game_state import GameState
 from v_chess.move import Move
@@ -23,28 +22,28 @@ class RacingKingsRules(StandardRules):
     def starting_fen(self) -> str:
         return "8/8/8/8/8/8/krbnNBRK/qrbnNBRQ w - - 0 1"
 
-    def validate_move(self, move: Move) -> MoveLegalityReason:
-        pseudo = self.move_pseudo_legality_reason(move)
+    def validate_move(self, state: GameState, move: Move) -> MoveLegalityReason:
+        pseudo = self.move_pseudo_legality_reason(state, move)
         if pseudo != self.MoveLegalityReason.LEGAL:
             return pseudo
 
-        next_state = self.apply_move(move)
-        if next_state.rules.is_check():
+        next_state = self.apply_move(state, move)
+        if self.is_check(next_state):
             return self.MoveLegalityReason.GIVES_CHECK
 
-        if next_state.rules.inactive_player_in_check():
+        if self.inactive_player_in_check(next_state):
              return self.MoveLegalityReason.KING_LEFT_IN_CHECK
 
         return self.MoveLegalityReason.LEGAL
 
-    def is_check(self) -> bool:
-        return self._is_color_in_check(self.state.board, self.state.turn)
+    def is_check(self, state: GameState) -> bool:
+        return self._is_color_in_check(state.board, state.turn)
 
-    def get_game_over_reason(self) -> GameOverReason:
+    def get_game_over_reason(self, state: GameState) -> GameOverReason:
         wk_on_8 = any(isinstance(p, King) and p.color == Color.WHITE and sq.row == 0
-                                                for sq, p in self.state.board.items())
+                                                for sq, p in state.board.items())
         bk_on_8 = any(isinstance(p, King) and p.color == Color.BLACK and sq.row == 0
-                                                for sq, p in self.state.board.items())
+                                                for sq, p in state.board.items())
 
         if wk_on_8 and bk_on_8:
             return self.GameOverReason.STALEMATE
@@ -54,42 +53,39 @@ class RacingKingsRules(StandardRules):
 
         if wk_on_8:
             # White is on 8th. If turn is Black, Black has one last turn.
-            if self.state.turn == Color.BLACK:
-                # If Black can also reach 8th, it's a draw (STALEMATE in RK terms for double reach)
-                # But for now, we continue to give Black the chance.
+            if state.turn == Color.BLACK:
+                # If Black can also reach 8th, it's a draw
                 pass
             else:
                 # Turn is White, and White is on 8th. White wins!
                 return self.GameOverReason.KING_TO_EIGHTH_RANK
 
         # Standard rules (repetition, 50-move, stalemate)
-        res = super().get_game_over_reason()
+        res = super().get_game_over_reason(state)
 
-        # Compare values to avoid Enum class mismatch issues
         if str(res.value) == str(GameOverReason.ONGOING.value):
             return self.GameOverReason.ONGOING
 
-        # Map other reasons (STALEMATE, REPETITION, etc.)
         try:
             return self.GameOverReason(res.value)
         except ValueError:
             return self.GameOverReason.ONGOING
 
-    def get_winner(self) -> Color | None:
-        reason = self.get_game_over_reason()
+    def get_winner(self, state: GameState) -> Color | None:
+        reason = self.get_game_over_reason(state)
         if reason == self.GameOverReason.KING_TO_EIGHTH_RANK:
             wk_on_8 = any(isinstance(p, King) and p.color == Color.WHITE and sq.row == 0
-                                                    for sq, p in self.state.board.items())
+                                                    for sq, p in state.board.items())
             if wk_on_8: return Color.WHITE
             return Color.BLACK
-        return super().get_winner()
+        return super().get_winner(state)
 
-    def validate_board_state(self) -> BoardLegalityReason:
-        res = super().validate_board_state()
+    def validate_board_state(self, state: GameState) -> BoardLegalityReason:
+        res = super().validate_board_state(state)
         if res != BoardLegalityReason.VALID:
             return res
 
-        if self.is_check() or self.inactive_player_in_check():
+        if self.is_check(state) or self.inactive_player_in_check(state):
             return self.BoardLegalityReason.KING_IN_CHECK
 
         return BoardLegalityReason.VALID

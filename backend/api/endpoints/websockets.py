@@ -112,7 +112,7 @@ async def game_websocket(websocket: WebSocket, game_id: str):
     
     await manager.broadcast(game_id, json.dumps({
         "type": "game_state", "fen": game.state.fen, "turn": game.state.turn.value, 
-        "is_over": game.is_over, "in_check": game.rules.is_check(), "winner": game.winner, 
+        "is_over": game.is_over, "in_check": game.is_check, "winner": game.winner, 
         "move_history": game.move_history, "uci_history": game.uci_history,
         "clocks": {c.value: t for c, t in game.clocks.items()} if game.clocks else None,
         "explosion_square": str(game.state.explosion_square) if hasattr(game.state, 'explosion_square') and game.state.explosion_square else None
@@ -155,7 +155,7 @@ async def game_websocket(websocket: WebSocket, game_id: str):
                     
                     game_state_msg = {
                         "type": "game_state", "fen": game.state.fen, "turn": game.state.turn.value, 
-                        "is_over": game.is_over, "in_check": game.rules.is_check(), "winner": game.winner, 
+                        "is_over": game.is_over, "in_check": game.is_check, "winner": game.winner, 
                         "move_history": game.move_history, "uci_history": game.uci_history,
                         "clocks": {c.value: t for c, t in game.get_current_clocks().items()} if game.clocks else None, 
                         "rating_diffs": rating_diffs,
@@ -177,7 +177,7 @@ async def game_websocket(websocket: WebSocket, game_id: str):
                     game.undo_move(); await save_game_to_db(game_id)
                     await manager.broadcast(game_id, json.dumps({
                         "type": "game_state", "fen": game.state.fen, "turn": game.state.turn.value, 
-                        "is_over": game.is_over, "in_check": game.rules.is_check(), "winner": game.winner, 
+                        "is_over": game.is_over, "in_check": game.is_check, "winner": game.winner, 
                         "move_history": game.move_history, "uci_history": game.uci_history,
                         "clocks": {c.value: t for c, t in game.get_current_clocks().items()} if game.clocks else None, 
                         "rating_diffs": None, "explosion_square": None, "is_drop": False
@@ -200,7 +200,7 @@ async def game_websocket(websocket: WebSocket, game_id: str):
                     rating_diffs = await save_game_to_db(game_id)
                     await manager.broadcast(game_id, json.dumps({
                         "type": "game_state", "fen": game.state.fen, "turn": game.state.turn.value, 
-                        "is_over": game.is_over, "in_check": game.rules.is_check(), "winner": game.winner, 
+                        "is_over": game.is_over, "in_check": game.is_check, "winner": game.winner, 
                         "move_history": game.move_history, "uci_history": game.uci_history,
                         "clocks": {c.value: t for c, t in game.get_current_clocks().items()} if game.clocks else None, 
                         "rating_diffs": rating_diffs,
@@ -213,7 +213,7 @@ async def game_websocket(websocket: WebSocket, game_id: str):
                 game.agree_draw(); rating_diffs = await save_game_to_db(game_id)
                 await manager.broadcast(game_id, json.dumps({
                         "type": "game_state", "fen": game.state.fen, "turn": game.state.turn.value, 
-                        "is_over": game.is_over, "in_check": game.rules.is_check(), "winner": game.winner, 
+                        "is_over": game.is_over, "in_check": game.is_check, "winner": game.winner, 
                         "move_history": game.move_history, "uci_history": game.uci_history,
                         "clocks": {c.value: t for c, t in game.get_current_clocks().items()} if game.clocks else None, 
                         "rating_diffs": rating_diffs,
@@ -238,7 +238,7 @@ async def game_websocket(websocket: WebSocket, game_id: str):
                     await manager.broadcast(game_id, json.dumps({"type": "takeback_cleared"}))
                     await manager.broadcast(game_id, json.dumps({
                         "type": "game_state", "fen": game.state.fen, "turn": game.state.turn.value, 
-                        "is_over": game.is_over, "in_check": game.rules.is_check(), "winner": game.winner, 
+                        "is_over": game.is_over, "in_check": game.is_check, "winner": game.winner, 
                         "move_history": game.move_history, "uci_history": game.uci_history,
                         "clocks": {c.value: t for c, t in game.get_current_clocks().items()} if game.clocks else None, 
                         "rating_diffs": None, "explosion_square": None, "is_drop": False, "status": "takeback_accepted"

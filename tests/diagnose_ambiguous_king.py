@@ -18,8 +18,6 @@ def parse_moves(game_string):
     return [move for move in moves_section.split() if move]
 
 
-
-
 def diagnose_moves3():
     print("--- Diagnosing moves3 Failure ---")
     pgn_path = "tests/example_games.pgn"
@@ -37,16 +35,7 @@ def diagnose_moves3():
 
     print(f"Game 3 Moves: {moves}")
 
-    board = Board.starting_setup()
-    state = GameState(
-        board=board,
-        turn=Color.WHITE,
-        castling_rights=(CastlingRight.WHITE_SHORT, CastlingRight.WHITE_LONG, CastlingRight.BLACK_SHORT, CastlingRight.BLACK_LONG),
-        ep_square=None,
-        halfmove_clock=0,
-        fullmove_count=1
-    )
-    game = Game(state)
+    game = Game()
 
     print("\nExecuting moves...")
     for i, san in enumerate(moves):
@@ -63,21 +52,24 @@ def diagnose_moves3():
                 from v_chess.piece.king import King
                 from v_chess.square import Square
                 from v_chess.enums import Color
-                pieces = game.state.board.get_pieces(King, game.state.turn)
-                print(f"King found: {pieces}")
-                if pieces:
-                    king = pieces[0]
-                    print(f"King Square: {king.square}")
-
+                
+                king_sq = None
+                for sq, piece in game.state.board.items():
+                    if isinstance(piece, King) and piece.color == game.state.turn:
+                        king_sq = sq
+                        break
+                
+                print(f"King Square: {king_sq}")
+                if king_sq:
                     target_sq = Square("c7")
                     is_attacked_by_black_on_original = game.rules.is_under_attack(game.state.board, target_sq, Color.BLACK)
                     print(f"Original board: Is c7 attacked by Black? {is_attacked_by_black_on_original}")
 
                     if is_attacked_by_black_on_original:
-                        black_pieces_original = game.state.board.get_pieces(color=Color.BLACK)
-                        for p in black_pieces_original:
-                            if p.square is not None and game.rules.is_attacking(game.state.board, p, target_sq, p.square):
-                                print(f"Original board Attacker: {p} at {p.square}")
+                        for sq, p in game.state.board.items():
+                            if p.color == Color.BLACK:
+                                if game.rules.is_attacking(game.state.board, p, target_sq, sq):
+                                    print(f"Original board Attacker: {p} at {sq}")
 
 
                     print("\n--- Simulating king_left_in_check for Kc7 ---")
@@ -85,7 +77,7 @@ def diagnose_moves3():
                     temp_game = Game(initial_fen)
 
                     try:
-                        temp_game.state = temp_game.rules.apply_move(temp_game.state, Move(king.square, target_sq))
+                        temp_game.state = temp_game.rules.apply_move(temp_game.state, Move(king_sq, target_sq))
                         temp_board = temp_game.state.board
                     except Exception as e:
                         print(f"Could not apply move on temp board: {e}")
@@ -100,67 +92,12 @@ def diagnose_moves3():
                         is_attacked_on_temp = temp_game.rules.is_under_attack(temp_board, sim_king_sq, Color.BLACK)
                         print(f"Temp board: Is c7 attacked by Black (after move)? {is_attacked_on_temp}")
                         if is_attacked_on_temp:
-                            black_pieces_temp = temp_board.get_pieces(color=Color.BLACK)
-                            for p in black_pieces_temp:
-                                if p.square is not None and temp_game.rules.is_attacking(temp_board, p, sim_king_sq, p.square):
-                                    print(f"Temp board Attacker: {p} at {p.square}")
+                            for sq, p in temp_board.items():
+                                if p.color == Color.BLACK:
+                                    if temp_game.rules.is_attacking(temp_board, p, sim_king_sq, sq):
+                                        print(f"Temp board Attacker: {p} at {sq}")
 
+    return
 
-
-
-
-    assert game.state.fen == initial_fen
-
-
-
-    print(f"King Theoretical Moves: {king.theoretical_moves}")
-
-    print(f"King Legal Moves: {[m.uci for m in game.legal_moves if m.start == king.square]}")
-
-
-
-
-
-    print("\n--- Diagnosing King theoretical_moves ---")
-
-    isolated_king_board = Board.empty()
-
-    test_king = King(Color.BLACK)
-
-    a7_square = Square("a7")
-
-    c7_square = Square("c7")
-
-    isolated_king_board.set_piece(test_king, a7_square)
-
-
-
-
-
-    test_king.square = a7_square
-
-
-
-    king_theoretical_moves = test_king.theoretical_moves
-
-    print(f"Theoretical moves for King at a7: {king_theoretical_moves}")
-
-
-
-    if c7_square in king_theoretical_moves:
-
-        print(f"CRITICAL BUG: King at a7 incorrectly includes {c7_square} in theoretical_moves!")
-
-    else:
-
-        print(f"King at a7 correctly does NOT include {c7_square} in theoretical_moves.")
-
-
-
-        print("\n-----------------------------------------")
-
-
-
-        return
 if __name__ == "__main__":
     diagnose_moves3()

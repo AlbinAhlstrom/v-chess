@@ -46,7 +46,7 @@ def test_horde_get_legal_moves_white():
     """Verify white can get legal moves in Horde (no NameError)."""
     fen = "k7/8/8/8/8/8/8/P7 w - - 0 1"
     game = Game(fen, rules=HordeRules())
-    moves = game.rules.get_legal_moves()
+    moves = game.legal_moves
     assert len(moves) > 0
     # a1-a2 and a1-a3 should be legal
     uci_moves = [m.uci for m in moves]

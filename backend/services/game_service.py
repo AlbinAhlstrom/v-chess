@@ -151,7 +151,7 @@ async def trigger_ai_move(game_id: str, game: Game):
                 "fen": game.state.fen, 
                 "turn": game.state.turn.value, 
                 "is_over": game.is_over, 
-                "in_check": game.rules.is_check(), 
+                "in_check": game.is_check, 
                 "winner": game.winner, 
                 "move_history": game.move_history, 
                 "uci_history": game.uci_history,

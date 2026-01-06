@@ -85,7 +85,7 @@ async def get_game_state(game_id: str):
 @router.post("/moves/all_legal")
 async def get_all_legal_moves(req: GameRequest):
     game = await get_game(req.game_id)
-    return {"moves": [m.uci for m in game.rules.get_legal_moves()], "status": "success"}
+    return {"moves": [m.uci for m in game.legal_moves], "status": "success"}
 
 @router.post("/moves/legal")
 async def get_legal_moves(req: LegalMovesRequest):
@@ -95,4 +95,4 @@ async def get_legal_moves(req: LegalMovesRequest):
     piece = game.state.board.get_piece(square)
     if not piece: return {"moves": [], "status": "success"}
     if piece.color != game.state.turn: raise HTTPException(status_code=400, detail="Piece belongs to the opponent")
-    return {"moves": [m.uci for m in game.rules.get_legal_moves() if m.start == square], "status": "success"}
+    return {"moves": [m.uci for m in game.legal_moves if m.start == square], "status": "success"}
