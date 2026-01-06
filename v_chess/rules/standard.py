@@ -404,16 +404,13 @@ class StandardRules(Rules):
 
     def _is_color_in_check(self, board: Board, color: Color) -> bool:
         """Checks if the king of the given color is under attack."""
-        king_sq = None
-        for sq, piece in board.board.items():
-            if isinstance(piece, King) and piece.color == color:
-                king_sq = sq
-                break
-
-        if king_sq is None:
-            return False
-
-        return self.is_under_attack(board, king_sq, color.opposite)
+        king_mask = board.bitboard.pieces[color][King]
+        while king_mask:
+            sq_idx = (king_mask & -king_mask).bit_length() - 1
+            if board.bitboard.is_attacked(sq_idx, color.opposite):
+                return True
+            king_mask &= king_mask - 1
+        return False
 
     def get_legal_castling_moves(self) -> list[Move]:
         """Returns all legal castling moves."""

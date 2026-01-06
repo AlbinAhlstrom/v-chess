@@ -38,11 +38,6 @@ class Board:
         else:
             raise TypeError(f"setup must be Bitboard or str, not {type(setup)}")
 
-    @property
-    def board(self) -> dict[Square, Piece]:
-        """Compatibility property returning a dict of pieces."""
-        return dict(self.items())
-
     def get_piece(self, coordinate: Coordinate) -> Piece | None:
         """Gets the piece at a specific coordinate.
 
