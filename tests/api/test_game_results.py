@@ -5,6 +5,7 @@ from backend import database
 from backend.database import User, GameModel
 import uuid
 import json
+import asyncio
 
 @pytest.mark.asyncio
 async def test_game_result_history_checkmate(client):
@@ -25,15 +26,13 @@ async def test_game_result_history_checkmate(client):
             while True:
                 msg = ws.receive_json()
                 if msg.get("type") == "game_state":
-                    # Check if this state corresponds to the current move (last move in history matches)
-                    # Or just check if it's the checkmate move
                     if uci == "d8h4":
                         history = msg.get("move_history")
                         if history[-1] == "0-1":
                             assert history[-2].endswith("#")
                             break
-                        else: continue # Might be an intermediate state
-                    break # Not the mate move, just continue to next move
+                        else: continue 
+                    break 
 
 @pytest.mark.asyncio
 async def test_game_result_history_resign(client):
@@ -53,26 +52,10 @@ async def test_game_result_history_resign(client):
             if msg.get("type") == "game_state" and "e4" in msg.get("move_history", []):
                 break
 
-        # White resigns
-        # Need to simulate user being White. 
-        # In test environment, session might be empty or mocked?
-        # main.py checks user_id against white_player_id.
-        # If created via API without auth, white_player_id might be None?
-        # Let's check new_game logic: 
-        # user_session = request.session.get("user") -> None
-        # white_id = None.
-        # Resign handler: if (not white_id and not black_id): allow.
-        
         ws.send_json({"type": "resign"})
         msg = ws.receive_json()
         
         history = msg["move_history"]
-        # If white resigns (default assumption in my fix for anon?), 0-1
-        # Wait, my fix for anon was: game.resign(game.state.turn) -> Black starts -> Black resigns -> 1-0?
-        # No, turn is Black after e4.
-        # If no user_id, resign uses game.state.turn.
-        # Turn is Black. So Black resigns.
-        # If Black resigns, White wins -> 1-0.
         assert history[-1] == "1-0"
 
 @pytest.mark.asyncio
@@ -97,4 +80,3 @@ async def test_game_result_history_draw_agreement(client):
                 history = msg.get("move_history")
                 if history and history[-1] == "1/2-1/2":
                     break
-

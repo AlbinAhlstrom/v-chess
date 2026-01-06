@@ -27,7 +27,7 @@ function GameOverIndicator({ isGameOver, position, winner, isFlipped }) {
         let displayFile = isFlipped ? 7 - sq.file : sq.file;
         let displayRank = isFlipped ? 7 - sq.rank : sq.rank;
         return (
-            <div key={color} style={{
+            <div key={color} className="on-draw-king" style={{
                 position: 'absolute',
                 left: `calc(${displayFile} * var(--square-size) + var(--square-size) / 2 - 15px)`,
                 top: `calc(${displayRank} * var(--square-size) + var(--square-size) / 2 - 15px)`,

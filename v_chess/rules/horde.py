@@ -98,10 +98,9 @@ class HordeRules(StandardRules):
             return Color.BLACK
         return super().get_winner(state)
 
-    def get_theoretical_moves(self, state: GameState):
+    def get_extra_theoretical_moves(self, state: GameState):
         """Generates all theoretical moves, including Horde-specific pawn pushes."""
-        yield from super().get_theoretical_moves(state)
-
+        
         # Horde specific: White pawns on rank 1 can also move 2 steps
         if state.turn == Color.WHITE:
             bb = state.board.bitboard

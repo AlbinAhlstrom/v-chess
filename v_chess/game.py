@@ -5,6 +5,9 @@ from v_chess.move import Move
 from v_chess.rules import Rules
 from v_chess.exceptions import IllegalMoveException, IllegalBoardException
 from v_chess.enums import MoveLegalityReason, BoardLegalityReason, GameOverReason, Color
+from v_chess.piece import Pawn, King, Queen, Rook, Bishop, Knight
+from v_chess.square import Square
+from v_chess.enums import Direction, CastlingRight
 
 
 class Game:
@@ -140,7 +143,7 @@ class Game:
                 self.last_move_at = now
 
         self.add_to_history()
-        new_state = self.rules.apply_move(self.state, move)
+        new_state = self.apply_move(self.state, move)
 
         current_fen_key = " ".join(new_state.fen.split()[:4])
 
@@ -254,14 +257,7 @@ class Game:
     @property
     def is_draw(self) -> bool:
         """Checks if the game is a draw."""
-        cls = getattr(self.rules, "GameOverReason", GameOverReason)
-        draw_reasons = []
-        for attr in ("STALEMATE", "REPETITION", "FIFTY_MOVE_RULE", "MUTUAL_AGREEMENT", "INSUFFICIENT_MATERIAL"):
-            reason = getattr(cls, attr, None)
-            if reason is not None:
-                draw_reasons.append(reason)
-
-        return self.game_over_reason in draw_reasons
+        return self.rules.is_draw(self.state)
 
     @property
     def is_over(self) -> bool:
@@ -273,12 +269,12 @@ class Game:
     @property
     def legal_moves(self) -> list[Move]:
         """Returns a list of all legal moves in the current position."""
-        return [move for move in self.rules.get_theoretical_moves(self.state) if self.is_move_legal(move)]
+        return [move for move in self.get_theoretical_moves(self.state) if self.is_move_legal(move)]
 
     @property
     def has_legal_moves(self) -> bool:
         """Checks if there is at least one legal move."""
-        return any(self.is_move_legal(move) for move in self.rules.get_theoretical_moves(self.state))
+        return any(self.is_move_legal(move) for move in self.get_theoretical_moves(self.state))
 
     @property
     def game_over_reason(self) -> GameOverReason:
@@ -313,3 +309,207 @@ class Game:
             True if the move is legal, False otherwise.
         """
         return self.rules.validate_move(self.state, move) == MoveLegalityReason.LEGAL
+
+    def is_move_pseudo_legal(self, move: Move) -> tuple[bool, MoveLegalityReason]:
+        """Checks if a move is pseudo-legal.
+
+        Args:
+            move: The move to check.
+
+        Returns:
+            A tuple (is_pseudo_legal, reason).
+        """
+        reason = self.rules.move_pseudo_legality_reason(self.state, move)
+        return reason == MoveLegalityReason.LEGAL, reason
+
+    def get_theoretical_moves(self, state: GameState):
+        """Generates all moves possible on an empty board for the current turn."""
+        bb = state.board.bitboard
+        turn = state.turn
+
+        for p_type, mask in bb.pieces[turn].items():
+            temp_mask = mask
+            while temp_mask:
+                sq_idx = (temp_mask & -temp_mask).bit_length() - 1
+                sq = Square(divmod(sq_idx, 8))
+                piece = state.board.get_piece(sq)
+
+                if piece:
+                    # Basic moves and promotions
+                    for end in piece.theoretical_moves(sq):
+                        if isinstance(piece, Pawn) and end.is_promotion_row(turn):
+                            for promo_piece_type in [Queen, Rook, Bishop, Knight]:
+                                yield Move(sq, end, promo_piece_type(turn))
+                        else:
+                            yield Move(sq, end)
+
+                    if isinstance(piece, Pawn):
+                        # Double push
+                        is_start_rank = (sq.row == 6 if turn == Color.WHITE else sq.row == 1)
+                        if is_start_rank:
+                            direction = piece.direction
+                            one_step = sq.get_step(direction)
+                            two_step = one_step.get_step(direction) if one_step and not one_step.is_none_square else None
+                            if two_step and not two_step.is_none_square:
+                                yield Move(sq, two_step)
+
+                    if isinstance(piece, King):
+                        # Castling
+                        for move in self.rules.get_legal_castling_moves(state):
+                            if move.start == sq:
+                                yield move
+
+                temp_mask &= temp_mask - 1
+
+        # Add variant-specific moves (e.g. drops)
+        yield from self.rules.get_extra_theoretical_moves(state)
+
+    def apply_move(self, state: GameState, move: Move) -> GameState:
+        """Executes a move and returns the new GameState."""
+        
+        if move.is_drop:
+             new_board = state.board.copy()
+             new_board.set_piece(move.drop_piece, move.end)
+             
+             new_halfmove_clock = state.halfmove_clock + 1
+             new_fullmove_count = state.fullmove_count + (1 if state.turn == Color.BLACK else 0)
+             
+             new_state = GameState(
+                board=new_board,
+                turn=state.turn.opposite,
+                castling_rights=state.castling_rights,
+                ep_square=None,
+                halfmove_clock=new_halfmove_clock,
+                fullmove_count=new_fullmove_count,
+                repetition_count=1
+             )
+             
+             return self.rules.post_move_actions(state, move, new_state)
+
+        new_board = state.board.copy()
+        piece = new_board.get_piece(move.start)
+        target = new_board.get_piece(move.end)
+
+        # Castling Detection (Generalized for 960)
+        is_castling = False
+        rook_sq = None
+        if isinstance(piece, King):
+            # Standard/960 Target: King moves > 1 square OR to C/G file
+            if abs(move.start.col - move.end.col) > 1:
+                is_castling = True
+            # 960 KxR Capture: Target is own Rook
+            elif isinstance(target, Rook) and target.color == piece.color:
+                is_castling = True
+                rook_sq = move.end
+
+        is_pawn_move = isinstance(piece, Pawn)
+        is_en_passant = is_pawn_move and move.end == state.ep_square
+        is_capture = target is not None or is_en_passant
+
+        new_halfmove_clock = state.halfmove_clock + 1
+        if is_pawn_move or is_capture:
+            new_halfmove_clock = 0
+
+        new_fullmove_count = state.fullmove_count
+        if state.turn == Color.BLACK:
+            new_fullmove_count += 1
+
+        if is_castling:
+            # Determine Castling Right involved
+            if rook_sq: # Known from KxR
+                # Find right matching this rook
+                right = next((r for r in state.castling_rights if r.expected_rook_square == rook_sq and r.color == piece.color), None)
+            else:
+                # Infer from direction
+                is_kingside = move.end.col > move.start.col
+                # For 960, we might need more robust matching if multiple rooks on same side (rare)
+                # Standard assumption: King moves towards the rook.
+                # In 960 standard notation (target c/g), g is kingside, c is queenside.
+                if move.end.col == 6: # g-file (Kingside)
+                     right = next((r for r in state.castling_rights if r.color == piece.color and r.expected_rook_square.col > move.start.col), None)
+                elif move.end.col == 2: # c-file (Queenside)
+                     right = next((r for r in state.castling_rights if r.color == piece.color and r.expected_rook_square.col < move.start.col), None)
+                else:
+                     # Non-standard target (manual 960 move?), fall back to direction
+                     if is_kingside:
+                         right = next((r for r in state.castling_rights if r.color == piece.color and r.expected_rook_square.col > move.start.col), None)
+                     else:
+                         right = next((r for r in state.castling_rights if r.color == piece.color and r.expected_rook_square.col < move.start.col), None)
+
+            if right:
+                rook_sq = right.expected_rook_square
+                rook = new_board.get_piece(rook_sq)
+                
+                # Destination Squares (Fixed for Chess)
+                rank = move.start.row
+                king_dest = Square(rank, 6) # g-file
+                rook_dest = Square(rank, 5) # f-file
+                if right.expected_rook_square.col < move.start.col: # Queenside
+                    king_dest = Square(rank, 2) # c-file
+                    rook_dest = Square(rank, 3) # d-file
+                
+                # Execute Castling
+                # Remove both first to avoid self-collision in 960
+                new_board.remove_piece(move.start)
+                new_board.remove_piece(rook_sq)
+                new_board.set_piece(piece, king_dest)
+                new_board.set_piece(rook, rook_dest)
+            else:
+                # Fallback (shouldn't happen if validated)
+                new_board.move_piece(piece, move.start, move.end)
+
+        else:
+            new_board.move_piece(piece, move.start, move.end)
+
+        if is_en_passant:
+            direction = Direction.DOWN if piece.color == Color.WHITE else Direction.UP
+            captured_coordinate = move.end.adjacent(direction)
+            new_board.remove_piece(captured_coordinate)
+
+        if move.promotion_piece is not None:
+            new_board.set_piece(move.promotion_piece, move.end)
+
+        new_castling_rights = set(state.castling_rights)
+
+        def revoke_rights(color: Color):
+            to_remove = [r for r in new_castling_rights if r != CastlingRight.NONE and r.color == color]
+            for r in to_remove: new_castling_rights.discard(r)
+
+        def revoke_rook_right(square: Square):
+            to_remove = [r for r in new_castling_rights if r != CastlingRight.NONE and r.expected_rook_square == square]
+            for r in to_remove: new_castling_rights.discard(r)
+
+        if isinstance(piece, King):
+            revoke_rights(piece.color)
+
+        if isinstance(piece, Rook):
+            revoke_rook_right(move.start)
+
+        # If rook was captured (or involved in castling? No, castling rights revoked by King move)
+        # But if we capture a rook, we must revoke *that* rook's right.
+        # In castling KxR, target IS rook.
+        if isinstance(target, Rook):
+            revoke_rook_right(move.end)
+        
+        # Explicit check for 960 KxR castling target revocation if not caught above
+        if is_castling and rook_sq:
+             revoke_rook_right(rook_sq)
+
+        new_ep_square = None
+        direction = Direction.DOWN if piece.color == Color.WHITE else Direction.UP
+        if isinstance(piece, Pawn) and abs(move.start.row - move.end.row) > 1:
+            new_ep_square = move.end.adjacent(direction)
+
+        # Basic state transition
+        new_state = GameState(
+            board=new_board,
+            turn=state.turn.opposite,
+            castling_rights=tuple(sorted(new_castling_rights, key=lambda x: x.value)),
+            ep_square=new_ep_square,
+            halfmove_clock=new_halfmove_clock,
+            fullmove_count=new_fullmove_count,
+            repetition_count=1
+        )
+        
+        # Apply variant hooks
+        return self.rules.post_move_actions(state, move, new_state)

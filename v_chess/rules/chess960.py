@@ -1,9 +1,10 @@
-from v_chess.enums import GameOverReason, MoveLegalityReason, BoardLegalityReason, Color, CastlingRight, Direction
+from v_chess.enums import GameOverReason, MoveLegalityReason, BoardLegalityReason, Color, CastlingRight
 from v_chess.move import Move
-from v_chess.piece import King, Rook, Pawn
+from v_chess.piece import King, Rook
 from v_chess.square import Square
 from v_chess.game_state import GameState
 from .standard import StandardRules
+from dataclasses import replace
 
 
 class Chess960Rules(StandardRules):
@@ -62,76 +63,18 @@ class Chess960Rules(StandardRules):
         fen = f"{row_str.lower()}/pppppppp/8/8/8/8/PPPPPPPP/{row_str} w {w_rook_cols}{b_rook_cols} - 0 1"
         return fen
 
-    def apply_move(self, state: GameState, move: Move) -> GameState:
-        piece = state.board.get_piece(move.start)
-
-        is_castling = False
-        if isinstance(piece, King):
-             # Check if this move is one of our legal castling moves
-             for c_move in self.get_legal_castling_moves(state):
-                 if c_move.start == move.start and c_move.end == move.end:
-                      is_castling = True; break
-
-             if not is_castling:
-                  # Also handle King-to-Rook notation
-                  target = state.board.get_piece(move.end)
-                  if isinstance(target, Rook) and target.color == piece.color:
-                       is_castling = True
-
-        if not is_castling:
-            return super().apply_move(state, move)
-
-        new_board = state.board.copy()
-        row = move.start.row
-
-        # We need to know if we are castling Kingside or Queenside
-        # If it was King-to-Rook, move.end is the Rook.
-        # If it was King-to-Target, move.end is g1/c1.
-
-        is_kingside = False
-        target = state.board.get_piece(move.end)
-        if isinstance(target, Rook) and target.color == piece.color:
-             is_kingside = move.end.col > move.start.col
-             rook_sq = move.end
-        else:
-             is_kingside = move.end.col == 6
-             # Find rook square from rights
-             right = None
-             if is_kingside:
-                  for r in state.castling_rights:
-                      if r.color == piece.color and r.expected_rook_square.col > move.start.col:
-                          right = r; break
-             else:
-                  for r in state.castling_rights:
-                      if r.color == piece.color and r.expected_rook_square.col < move.start.col:
-                          right = r; break
-             if not right: return super().apply_move(state, move)
-             rook_sq = right.expected_rook_square
-
-        rook_piece = new_board.get_piece(rook_sq)
-
-        target_king = Square(row, 6) if is_kingside else Square(row, 2)
-        target_rook = Square(row, 5) if is_kingside else Square(row, 3)
-
-        new_board.remove_piece(move.start)
-        new_board.remove_piece(rook_sq)
-
-        new_board.set_piece(piece, target_king)
-        new_board.set_piece(rook_piece, target_rook)
-
-        new_castling_rights = set(state.castling_rights)
-        to_remove = [r for r in new_castling_rights if r != CastlingRight.NONE and r.color == piece.color]
-        for r in to_remove: new_castling_rights.discard(r)
-
-        return GameState(
-            board=new_board,
-            turn=state.turn.opposite,
-            castling_rights=tuple(sorted(new_castling_rights, key=lambda x: x.value)),
-            ep_square=None,
-            halfmove_clock=state.halfmove_clock + 1,
-            fullmove_count=state.fullmove_count + (1 if state.turn == Color.BLACK else 0),
-            repetition_count=1
-        )
+    def post_move_actions(self, old_state: GameState, move: Move, new_state: GameState) -> GameState:
+        # Standard castling rights cleanup in Game handles implicit rook loss.
+        # But 960 KxR castling might need explicit rights removal if Game didn't catch it.
+        # Game handles KxR castling logic explicitly now.
+        
+        # We just need to ensure correct rights cleanup if the Game missed something specific to 960 notation
+        # But Game looks up rights by piece/rook square.
+        
+        # Is there anything else?
+        # Maybe remove rights if a rook moves/is captured? StandardRules logic handles this via Game.
+        
+        return new_state
 
     def invalid_castling_rights(self, state: GameState) -> list[CastlingRight]:
         invalid = []
@@ -166,6 +109,16 @@ class Chess960Rules(StandardRules):
     def castling_legality_reason(self, state: GameState, move: Move, piece: King) -> MoveLegalityReason:
         target_king_sq = move.end
         row = 7 if piece.color == Color.WHITE else 0
+        
+        # Check if target is Rook (KxR notation)
+        target_piece = state.board.get_piece(target_king_sq)
+        if isinstance(target_piece, Rook) and target_piece.color == piece.color:
+             # Map to standard target based on direction
+             if target_king_sq.col > move.start.col:
+                 target_king_sq = Square(row, 6) # Kingside
+             else:
+                 target_king_sq = Square(row, 2) # Queenside
+
         is_kingside = target_king_sq.col > move.start.col
 
         right = None

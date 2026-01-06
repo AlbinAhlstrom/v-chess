@@ -12,8 +12,8 @@ def test_chess960_castling_non_standard():
     fen = "k7/8/8/8/8/8/8/5K1R w K - 0 1"
     game = Game(fen, rules=Chess960Rules())
     
-    # Target square for Kingside castling is g1 (row 7, col 6)
-    move = Move("f1g1")
+    # Target square for Kingside castling in standard notation is g1, but UCI uses KxR (f1h1) for 960
+    move = Move("f1h1")
     assert game.rules.validate_move(game.state, move) == MoveLegalityReason.LEGAL
     
     game.take_turn(move)

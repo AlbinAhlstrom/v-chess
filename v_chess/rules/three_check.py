@@ -15,37 +15,34 @@ class ThreeCheckRules(StandardRules):
         """The human-readable name of the variant."""
         return "Three-Check"
 
-    def apply_move(self, state: GameState, move: Move) -> ThreeCheckGameState:
-        """Applies a move and updates the check counter."""
-        next_state_base = super().apply_move(state, move)
-
-        # Determine current checks from previous state (if it was ThreeCheckGameState)
+    def post_move_actions(self, old_state: GameState, move: Move, new_state: GameState) -> GameState:
+        """Updates check counter after a move."""
         current_checks = (0, 0)
-        if isinstance(state, ThreeCheckGameState):
-            current_checks = state.checks
+        if isinstance(old_state, ThreeCheckGameState):
+            current_checks = old_state.checks
 
-        # Check if this move GAVE check.
-        # super().is_check(next_state_base) checks if the player who is NEXT to move is in check.
-        is_check = self.is_check(next_state_base)
+        # Check if the move GAVE check (in the NEW state)
+        # new_state.turn is the player who will move NEXT.
+        # So we check if is_check(new_state) is true.
+        is_check = self.is_check(new_state)
 
         white_checks, black_checks = current_checks
 
-        # The player who JUST moved is state.turn.
+        # The player who JUST moved is old_state.turn.
         if is_check:
-            if state.turn == Color.WHITE:
+            if old_state.turn == Color.WHITE:
                 white_checks += 1
             else:
                 black_checks += 1
 
-        # Create new ThreeCheckGameState
         return ThreeCheckGameState(
-            board=next_state_base.board,
-            turn=next_state_base.turn,
-            castling_rights=next_state_base.castling_rights,
-            ep_square=next_state_base.ep_square,
-            halfmove_clock=next_state_base.halfmove_clock,
-            fullmove_count=next_state_base.fullmove_count,
-            repetition_count=next_state_base.repetition_count,
+            board=new_state.board,
+            turn=new_state.turn,
+            castling_rights=new_state.castling_rights,
+            ep_square=new_state.ep_square,
+            halfmove_clock=new_state.halfmove_clock,
+            fullmove_count=new_state.fullmove_count,
+            repetition_count=new_state.repetition_count,
             checks=(white_checks, black_checks)
         )
 
