@@ -179,11 +179,10 @@ def validate_standard_castling(state: "GameState", move: "Move", rules: "Rules")
 def validate_king_safety(state: "GameState", move: "Move", rules: "Rules") -> Optional[MoveLegalityReason]:
     """Ensures the move does not leave the player's own King in check."""
     from v_chess.piece import King
-    if rules.has_check:
-        has_king = any(isinstance(p, King) and p.color == state.turn for p in state.board.values())
-        if has_king and rules.king_left_in_check(state, move):
-            cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
-            return getattr(cls, "KING_LEFT_IN_CHECK", MoveLegalityReason.KING_LEFT_IN_CHECK)
+    has_king = any(isinstance(p, King) and p.color == state.turn for p in state.board.values())
+    if has_king and rules.king_left_in_check(state, move):
+        cls = getattr(rules, "MoveLegalityReason", MoveLegalityReason)
+        return getattr(cls, "KING_LEFT_IN_CHECK", MoveLegalityReason.KING_LEFT_IN_CHECK)
     return None
 
 def validate_mandatory_capture(state: "GameState", move: "Move", rules: "Rules") -> Optional[MoveLegalityReason]:

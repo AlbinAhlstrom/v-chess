@@ -11,7 +11,7 @@ from v_chess.move_validators import (
     validate_antichess_castling
 )
 from v_chess.state_validators import (
-    validate_pawn_position, validate_pawn_count, validate_en_passant
+    pawn_on_backrank, pawn_count_standard, en_passant_target_validity
 )
 from .standard import StandardRules
 
@@ -25,10 +25,6 @@ class AntichessRules(StandardRules):
     def name(self) -> str:
         return "Antichess"
 
-    @property
-    def has_check(self) -> bool:
-        return False
-    
     @property
     def game_over_conditions(self) -> List[Callable[[GameState, "StandardRules"], Optional[GameOverReason]]]:
         return [
@@ -56,9 +52,9 @@ class AntichessRules(StandardRules):
     def state_validators(self) -> List[Callable[[GameState, "StandardRules"], Optional[BoardLegalityReason]]]:
         """Returns a list of board state validators."""
         return [
-            validate_pawn_position,
-            validate_pawn_count,
-            validate_en_passant
+            pawn_on_backrank,
+            pawn_count_standard,
+            en_passant_target_validity
         ]
 
     def is_check(self, state: GameState) -> bool:

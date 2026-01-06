@@ -10,9 +10,9 @@ from v_chess.move_validators import (
     validate_path, validate_promotion, validate_racing_kings_move
 )
 from v_chess.state_validators import (
-    validate_standard_king_count, validate_pawn_position,
-    validate_pawn_count, validate_piece_count, validate_castling_rights,
-    validate_en_passant, validate_no_checks
+    standard_king_count, pawn_on_backrank,
+    pawn_count_standard, piece_count_promotion_consistency, castling_rights_consistency,
+    en_passant_target_validity, racing_kings_check_illegality
 )
 from .standard import StandardRules
 
@@ -53,18 +53,14 @@ class RacingKingsRules(StandardRules):
     def state_validators(self) -> List[Callable[[GameState, "StandardRules"], Optional[BoardLegalityReason]]]:
         """Returns a list of board state validators."""
         return [
-            validate_standard_king_count,
-            validate_pawn_position,
-            validate_pawn_count,
-            validate_piece_count,
-            validate_castling_rights,
-            validate_en_passant,
-            validate_no_checks
+            standard_king_count,
+            pawn_on_backrank,
+            pawn_count_standard,
+            piece_count_promotion_consistency,
+            castling_rights_consistency,
+            en_passant_target_validity,
+            racing_kings_check_illegality
         ]
-
-    @property
-    def has_check(self) -> bool:
-        return False
 
     @property
     def starting_fen(self) -> str:

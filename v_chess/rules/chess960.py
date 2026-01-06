@@ -11,9 +11,9 @@ from v_chess.move_validators import (
     validate_chess960_castling
 )
 from v_chess.state_validators import (
-    validate_standard_king_count, validate_pawn_position,
-    validate_pawn_count, validate_piece_count, validate_castling_rights,
-    validate_en_passant, validate_inactive_player_check
+    standard_king_count, pawn_on_backrank,
+    pawn_count_standard, piece_count_promotion_consistency, castling_rights_consistency,
+    en_passant_target_validity, inactive_player_check_safety
 )
 from .standard import StandardRules
 from dataclasses import replace

@@ -12,9 +12,9 @@ from v_chess.move_validators import (
     validate_king_safety, validate_horde_pawn
 )
 from v_chess.state_validators import (
-    validate_black_king_count, 
-    validate_black_pawn_count, validate_piece_count, validate_castling_rights,
-    validate_en_passant, validate_inactive_player_check
+    black_king_count_horde, black_pawn_count_horde, 
+    piece_count_promotion_consistency, castling_rights_consistency,
+    en_passant_target_validity, inactive_player_check_safety
 )
 from .standard import StandardRules
 
@@ -54,12 +54,12 @@ class HordeRules(StandardRules):
     def state_validators(self) -> List[Callable[[GameState, "StandardRules"], Optional[BoardLegalityReason]]]:
         """Returns a list of board state validators."""
         return [
-            validate_black_king_count,
-            validate_black_pawn_count,
-            validate_piece_count,
-            validate_castling_rights,
-            validate_en_passant,
-            validate_inactive_player_check
+            black_king_count_horde,
+            black_pawn_count_horde,
+            piece_count_promotion_consistency,
+            castling_rights_consistency,
+            en_passant_target_validity,
+            inactive_player_check_safety
         ]
 
     @property

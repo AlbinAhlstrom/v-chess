@@ -10,9 +10,9 @@ from v_chess.move_validators import (
     validate_path, validate_promotion, validate_atomic_move
 )
 from v_chess.state_validators import (
-    validate_standard_king_count, validate_pawn_position,
-    validate_pawn_count, validate_piece_count, validate_castling_rights,
-    validate_en_passant, validate_inactive_player_check, validate_atomic_adjacency
+    standard_king_count, pawn_on_backrank,
+    pawn_count_standard, piece_count_promotion_consistency, castling_rights_consistency,
+    en_passant_target_validity, inactive_player_check_safety, atomic_kings_proximity
 )
 from .standard import StandardRules
 from dataclasses import replace
@@ -49,14 +49,14 @@ class AtomicRules(StandardRules):
     def state_validators(self) -> List[Callable[[GameState, "StandardRules"], Optional[BoardLegalityReason]]]:
         """Returns a list of board state validators."""
         return [
-            validate_atomic_adjacency,
-            validate_standard_king_count,
-            validate_pawn_position,
-            validate_pawn_count,
-            validate_piece_count,
-            validate_castling_rights,
-            validate_en_passant,
-            validate_inactive_player_check
+            atomic_kings_proximity,
+            standard_king_count,
+            pawn_on_backrank,
+            pawn_count_standard,
+            piece_count_promotion_consistency,
+            castling_rights_consistency,
+            en_passant_target_validity,
+            inactive_player_check_safety
         ]
 
     def post_move_actions(self, old_state: GameState, move: Move, new_state: GameState) -> GameState:

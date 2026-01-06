@@ -29,12 +29,6 @@ class Rules(ABC):
 
     @property
     @abstractmethod
-    def has_check(self) -> bool:
-        """Whether the variant includes the concept of check/king safety."""
-        ...
-
-    @property
-    @abstractmethod
     def game_over_conditions(self) -> List[Callable[["GameState", "Rules"], Optional[GameOverReason]]]:
         """Returns a list of conditions that can end the game."""
         ...

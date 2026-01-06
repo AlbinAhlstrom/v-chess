@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Callable, Optional
 from itertools import chain
 
 from v_chess.board import Board
@@ -18,9 +18,9 @@ from v_chess.move_validators import (
     validate_king_safety
 )
 from v_chess.state_validators import (
-    validate_standard_king_count, validate_pawn_position,
-    validate_pawn_count, validate_piece_count, validate_castling_rights,
-    validate_en_passant, validate_inactive_player_check
+    standard_king_count, pawn_on_backrank,
+    pawn_count_standard, piece_count_promotion_consistency, castling_rights_consistency,
+    en_passant_target_validity, inactive_player_check_safety
 )
 from .core import Rules
 
@@ -41,12 +41,7 @@ class StandardRules(Rules):
         return GameState.STARTING_FEN
 
     @property
-    def has_check(self) -> bool:
-        """Whether the variant includes the concept of check."""
-        return True
-    
-    @property
-    def game_over_conditions(self) -> List[Callable[["GameState", "Rules"], Optional[GameOverReason]]]:
+    def game_over_conditions(self) -> List[Callable[[GameState, Rules], Optional[GameOverReason]]]:
         """Returns a list of conditions that can end the game."""
         return [
             evaluate_repetition,
@@ -56,7 +51,7 @@ class StandardRules(Rules):
         ]
 
     @property
-    def move_validators(self) -> List[Callable[["GameState", "Move", "Rules"], Optional[MoveLegalityReason]]]:
+    def move_validators(self) -> List[Callable[[GameState, Move, Rules], Optional[MoveLegalityReason]]]:
         """Returns a list of move validators."""
         return [
             validate_piece_presence,
@@ -71,16 +66,16 @@ class StandardRules(Rules):
         ]
 
     @property
-    def state_validators(self) -> List[Callable[["GameState", "Rules"], Optional[BoardLegalityReason]]]:
+    def state_validators(self) -> List[Callable[[GameState, Rules], Optional[BoardLegalityReason]]]:
         """Returns a list of board state validators."""
         return [
-            validate_standard_king_count,
-            validate_pawn_position,
-            validate_pawn_count,
-            validate_piece_count,
-            validate_castling_rights,
-            validate_en_passant,
-            validate_inactive_player_check
+            standard_king_count,
+            pawn_on_backrank,
+            pawn_count_standard,
+            piece_count_promotion_consistency,
+            castling_rights_consistency,
+            en_passant_target_validity,
+            inactive_player_check_safety
         ]
 
     def get_winner(self, state: GameState) -> Color | None:
