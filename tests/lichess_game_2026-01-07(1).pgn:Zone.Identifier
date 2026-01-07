@@ -1,0 +1,4 @@
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=https://lichess.org/@/game/download
+HostUrl=https://lichess.org/games/export/game?tags=true&clocks=false&evals=false&opening=false&literate=false&max=5000&perfType=chess960%2CkingOfTheHill%2Cantichess%2Catomic%2CthreeCheck%2Chorde%2CracingKings%2Ccrazyhouse

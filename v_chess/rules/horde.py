@@ -52,15 +52,14 @@ class HordeRules(StandardRules):
         return [
             black_king_count_horde,
             black_pawn_count_horde,
-            piece_count_promotion_consistency,
             castling_rights_consistency,
             en_passant_target_validity,
             inactive_player_check_safety
         ]
 
     @property
-    def piece_moves(self) -> List[PieceMoveRule]:
-        """Returns a list of rules for piece-specific moves."""
+    def available_moves(self) -> List[Callable]:
+        """Returns a list of rules for generating moves."""
         return [
             basic_moves,
             pawn_promotions,
@@ -68,11 +67,6 @@ class HordeRules(StandardRules):
             horde_pawn_double_push,
             standard_castling
         ]
-
-    @property
-    def global_moves(self) -> List[GlobalMoveRule]:
-        """Returns a list of rules for moves not originating from board pieces."""
-        return []
 
     @property
     def starting_fen(self) -> str:

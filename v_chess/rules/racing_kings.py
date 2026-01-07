@@ -14,6 +14,9 @@ from v_chess.state_validators import (
     pawn_count_standard, piece_count_promotion_consistency, castling_rights_consistency,
     en_passant_target_validity, racing_kings_check_illegality
 )
+from v_chess.special_moves import (
+    basic_moves, pawn_promotions, pawn_double_push
+)
 from .standard import StandardRules
 
 
@@ -52,6 +55,15 @@ class RacingKingsRules(StandardRules):
             castling_rights_consistency,
             en_passant_target_validity,
             racing_kings_check_illegality
+        ]
+
+    @property
+    def available_moves(self) -> List[Callable]:
+        """Returns a list of rules for generating moves."""
+        return [
+            basic_moves,
+            pawn_promotions,
+            pawn_double_push
         ]
 
     @property

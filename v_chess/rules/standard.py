@@ -76,19 +76,14 @@ class StandardRules(Rules):
         return "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
     @property
-    def piece_moves(self) -> List[PieceMoveRule]:
-        """Returns a list of rules for piece-specific moves."""
+    def available_moves(self) -> List[Callable]:
+        """Returns a list of rules for generating moves."""
         return [
             basic_moves,
             pawn_promotions,
             pawn_double_push,
             standard_castling
         ]
-
-    @property
-    def global_moves(self) -> List[GlobalMoveRule]:
-        """Returns a list of rules for moves not originating from board pieces."""
-        return []
 
     def get_winner(self, state: GameState) -> Color | None:
         """Determines the winner of the game."""
@@ -177,11 +172,26 @@ class StandardRules(Rules):
         """Returns a list of castling rights that are no longer valid due to piece positions."""
         invalid = []
         for right in state.castling_rights:
-            king = state.board.get_piece(right.expected_king_square)
-            rook = state.board.get_piece(right.expected_rook_square)
+            if right == CastlingRight.NONE: continue
+            
+            row = 7 if right.color == Color.WHITE else 0
+            # In Chess960, king can be on any square on the rank initially.
+            # But the right is only valid if the king is STILL on that rank.
+            # Actually, standard rules are strict about e1/e8.
+            # We can use expected_king_square and check if a king is there.
+            
+            target_king_sq = right.expected_king_square
+            king = state.board.get_piece(target_king_sq)
+            
+            # If no king at expected square, check if any king exists on the rank (for 960 compatibility)
             if not (isinstance(king, King) and king.color == right.color):
-                invalid.append(right)
-                continue
+                 kings_on_rank = [p for sq, p in state.board.items() 
+                                  if isinstance(p, King) and p.color == right.color and sq.row == row]
+                 if not kings_on_rank:
+                      invalid.append(right)
+                      continue
+
+            rook = state.board.get_piece(right.expected_rook_square)
             if not (isinstance(rook, Rook) and rook.color == right.color):
                 invalid.append(right)
                 continue

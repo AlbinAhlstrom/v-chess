@@ -42,7 +42,9 @@ class Move:
             uci_str = args[0]
             if "@" in uci_str:
                 # Drop move: P@e4
-                piece_char, square_str = uci_str.split("@")
+                # Clean for SAN compatibility (strip + or #)
+                clean_uci = uci_str.replace("+", "").replace("#", "")
+                piece_char, square_str = clean_uci.split("@")
                 if piece_char in piece_from_char and Move.is_square_valid(square_str):
                     _start = Square(None) # NoneSquare
                     _end = Square(square_str)
@@ -220,17 +222,23 @@ class Move:
     def from_san_castling(cls, san_str: str, game: "Game") -> "Move":
         """Creates a castling Move from a SAN string."""
         color = game.state.turn
+        
+        # Find the king's actual position
+        king_sq = None
+        for sq, piece in game.state.board.items():
+            if isinstance(piece, King) and piece.color == color:
+                king_sq = sq
+                break
+        
+        if king_sq is None:
+            # Fallback to standard if king missing (should be caught by validators)
+            king_sq = Square("e1") if color == Color.WHITE else Square("e8")
+
+        rank = 7 if color == Color.WHITE else 0
         if san_str == "O-O":
-            if color == Color.WHITE:
-                move = Move("e1g1", player_to_move=color)
-            else:
-                move =  Move("e8g8", player_to_move=color)
+            return Move(king_sq, Square(rank, 6), player_to_move=color)
         else:
-            if color == Color.WHITE:
-                move = Move("e1c1", player_to_move=color)
-            else:
-                move = Move("e8c8", player_to_move=color)
-        return move
+            return Move(king_sq, Square(rank, 2), player_to_move=color)
 
     @classmethod
     def from_san_move(cls, san_str: str, game: "Game") -> "Move":
@@ -260,14 +268,13 @@ class Move:
             promotion_piece = piece_from_char[promotion_char](
                 game.state.turn
             )
-        elif clean_san and clean_san[-1].isalpha() and clean_san[-1] in piece_from_char:
+        elif clean_san and clean_san[-1].isalpha() and clean_san[-1].upper() in piece_from_char:
 
             promotion_char = clean_san[-1]
-            if promotion_char.upper() in ["Q", "R", "B", "N"]:
-                clean_san = clean_san[:-1]
-                promotion_piece = piece_from_char[promotion_char](
-                    game.state.turn
-                )
+            clean_san = clean_san[:-1]
+            promotion_piece = piece_from_char[promotion_char](
+                game.state.turn
+            )
 
         end_square = Square(clean_san[-2:])
         piece_indicator = clean_san[:-2]

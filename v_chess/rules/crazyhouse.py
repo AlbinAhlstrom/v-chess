@@ -47,19 +47,26 @@ class CrazyhouseRules(StandardRules):
         ]
 
     @property
-    def piece_moves(self) -> List[PieceMoveRule]:
-        """Returns a list of rules for piece-specific moves."""
+    def available_moves(self) -> List[Callable]:
+        """Returns a list of rules for generating moves."""
         return [
             basic_moves,
             pawn_promotions,
             pawn_double_push,
-            standard_castling
+            standard_castling,
+            crazyhouse_drops
         ]
 
     @property
-    def global_moves(self) -> List[GlobalMoveRule]:
-        """Returns a list of rules for moves not originating from board pieces."""
-        return [crazyhouse_drops]
+    def state_validators(self) -> List[Callable[[GameState, "StandardRules"], Optional[BoardLegalityReason]]]:
+        """Returns a list of board state validators."""
+        return [
+            standard_king_count,
+            pawn_on_backrank,
+            castling_rights_consistency,
+            en_passant_target_validity,
+            inactive_player_check_safety
+        ]
 
     @property
     def fen_type(self) -> str:

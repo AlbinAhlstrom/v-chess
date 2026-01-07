@@ -63,8 +63,22 @@ def castling_rights_consistency(state: "GameState", rules: "Rules") -> Optional[
 
 def en_passant_target_validity(state: "GameState", rules: "Rules") -> Optional[BoardLegalityReason]:
     """Ensures en passant target square is valid."""
-    if state.ep_square is not None and state.ep_square.row not in (2, 5):
-        return BoardLegalityReason.INVALID_EP_SQUARE
+    if state.ep_square is not None:
+        valid_rows = [2, 5]
+        from v_chess.rules.horde import HordeRules
+        if isinstance(rules, HordeRules):
+            valid_rows.append(6) # Rank 2 for white double push from rank 1
+            
+        if state.ep_square.row not in valid_rows:
+            return BoardLegalityReason.INVALID_EP_SQUARE
+    return None
+
+def atomic_king_count(state: "GameState", rules: "Rules") -> Optional[BoardLegalityReason]:
+    """Ensures at most one king exists for each player (allows 0 for game over)."""
+    white_kings = state.board.get_pieces(King, Color.WHITE)
+    black_kings = state.board.get_pieces(King, Color.BLACK)
+    if len(white_kings) > 1 or len(black_kings) > 1:
+        return BoardLegalityReason.TOO_MANY_KINGS
     return None
 
 def inactive_player_check_safety(state: "GameState", rules: "Rules") -> Optional[BoardLegalityReason]:

@@ -111,10 +111,20 @@ class CastlingRight(StrEnum):
     def expected_king_square(self) -> "Square":
         """Returns the square where the king is expected to be for this right."""
         from v_chess.square import Square
-        if self.value.isupper():
+        # Standard rights
+        if self in (CastlingRight.WHITE_SHORT, CastlingRight.WHITE_LONG):
             return Square("e1")
-        if self.value.islower():
+        if self in (CastlingRight.BLACK_SHORT, CastlingRight.BLACK_LONG):
             return Square("e8")
+            
+        # 960 rights (A-H, a-h) - we need to find where the king actually is.
+        # But wait, castling rights in 960 FEN (HAha) only tell us where the ROOKS are.
+        # The king's expected square is STILL its starting square.
+        # In Chess960, we just need to ensure A king exists on that rank.
+        if self.value.isupper():
+            return Square(7, 4) # Default e1, but in 960 it could be anywhere on rank 1.
+        if self.value.islower():
+            return Square(0, 4) # Default e8
         return Square(None)
 
     @property
@@ -147,9 +157,11 @@ class CastlingRight(StrEnum):
         if not fen_castling_string or fen_castling_string == "-":
             return tuple()
         rights = []
+        # Mapping from char to member for performance/robustness
+        member_map = {m.value: m for m in cls}
         for char in fen_castling_string:
-            try: rights.append(cls(char))
-            except ValueError: pass
+            if char in member_map:
+                rights.append(member_map[char])
         return tuple(rights)
 
 

@@ -48,14 +48,12 @@ class Rules(ABC):
 
     @property
     @abstractmethod
-    def piece_moves(self) -> List["PieceMoveRule"]:
-        """Returns a list of rules for piece-specific moves."""
-        ...
-
-    @property
-    @abstractmethod
-    def global_moves(self) -> List["GlobalMoveRule"]:
-        """Returns a list of rules for moves not originating from board pieces."""
+    def available_moves(self) -> List[Callable]:
+        """Returns a list of rules for generating moves.
+        
+        Rules can be piece-specific (take state, sq, piece) or 
+        global (take state and have is_global=True).
+        """
         ...
 
     def get_possible_moves(self, state: "GameState") -> list[Move]:
@@ -63,6 +61,9 @@ class Rules(ABC):
         moves = []
         bb = state.board.bitboard
         turn = state.turn
+
+        piece_rules = [r for r in self.available_moves if not getattr(r, "is_global", False)]
+        global_rules = [r for r in self.available_moves if getattr(r, "is_global", False)]
 
         # 1. Piece-specific moves
         for p_type, mask in bb.pieces[turn].items():
@@ -74,14 +75,14 @@ class Rules(ABC):
                 piece = state.board.get_piece(sq)
 
                 if piece:
-                    for gen in self.piece_moves:
-                        moves.extend(gen(state, sq, piece))
+                    for rule in piece_rules:
+                        moves.extend(rule(state, sq, piece))
 
                 temp_mask &= temp_mask - 1
 
         # 2. Global moves (e.g. Drops)
-        for gen in self.global_moves:
-            moves.extend(gen(state))
+        for rule in global_rules:
+            moves.extend(rule(state))
 
         return moves
 

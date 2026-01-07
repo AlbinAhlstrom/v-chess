@@ -56,18 +56,13 @@ class AntichessRules(StandardRules):
         ]
 
     @property
-    def piece_moves(self) -> List[PieceMoveRule]:
-        """Returns a list of rules for piece-specific moves."""
+    def available_moves(self) -> List[Callable]:
+        """Returns a list of rules for generating moves."""
         return [
             basic_moves,
             pawn_promotions,
             pawn_double_push
         ]
-
-    @property
-    def global_moves(self) -> List[GlobalMoveRule]:
-        """Returns a list of rules for moves not originating from board pieces."""
-        return []
 
     def is_check(self, state: GameState) -> bool:
         return False

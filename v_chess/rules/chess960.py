@@ -40,19 +40,14 @@ class Chess960Rules(StandardRules):
         ]
 
     @property
-    def piece_moves(self) -> List[PieceMoveRule]:
-        """Returns a list of rules for piece-specific moves."""
+    def available_moves(self) -> List[Callable]:
+        """Returns a list of rules for generating moves."""
         return [
             basic_moves,
             pawn_promotions,
             pawn_double_push,
             chess960_castling
         ]
-
-    @property
-    def global_moves(self) -> List[GlobalMoveRule]:
-        """Returns a list of rules for moves not originating from board pieces."""
-        return []
 
     @property
     def starting_fen(self) -> str:
@@ -119,12 +114,41 @@ class Chess960Rules(StandardRules):
         for right in state.castling_rights:
             if right == CastlingRight.NONE: continue
             row = 7 if right.color == Color.WHITE else 0
-            kings = [p for sq, p in state.board.items()
-                     if isinstance(p, King) and p.color == right.color and sq.row == row]
+            
+            # Find the king on the correct rank
+            king_sq = next((sq for sq, p in state.board.items() 
+                            if isinstance(p, King) and p.color == right.color and sq.row == row), None)
+            if not king_sq:
+                invalid.append(right)
+                continue
+
+            # In Chess960, K/Q might refer to the outermost rooks relative to the king
+            # if they are not at h/a.
+            rooks_on_rank = [sq for sq, p in state.board.items()
+                             if isinstance(p, Rook) and p.color == right.color and sq.row == row]
+            
+            if not rooks_on_rank:
+                invalid.append(right)
+                continue
+
+            # Check if specified rook exists
             rook_sq = right.expected_rook_square
             rook = state.board.get_piece(rook_sq)
-            if not kings or not (isinstance(rook, Rook) and rook.color == right.color):
-                invalid.append(right)
+            
+            if not (isinstance(rook, Rook) and rook.color == right.color):
+                # Fallback for K/Q shorthand in non-standard positions
+                if right in (CastlingRight.WHITE_SHORT, CastlingRight.BLACK_SHORT):
+                    # K: needs at least one rook to the right of king
+                    if not any(r_sq.col > king_sq.col for r_sq in rooks_on_rank):
+                        invalid.append(right)
+                elif right in (CastlingRight.WHITE_LONG, CastlingRight.BLACK_LONG):
+                    # Q: needs at least one rook to the left of king
+                    if not any(r_sq.col < king_sq.col for r_sq in rooks_on_rank):
+                        invalid.append(right)
+                else:
+                    # Specific column right (A-H), already failed standard check above
+                    invalid.append(right)
+                    
         return invalid
 
     def castling_legality_reason(self, state: GameState, move: Move, piece: King) -> MoveLegalityReason:

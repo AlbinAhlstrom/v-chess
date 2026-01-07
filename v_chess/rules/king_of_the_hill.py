@@ -16,19 +16,14 @@ class KingOfTheHillRules(StandardRules):
         return [evaluate_king_center_win] + super().game_over_conditions
 
     @property
-    def piece_moves(self) -> List[PieceMoveRule]:
-        """Returns a list of rules for piece-specific moves."""
+    def available_moves(self) -> List[Callable]:
+        """Returns a list of rules for generating moves."""
         return [
             basic_moves,
             pawn_promotions,
             pawn_double_push,
             standard_castling
         ]
-
-    @property
-    def global_moves(self) -> List[GlobalMoveRule]:
-        """Returns a list of rules for moves not originating from board pieces."""
-        return []
 
     def get_winner(self, state: GameState) -> Color | None:
         reason = self.get_game_over_reason(state)

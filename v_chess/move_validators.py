@@ -155,7 +155,9 @@ def validate_promotion(state: "GameState", move: "Move", rules: "Rules") -> Opti
         if not is_pawn or not is_promo_rank:
             return MoveLegalityReason.EARLY_PROMOTION
         if isinstance(move.promotion_piece, King):
-            return MoveLegalityReason.KING_PROMOTION
+            from v_chess.rules.antichess import AntichessRules
+            if not isinstance(rules, AntichessRules):
+                return MoveLegalityReason.KING_PROMOTION
             
     return None
 

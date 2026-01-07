@@ -16,19 +16,14 @@ class ThreeCheckRules(StandardRules):
         return [evaluate_three_check_win] + super().game_over_conditions
 
     @property
-    def piece_moves(self) -> List[PieceMoveRule]:
-        """Returns a list of rules for piece-specific moves."""
+    def available_moves(self) -> List[Callable]:
+        """Returns a list of rules for generating moves."""
         return [
             basic_moves,
             pawn_promotions,
             pawn_double_push,
             standard_castling
         ]
-
-    @property
-    def global_moves(self) -> List[GlobalMoveRule]:
-        """Returns a list of rules for moves not originating from board pieces."""
-        return []
 
     def post_move_actions(self, old_state: GameState, move: Move, new_state: GameState) -> GameState:
         """Updates check counter after a move."""

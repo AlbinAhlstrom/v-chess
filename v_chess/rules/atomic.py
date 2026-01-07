@@ -10,7 +10,7 @@ from v_chess.move_validators import (
     validate_path, validate_promotion, validate_atomic_move
 )
 from v_chess.state_validators import (
-    standard_king_count, pawn_on_backrank,
+    atomic_king_count, pawn_on_backrank,
     pawn_count_standard, piece_count_promotion_consistency, castling_rights_consistency,
     en_passant_target_validity, inactive_player_check_safety, atomic_kings_proximity
 )
@@ -45,7 +45,7 @@ class AtomicRules(StandardRules):
     def state_validators(self) -> List[Callable[[GameState, "StandardRules"], Optional[BoardLegalityReason]]]:
         """Returns a list of board state validators."""
         return [
-            standard_king_count,
+            atomic_king_count,
             pawn_on_backrank,
             pawn_count_standard,
             piece_count_promotion_consistency,
@@ -56,19 +56,14 @@ class AtomicRules(StandardRules):
         ]
 
     @property
-    def piece_moves(self) -> List[PieceMoveRule]:
-        """Returns a list of rules for piece-specific moves."""
+    def available_moves(self) -> List[Callable]:
+        """Returns a list of rules for generating moves."""
         return [
             basic_moves,
             pawn_promotions,
             pawn_double_push,
             standard_castling
         ]
-
-    @property
-    def global_moves(self) -> List[GlobalMoveRule]:
-        """Returns a list of rules for moves not originating from board pieces."""
-        return []
 
     def post_move_actions(self, old_state: GameState, move: Move, new_state: GameState) -> GameState:
         moving_piece = old_state.board.get_piece(move.start)

@@ -23,11 +23,11 @@ def basic_moves(state: "GameState", sq: "Square", piece: "Piece") -> Iterable[Mo
 
 def pawn_promotions(state: "GameState", sq: "Square", piece: "Piece") -> Iterable[Move]:
     """Generates promotion moves for pawns reaching the last rank."""
-    from v_chess.piece import Pawn, Queen, Rook, Bishop, Knight
+    from v_chess.piece import Pawn, Queen, Rook, Bishop, Knight, King
     if isinstance(piece, Pawn):
         for end in piece.theoretical_moves(sq):
             if end.is_promotion_row(state.turn):
-                for promo_piece_type in [Queen, Rook, Bishop, Knight]:
+                for promo_piece_type in [Queen, Rook, Bishop, Knight, King]:
                     yield Move(sq, end, promo_piece_type(state.turn), player_to_move=state.turn)
 
 def pawn_double_push(state: "GameState", sq: "Square", piece: "Piece") -> Iterable[Move]:
@@ -103,3 +103,5 @@ def crazyhouse_drops(state: "GameState") -> Iterable[Move]:
                     if isinstance(p, Pawn) and (r == 0 or r == 7):
                         continue
                     yield Move(Square(None), target_sq, None, p, player_to_move=state.turn)
+
+crazyhouse_drops.is_global = True
