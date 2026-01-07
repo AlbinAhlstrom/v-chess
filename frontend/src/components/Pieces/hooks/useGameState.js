@@ -45,22 +45,36 @@ export function useGameState(urlGameId, variant, computer, navigate) {
         fenHistoryRef.current = fenHistory;
     }, [fenHistory]);
 
-    const fetchLegalMoves = useCallback((id) => {
-        if (!id) return;
-        getAllLegalMoves(id).then(response => {
-            if (response.status === "success") {
-                setAllPossibleMoves(response.moves);
+    const fetchLegalMoves = useCallback(async () => {
+        if (!gameId) return;
+        try {
+            const data = await getAllLegalMoves(gameId);
+            if (data.moves) {
+                setAllPossibleMoves(data.moves);
+                if (data.debug_rejections) {
+                    console.log(`[DEBUG] Move rejections for game ${gameId}:`, data.debug_rejections);
+                }
+                if (data.validators) {
+                    console.log(`[DEBUG] Validators being used for game ${gameId}:`, data.validators);
+                }
+                console.log(`[DEBUG] Legal moves for FEN ${fen}:`, data.moves);
             }
-        }).catch(error => {
-            console.error("Failed to fetch all legal moves:", error);
-        });
-    }, []);
+        } catch (err) {
+            console.error("Error fetching legal moves:", err);
+        }
+    }, [gameId, fen]);
 
     useEffect(() => {
         if (gameId) {
             fetchLegalMoves(gameId);
         }
     }, [gameId, fen, fetchLegalMoves]);
+
+    useEffect(() => {
+        if (allPossibleMoves.length > 0) {
+            console.log(`[DEBUG] Legal moves for FEN ${fen}:`, allPossibleMoves);
+        }
+    }, [allPossibleMoves, fen]);
 
     const initializeGame = useCallback(async (fenToLoad = null, variantToLoad = null, tc = null) => {
         try {

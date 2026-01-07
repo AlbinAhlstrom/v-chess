@@ -223,7 +223,7 @@ class Bitboard:
 
         return is_attacked
 
-    def _check_slider(self, square_idx: int, attackers: int, directions: list[Direction], occupied: int) -> bool:
+    def _check_slider(self, square_idx: int, attackers: int, directions: set[Direction], occupied: int) -> bool:
         """Helper to check sliding piece attacks."""
         for d in directions:
             ray = d.get_ray_mask(square_idx)
@@ -232,13 +232,18 @@ class Bitboard:
 
             blockers = ray & occupied
             if not blockers:
+                # Ray has an attacker and no blockers, so the square IS attacked.
                 return True
 
-            idx_delta = d.value[1] * 8 + d.value[0]
-
+            # Need to find the blocker closest to square_idx
+            d_col, d_row = d.value
+            idx_delta = d_row * 8 + d_col
+            
             if idx_delta > 0:
+                # Squares in this direction have higher indices
                 first_blocker_mask = blockers & -blockers
             else:
+                # Squares in this direction have lower indices
                 first_blocker_mask = 1 << (blockers.bit_length() - 1)
 
             if first_blocker_mask & attackers:

@@ -107,11 +107,12 @@ class Rules(ABC):
                 return reason
         return BoardLegalityReason.VALID
 
-    def validate_move(self, state: "GameState", move: Move) -> MoveLegalityReason:
+    def validate_move(self, state: "GameState", move: "Move") -> MoveLegalityReason:
         """Validates a move using the component pipeline."""
         for v in self.move_validators:
             reason = v(state, move, self)
             if reason:
+                print(f"[RULES DEBUG] Move {move.uci} rejected by {v.__name__}: {reason.value}")
                 return reason
         return MoveLegalityReason.LEGAL
 

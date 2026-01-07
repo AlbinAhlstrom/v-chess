@@ -63,7 +63,7 @@ const VARIANT_RULES = {
             "Black wins by capturing all of White's pawns (and any promoted pieces)."
         ]
     },
-    king_of_the_hill: {
+    kingofthehill: {
         title: "King of the Hill",
         description: "Race your king to the center.",
         rules: [
@@ -71,7 +71,7 @@ const VARIANT_RULES = {
             "The first player to reach the center wins immediately."
         ]
     },
-    racing_kings: {
+    racingkings: {
         title: "Racing Kings",
         description: "A race to the finish line.",
         rules: [
@@ -80,7 +80,7 @@ const VARIANT_RULES = {
             "Checks are illegal. You cannot move into check, and you cannot deliver a check."
         ]
     },
-    three_check: {
+    threecheck: {
         title: "Three-Check",
         description: "Check the king three times to win.",
         rules: [
@@ -144,10 +144,10 @@ function Rules() {
                 {currentVariant === 'atomic' && <AtomicTutorialBoard />}
                 {currentVariant === 'antichess' && <AntichessTutorialBoard />}
                 {currentVariant === 'crazyhouse' && <CrazyhouseTutorialBoard />}
-                {currentVariant === 'king_of_the_hill' && <KOTHTutorialBoard />}
-                {currentVariant === 'racing_kings' && <RacingKingsTutorialBoard />}
+                {currentVariant === 'kingofthehill' && <KOTHTutorialBoard />}
+                {currentVariant === 'racingkings' && <RacingKingsTutorialBoard />}
                 {currentVariant === 'horde' && <HordeTutorialBoard />}
-                {currentVariant === 'three_check' && <ThreeCheckTutorialBoard />}
+                {currentVariant === 'threecheck' && <ThreeCheckTutorialBoard />}
                 {currentVariant === 'chess960' && <Chess960TutorialBoard />}
 
                 <ul className="rules-list">

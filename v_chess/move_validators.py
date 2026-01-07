@@ -191,7 +191,8 @@ def validate_mandatory_capture(state: "GameState", move: "Move", rules: "Rules")
     if is_capture:
         return None
         
-    for opt_move in rules.get_possible_moves(state):
+    possible_moves = rules.get_possible_moves(state)
+    for opt_move in possible_moves:
         if rules.move_pseudo_legality_reason(state, opt_move) == MoveLegalityReason.LEGAL:
             opt_is_cap = state.board.get_piece(opt_move.end) is not None
             if not opt_is_cap:
@@ -200,6 +201,7 @@ def validate_mandatory_capture(state: "GameState", move: "Move", rules: "Rules")
                     opt_is_cap = True
             
             if opt_is_cap:
+                print(f"[VALIDATOR DEBUG] MANDATORY_CAPTURE triggered for move {move.uci}. Found mandatory capture: {opt_move.uci}")
                 return MoveLegalityReason.MANDATORY_CAPTURE
     
     return None
@@ -301,9 +303,11 @@ def validate_racing_kings_move(state: "GameState", move: "Move", rules: "Rules")
     next_state = rules.apply_move(state, move)
     
     if rules.is_check(next_state):
+        print(f"[VALIDATOR DEBUG] RACING_KINGS GIVES_CHECK for move {move.uci}")
         return MoveLegalityReason.GIVES_CHECK
 
     if rules.inactive_player_in_check(next_state):
+         print(f"[VALIDATOR DEBUG] RACING_KINGS KING_LEFT_IN_CHECK for move {move.uci}")
          return MoveLegalityReason.KING_LEFT_IN_CHECK
          
     return None

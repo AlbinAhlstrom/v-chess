@@ -30,6 +30,13 @@ function ImportDialog({ onImport, onCancel }) {
                         >
                             <option value="standard">Standard</option>
                             <option value="antichess">Antichess</option>
+                            <option value="atomic">Atomic</option>
+                            <option value="chess960">Chess960</option>
+                            <option value="crazyhouse">Crazyhouse</option>
+                            <option value="horde">Horde</option>
+                            <option value="kingofthehill">King of the Hill</option>
+                            <option value="racingkings">Racing Kings</option>
+                            <option value="threecheck">Three Check</option>
                         </select>
                     </div>
                     <input

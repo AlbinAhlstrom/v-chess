@@ -85,7 +85,30 @@ async def get_game_state(game_id: str):
 @router.post("/moves/all_legal")
 async def get_all_legal_moves(req: GameRequest):
     game = await get_game(req.game_id)
-    return {"moves": [m.uci for m in game.legal_moves], "status": "success"}
+    
+    # Debugging: Log rejection reasons and validators
+    possible_moves = game.rules.get_possible_moves(game.state)
+    legal_moves_uci = []
+    rejection_log = {}
+    validator_names = [v.__name__ for v in game.rules.move_validators]
+    
+    for m in possible_moves:
+        reason = game.rules.validate_move(game.state, m)
+        if reason == "move is legal":
+            legal_moves_uci.append(m.uci)
+        else:
+            rejection_log[m.uci] = reason
+            
+    print(f"[BACKEND DEBUG] Game {req.game_id} Variant: {game.rules.__class__.__name__}")
+    print(f"[BACKEND DEBUG] Validators: {validator_names}")
+    print(f"[BACKEND DEBUG] Legal moves: {legal_moves_uci}")
+    
+    return {
+        "moves": legal_moves_uci, 
+        "status": "success", 
+        "debug_rejections": rejection_log,
+        "validators": validator_names
+    }
 
 @router.post("/moves/legal")
 async def get_legal_moves(req: LegalMovesRequest):
